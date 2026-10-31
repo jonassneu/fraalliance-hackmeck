@@ -1,0 +1,74 @@
+# Single-feature additions to the production OD model (output of `run.py`)
+
+`+feature` = production feature set plus that feature; `PRODUCTION` = unchanged production model.
+
+## single.log
++prog_signed_trans             od25   acc1=0.9679 acc6=0.9613 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0359 brier_all=0.0365
++prog_tdir                     od25   acc1=0.9679 acc6=0.9558 acc24=0.9578 acc48=0.9348 brier_1_6_24_48=0.0374 brier_all=0.0383
+PRODUCTION                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0363
++prog_rev3                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0358 brier_all=0.0363
++prog_gap                      od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0362
++prog_rev6                     od25   acc1=0.9670 acc6=0.9604 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0359 brier_all=0.0363
++prog_trans                    od25   acc1=0.9688 acc6=0.9604 acc24=0.9569 acc48=0.9396 brier_1_6_24_48=0.0358 brier_all=0.0362
+sub prog_signed_filled         od25   acc1=0.9670 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0359 brier_all=0.0364
++prog_disagree                 od25   acc1=0.9670 acc6=0.9594 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0361 brier_all=0.0368
++h_since_sw                    od25   acc1=0.9697 acc6=0.9585 acc24=0.9531 acc48=0.9348 brier_1_6_24_48=0.0360 brier_all=0.0365
++nsw72                         od25   acc1=0.9697 acc6=0.9585 acc24=0.9522 acc48=0.9406 brier_1_6_24_48=0.0364 brier_all=0.0370
++nsw24                         od25   acc1=0.9670 acc6=0.9604 acc24=0.9569 acc48=0.9377 brier_1_6_24_48=0.0357 brier_all=0.0364
++prog_chg_before_valid         od25   acc1=0.9670 acc6=0.9585 acc24=0.9569 acc48=0.9386 brier_1_6_24_48=0.0358 brier_all=0.0367
++prog_x_now                    od25   acc1=0.9688 acc6=0.9604 acc24=0.9541 acc48=0.9358 brier_1_6_24_48=0.0357 brier_all=0.0362
++od_3h_ago                     od25   acc1=0.9661 acc6=0.9622 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0362 brier_all=0.0370
++od_24h_ago                    od25   acc1=0.9697 acc6=0.9613 acc24=0.9578 acc48=0.9386 brier_1_6_24_48=0.0361 brier_all=0.0362
++west_share24                  od25   acc1=0.9670 acc6=0.9585 acc24=0.9597 acc48=0.9358 brier_1_6_24_48=0.0358 brier_all=0.0364
++obs_tw25_f                    od25   acc1=0.9688 acc6=0.9585 acc24=0.9578 acc48=0.9367 brier_1_6_24_48=0.0360 brier_all=0.0371
++west_frac_now                 od25   acc1=0.9688 acc6=0.9613 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0359 brier_all=0.0366
++obs_tw25_max3                 od25   acc1=0.9670 acc6=0.9622 acc24=0.9569 acc48=0.9367 brier_1_6_24_48=0.0367 brier_all=0.0378
++obs_tw25_min3                 od25   acc1=0.9679 acc6=0.9558 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0364 brier_all=0.0372
++obs_tw25_trend3               od25   acc1=0.9679 acc6=0.9613 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0357 brier_all=0.0362
++tw25_bias                     od25   acc1=0.9688 acc6=0.9604 acc24=0.9550 acc48=0.9358 brier_1_6_24_48=0.0361 brier_all=0.0369
+sub tw25_corr                  od25   acc1=0.9688 acc6=0.9567 acc24=0.9569 acc48=0.9377 brier_1_6_24_48=0.0365 brier_all=0.0372
++rule_now_disagree             od25   acc1=0.9670 acc6=0.9594 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0360 brier_all=0.0365
++tw25_bias_dec                 od25   acc1=0.9688 acc6=0.9585 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0363 brier_all=0.0368
++obs_tw25_x_now                od25   acc1=0.9661 acc6=0.9585 acc24=0.9578 acc48=0.9377 brier_1_6_24_48=0.0359 brier_all=0.0365
++weekend                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9338 brier_1_6_24_48=0.0358 brier_all=0.0363
++now_dec12                     od25   acc1=0.9651 acc6=0.9576 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0364 brier_all=0.0372
++now_dec3                      od25   acc1=0.9661 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0362 brier_all=0.0367
++dow                           od25   acc1=0.9688 acc6=0.9585 acc24=0.9541 acc48=0.9358 brier_1_6_24_48=0.0362 brier_all=0.0366
++lead_frac                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0358 brier_all=0.0363
++od_rule_now                   od25   acc1=0.9688 acc6=0.9521 acc24=0.9541 acc48=0.9367 brier_1_6_24_48=0.0368 brier_all=0.0376
+
+DELTA vs production (acc in pp, brier abs):
+                          acc1    acc6   acc24   acc48  brier_1_6_24_48  brier_all
++prog_trans             0.0917  0.0000  0.0937  0.1918           0.0000    -0.0001
++prog_x_now             0.0917  0.0000 -0.1874 -0.1918          -0.0001    -0.0001
++od_24h_ago             0.1835  0.0922  0.1874  0.0959           0.0003    -0.0000
++obs_tw25_trend3        0.0000  0.0922  0.0000  0.0000          -0.0001    -0.0000
++prog_gap               0.0917  0.0000  0.0000  0.0000          -0.0000    -0.0000
++weekend                0.0000  0.0000  0.0000 -0.3835          -0.0000    -0.0000
+PRODUCTION              0.0000  0.0000  0.0000  0.0000           0.0000     0.0000
++prog_rev3              0.0000  0.0000  0.0000 -0.0959           0.0000     0.0000
++lead_frac              0.0000  0.0000  0.0000 -0.0959           0.0000     0.0000
++prog_rev6             -0.0917  0.0000  0.0000 -0.1918           0.0002     0.0001
+sub prog_signed_filled -0.0917  0.0000  0.0000  0.0000           0.0001     0.0001
++west_share24          -0.0917 -0.1843  0.3749 -0.1918          -0.0000     0.0001
++nsw24                 -0.0917  0.0000  0.0937  0.0000          -0.0001     0.0002
++obs_tw25_x_now        -0.1835 -0.1843  0.1874  0.0000           0.0001     0.0002
++rule_now_disagree     -0.0917 -0.0922  0.0000  0.0000           0.0003     0.0002
++prog_signed_trans      0.0000  0.0922  0.0000 -0.1918           0.0001     0.0002
++h_since_sw             0.1835 -0.1843 -0.2812 -0.2876           0.0002     0.0003
++west_frac_now          0.0917  0.0922  0.0000  0.0000           0.0002     0.0003
++dow                    0.0917 -0.1843 -0.1874 -0.1918           0.0005     0.0004
++now_dec3              -0.1835  0.0000  0.0000  0.0000           0.0004     0.0004
++prog_chg_before_valid -0.0917 -0.1843  0.0937  0.0959           0.0000     0.0005
++prog_disagree         -0.0917 -0.0922  0.0000 -0.1918           0.0003     0.0006
++tw25_bias_dec          0.0917 -0.1843  0.0000  0.0000           0.0005     0.0006
++tw25_bias              0.0917  0.0000 -0.0937 -0.1918           0.0003     0.0006
++od_3h_ago             -0.1835  0.1843  0.0000 -0.1918           0.0004     0.0007
++nsw72                  0.1835 -0.1843 -0.3749  0.2876           0.0006     0.0007
++obs_tw25_f             0.0917 -0.1843  0.1874 -0.0959           0.0002     0.0009
++obs_tw25_min3          0.0000 -0.4608  0.0000 -0.1918           0.0006     0.0009
+sub tw25_corr           0.0917 -0.3687  0.0937  0.0000           0.0007     0.0009
++now_dec12             -0.2752 -0.2765  0.0000  0.0000           0.0006     0.0010
++od_rule_now            0.0917 -0.8295 -0.1874 -0.0959           0.0010     0.0014
++obs_tw25_max3         -0.0917  0.1843  0.0937 -0.0959           0.0009     0.0015
++prog_tdir              0.0000 -0.4608  0.1874 -0.2876           0.0016     0.0020

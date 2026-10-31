@@ -1,0 +1,26 @@
+[project]
+name = "fra-od"
+version = "0.1.0"
+description = "Forecast of Frankfurt Airport's operating direction (OD 07/25) and Runway 18 availability, 1-48 h ahead"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "lightgbm>=4.7.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
+    "pandas>=3.1.0",
+    "pyarrow>=26.0.0",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.4"]
+
+[tool.uv]
+# An application, not a library: run the modules with `uv run python -m fra.<module>` from the repo root.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

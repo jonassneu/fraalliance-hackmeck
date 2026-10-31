@@ -1,0 +1,260 @@
+# Console output of the OD model-structure runs (walk-forward from 2026-09-15)
+
+One section per run, in run order (warnings removed). Variant lines show accuracy at +1/+6/+24/+48 h and the
+Brier score (mean over leads 1/6/24/48 and over all leads); `prod` / `production` is the production model.
+The per-batch tables are also in the `results*.csv` files next to this one.
+
+## log1.txt
+prod                           od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0363
+prod_harness                   od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0363
+win60                          od25   acc1=0.9706 acc6=0.9604 acc24=0.9541 acc48=0.9338 brier_1_6_24_48=0.0369 brier_all=0.0372
+win90                          od25   acc1=0.9725 acc6=0.9530 acc24=0.9513 acc48=0.9329 brier_1_6_24_48=0.0362 brier_all=0.0367
+win150                         od25   acc1=0.9670 acc6=0.9576 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0359 brier_all=0.0366
+win180                         od25   acc1=0.9651 acc6=0.9567 acc24=0.9569 acc48=0.9338 brier_1_6_24_48=0.0367 brier_all=0.0379
+win_all                        od25   acc1=0.9661 acc6=0.9502 acc24=0.9400 acc48=0.9319 brier_1_6_24_48=0.0390 brier_all=0.0407
+hl30_nowin                     od25   acc1=0.9725 acc6=0.9548 acc24=0.9494 acc48=0.9329 brier_1_6_24_48=0.0382 brier_all=0.0381
+hl45_nowin                     od25   acc1=0.9706 acc6=0.9585 acc24=0.9503 acc48=0.9329 brier_1_6_24_48=0.0373 brier_all=0.0375
+hl60_nowin                     od25   acc1=0.9697 acc6=0.9585 acc24=0.9503 acc48=0.9348 brier_1_6_24_48=0.0370 brier_all=0.0375
+hl90_nowin                     od25   acc1=0.9670 acc6=0.9558 acc24=0.9503 acc48=0.9358 brier_1_6_24_48=0.0371 brier_all=0.0379
+hl120_nowin                    od25   acc1=0.9651 acc6=0.9558 acc24=0.9531 acc48=0.9329 brier_1_6_24_48=0.0373 brier_all=0.0383
+hl60_win180                    od25   acc1=0.9697 acc6=0.9594 acc24=0.9531 acc48=0.9338 brier_1_6_24_48=0.0368 brier_all=0.0372
+hl90_win180                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9531 acc48=0.9338 brier_1_6_24_48=0.0366 brier_all=0.0372
+hl60_win120                    od25   acc1=0.9706 acc6=0.9594 acc24=0.9513 acc48=0.9338 brier_1_6_24_48=0.0368 brier_all=0.0369
+perday                         od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0364
+perday_win180                  od25   acc1=0.9642 acc6=0.9567 acc24=0.9578 acc48=0.9338 brier_1_6_24_48=0.0368 brier_all=0.0380
+perday_hl60                    od25   acc1=0.9697 acc6=0.9585 acc24=0.9494 acc48=0.9348 brier_1_6_24_48=0.0371 brier_all=0.0377
+C0.01                          od25   acc1=0.9725 acc6=0.9567 acc24=0.9550 acc48=0.9367 brier_1_6_24_48=0.0373 brier_all=0.0373
+C0.02                          od25   acc1=0.9697 acc6=0.9604 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0361 brier_all=0.0364
+C0.05                          od25   acc1=0.9661 acc6=0.9594 acc24=0.9560 acc48=0.9386 brier_1_6_24_48=0.0356 brier_all=0.0363
+C0.1                           od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0355 brier_all=0.0364
+
+## log2.txt
+scaled_C0.03                   od25   acc1=0.9679 acc6=0.9576 acc24=0.9494 acc48=0.9367 brier_1_6_24_48=0.0368 brier_all=0.0378
+scaled_C0.01                   od25   acc1=0.9697 acc6=0.9558 acc24=0.9475 acc48=0.9338 brier_1_6_24_48=0.0373 brier_all=0.0380
+scaled_C0.1                    od25   acc1=0.9670 acc6=0.9567 acc24=0.9541 acc48=0.9377 brier_1_6_24_48=0.0363 brier_all=0.0375
+scaled_C0.3                    od25   acc1=0.9679 acc6=0.9548 acc24=0.9531 acc48=0.9396 brier_1_6_24_48=0.0359 brier_all=0.0372
+scaled_C1                      od25   acc1=0.9670 acc6=0.9558 acc24=0.9541 acc48=0.9396 brier_1_6_24_48=0.0357 brier_all=0.0369
+l1_C0.03                       od25   acc1=0.9670 acc6=0.9567 acc24=0.9560 acc48=0.9348 brier_1_6_24_48=0.0371 brier_all=0.0383
+l1_C0.1                        od25   acc1=0.9697 acc6=0.9558 acc24=0.9550 acc48=0.9358 brier_1_6_24_48=0.0363 brier_all=0.0376
+l1_C0.3                        od25   acc1=0.9679 acc6=0.9558 acc24=0.9531 acc48=0.9396 brier_1_6_24_48=0.0358 brier_all=0.0371
+B2                             od25   acc1=0.9697 acc6=0.9438 acc24=0.9522 acc48=0.9358 brier_1_6_24_48=0.0379 brier_all=0.0361
+B3                             od25   acc1=0.9697 acc6=0.9429 acc24=0.9569 acc48=0.9358 brier_1_6_24_48=0.0376 brier_all=0.0364
+B3b                            od25   acc1=0.9679 acc6=0.9622 acc24=0.9531 acc48=0.9358 brier_1_6_24_48=0.0360 brier_all=0.0361
+B5                             od25   acc1=0.9679 acc6=0.9594 acc24=0.9541 acc48=0.9367 brier_1_6_24_48=0.0361 brier_all=0.0365
+B6                             od25   acc1=0.9688 acc6=0.9567 acc24=0.9531 acc48=0.9377 brier_1_6_24_48=0.0370 brier_all=0.0364
+B12                            od25   acc1=0.9706 acc6=0.9567 acc24=0.9550 acc48=0.9367 brier_1_6_24_48=0.0376 brier_all=0.0372
+B4alt                          od25   acc1=0.9688 acc6=0.9576 acc24=0.9569 acc48=0.9358 brier_1_6_24_48=0.0361 brier_all=0.0363
+shared_only                    od25   acc1=0.9670 acc6=0.9585 acc24=0.9494 acc48=0.9319 brier_1_6_24_48=0.0370 brier_all=0.0361
+shared_only_L1                 od25   acc1=0.9697 acc6=0.9567 acc24=0.9494 acc48=0.9358 brier_1_6_24_48=0.0369 brier_all=0.0364
+shared_only_L2                 od25   acc1=0.9697 acc6=0.9576 acc24=0.9513 acc48=0.9358 brier_1_6_24_48=0.0370 brier_all=0.0364
+shared_B4                      od25   acc1=0.9688 acc6=0.9585 acc24=0.9531 acc48=0.9358 brier_1_6_24_48=0.0355 brier_all=0.0359
+shared_B4_C0.01                od25   acc1=0.9706 acc6=0.9594 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0358 brier_all=0.0357
+shared_B4_C0.1                 od25   acc1=0.9670 acc6=0.9576 acc24=0.9541 acc48=0.9386 brier_1_6_24_48=0.0356 brier_all=0.0364
+shared_B6                      od25   acc1=0.9679 acc6=0.9521 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0366 brier_all=0.0357
+shared_B12                     od25   acc1=0.9670 acc6=0.9567 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0361 brier_all=0.0356
+shared_B12_C0.01               od25   acc1=0.9706 acc6=0.9576 acc24=0.9541 acc48=0.9310 brier_1_6_24_48=0.0363 brier_all=0.0358
+shared_B4_L1                   od25   acc1=0.9679 acc6=0.9585 acc24=0.9560 acc48=0.9386 brier_1_6_24_48=0.0356 brier_all=0.0360
+
+## log3.txt
+spline_3_12_30                 od25   acc1=0.9688 acc6=0.9548 acc24=0.9503 acc48=0.9358 brier_1_6_24_48=0.0370 brier_all=0.0365
+spline_3_12_30_log             od25   acc1=0.9706 acc6=0.9558 acc24=0.9503 acc48=0.9338 brier_1_6_24_48=0.0365 brier_all=0.0360
+spline_6_24                    od25   acc1=0.9697 acc6=0.9558 acc24=0.9522 acc48=0.9358 brier_1_6_24_48=0.0368 brier_all=0.0365
+spline_2_6_12_24_36            od25   acc1=0.9697 acc6=0.9539 acc24=0.9522 acc48=0.9348 brier_1_6_24_48=0.0370 brier_all=0.0366
+spline_3_12_30_C0.1            od25   acc1=0.9716 acc6=0.9493 acc24=0.9513 acc48=0.9319 brier_1_6_24_48=0.0376 brier_all=0.0370
+spline_3_12_30_C0.01           od25   acc1=0.9725 acc6=0.9585 acc24=0.9522 acc48=0.9348 brier_1_6_24_48=0.0369 brier_all=0.0363
+sym                            od25   acc1=0.9651 acc6=0.9631 acc24=0.9410 acc48=0.9223 brier_1_6_24_48=0.0394 brier_all=0.0408
+sym_noasym                     od25   acc1=0.9642 acc6=0.9465 acc24=0.9316 acc48=0.9118 brier_1_6_24_48=0.0447 brier_all=0.0457
+sym_C0.1                       od25   acc1=0.9651 acc6=0.9641 acc24=0.9428 acc48=0.9271 brier_1_6_24_48=0.0385 brier_all=0.0401
+sym_C0.01                      od25   acc1=0.9642 acc6=0.9558 acc24=0.9372 acc48=0.9223 brier_1_6_24_48=0.0415 brier_all=0.0425
+sym_B6                         od25   acc1=0.9661 acc6=0.9456 acc24=0.9391 acc48=0.9204 brier_1_6_24_48=0.0421 brier_all=0.0413
+hinge_tw25                     od25   acc1=0.9679 acc6=0.9622 acc24=0.9578 acc48=0.9358 brier_1_6_24_48=0.0356 brier_all=0.0362
+hinge_tw25_roll6               od25   acc1=0.9679 acc6=0.9604 acc24=0.9588 acc48=0.9367 brier_1_6_24_48=0.0358 brier_all=0.0364
+hinge_tw25_k-8_-3_3_8          od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9386 brier_1_6_24_48=0.0356 brier_all=0.0364
+hinge_all_tw                   od25   acc1=0.9679 acc6=0.9594 acc24=0.9578 acc48=0.9348 brier_1_6_24_48=0.0359 brier_all=0.0366
+
+## log4.txt
+platt_b_21                     od25   acc1=0.9679 acc6=0.9447 acc24=0.9466 acc48=0.9128 brier_1_6_24_48=0.0439 brier_all=0.0449
+platt_b_35                     od25   acc1=0.9679 acc6=0.9594 acc24=0.9522 acc48=0.9271 brier_1_6_24_48=0.0392 brier_all=0.0402
+platt_all_21                   od25   acc1=0.9688 acc6=0.9484 acc24=0.9419 acc48=0.9291 brier_1_6_24_48=0.0426 brier_all=0.0435
+temp_b_21                      od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0355
+temp_b_35                      od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0355 brier_all=0.0361
+temp_all_35                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0354 brier_all=0.0359
+blend_prog0.1                  od25   acc1=0.9688 acc6=0.9594 acc24=0.9541 acc48=0.9358 brier_1_6_24_48=0.0362 brier_all=0.0366
+blend_prog0.2                  od25   acc1=0.9697 acc6=0.9585 acc24=0.9522 acc48=0.9367 brier_1_6_24_48=0.0369 brier_all=0.0373
+blend_prog0.05                 od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0359 brier_all=0.0364
+clip0.01                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0363
+clip0.02                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0359 brier_all=0.0364
+lgbm_blend0.5                  od25   acc1=0.9679 acc6=0.9604 acc24=0.9494 acc48=0.9281 brier_1_6_24_48=0.0367 brier_all=0.0369
+lgbm_blend0.3                  od25   acc1=0.9679 acc6=0.9594 acc24=0.9541 acc48=0.9338 brier_1_6_24_48=0.0362 brier_all=0.0365
+lgbm_blend0.5_nomono           od25   acc1=0.9679 acc6=0.9613 acc24=0.9503 acc48=0.9300 brier_1_6_24_48=0.0366 brier_all=0.0369
+lgbm_blend0.3_l7               od25   acc1=0.9679 acc6=0.9604 acc24=0.9550 acc48=0.9338 brier_1_6_24_48=0.0359 brier_all=0.0362
+lgbm_blend0.5_all              od25   acc1=0.9679 acc6=0.9576 acc24=0.9419 acc48=0.9310 brier_1_6_24_48=0.0375 brier_all=0.0377
+
+## log5.txt
+intercept_true                 od25   acc1=0.9688 acc6=0.9613 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0357 brier_all=0.0362
+bf_2_1_1_1                     od25   acc1=0.9661 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0359 brier_all=0.0368
+bf_0.5_1_1_1                   od25   acc1=0.9743 acc6=0.9604 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0365 brier_all=0.0365
+bf_1_1_2_2                     od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0355 brier_all=0.0361
+bf_1_1_0.5_0.5                 od25   acc1=0.9679 acc6=0.9604 acc24=0.9513 acc48=0.9348 brier_1_6_24_48=0.0367 brier_all=0.0370
+bf_2_1.5_1_0.7                 od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0359 brier_all=0.0367
+bf_0.7_1_1.5_2                 od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0361
+bf_1_2_1_1                     od25   acc1=0.9697 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0356 brier_all=0.0361
+bf_1_0.5_1_1                   od25   acc1=0.9679 acc6=0.9567 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0365 brier_all=0.0369
+ff_prog2                       od25   acc1=0.9697 acc6=0.9585 acc24=0.9550 acc48=0.9377 brier_1_6_24_48=0.0356 brier_all=0.0361
+ff_prog0.5                     od25   acc1=0.9670 acc6=0.9613 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0363 brier_all=0.0367
+ff_now2                        od25   acc1=0.9670 acc6=0.9585 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0360 brier_all=0.0370
+ff_now0.5                      od25   acc1=0.9725 acc6=0.9594 acc24=0.9531 acc48=0.9386 brier_1_6_24_48=0.0364 brier_all=0.0364
+ff_rule2                       od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0358 brier_all=0.0363
+ff_rule0.5                     od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0357 brier_all=0.0362
+
+## log6.txt
+ff_tw0.5                       od25   acc1=0.9688 acc6=0.9576 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0364 brier_all=0.0368
+ff_tw2                         od25   acc1=0.9688 acc6=0.9594 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0354 brier_all=0.0359
+ff_time2                       od25   acc1=0.9688 acc6=0.9604 acc24=0.9569 acc48=0.9386 brier_1_6_24_48=0.0358 brier_all=0.0362
+ff_time0.5                     od25   acc1=0.9688 acc6=0.9604 acc24=0.9541 acc48=0.9348 brier_1_6_24_48=0.0361 brier_all=0.0367
+bag_win90_120_180              od25   acc1=0.9679 acc6=0.9567 acc24=0.9560 acc48=0.9358 brier_1_6_24_48=0.0360 brier_all=0.0367
+bag_win120_all                 od25   acc1=0.9670 acc6=0.9567 acc24=0.9550 acc48=0.9367 brier_1_6_24_48=0.0368 brier_all=0.0379
+bag_win120_hl60                od25   acc1=0.9688 acc6=0.9585 acc24=0.9531 acc48=0.9348 brier_1_6_24_48=0.0363 brier_all=0.0368
+bag_prod_sym                   od25   acc1=0.9651 acc6=0.9622 acc24=0.9456 acc48=0.9319 brier_1_6_24_48=0.0366 brier_all=0.0375
+bag_prod_spline                od25   acc1=0.9697 acc6=0.9576 acc24=0.9522 acc48=0.9358 brier_1_6_24_48=0.0360 brier_all=0.0360
+bag_prod_shared                od25   acc1=0.9697 acc6=0.9567 acc24=0.9531 acc48=0.9377 brier_1_6_24_48=0.0362 brier_all=0.0361
+bag_prod_sym_spline            od25   acc1=0.9670 acc6=0.9622 acc24=0.9494 acc48=0.9348 brier_1_6_24_48=0.0361 brier_all=0.0365
+bag_prod_sym_spline_logit      od25   acc1=0.9670 acc6=0.9622 acc24=0.9494 acc48=0.9348 brier_1_6_24_48=0.0359 brier_all=0.0363
+bag_C0.01_0.03_0.1             od25   acc1=0.9688 acc6=0.9604 acc24=0.9569 acc48=0.9358 brier_1_6_24_48=0.0359 brier_all=0.0363
+
+## log7.txt
+temp_b4_14                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+   temps 2026-09-15 [1.0, 0.85, 0.82, 0.78]
+   temps 2026-09-22 [1.3, 1.1, 1.27, 1.15]
+   temps 2026-09-29 [1.2, 1.45, 1.71, 1.65]
+   temps 2026-10-06 [1.18, 1.47, 1.55, 1.49]
+   temps 2026-10-13 [1.2, 1.56, 1.66, 1.57]
+   temps 2026-10-20 [1.36, 1.52, 1.5, 1.53]
+   temps 2026-10-27 [1.73, 2.21, 2.13, 1.93]
+temp_b4_21                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0355
+temp_b4_28                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0353 brier_all=0.0360
+temp_b4_42                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0355 brier_all=0.0361
+temp_b4_60                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0351 brier_all=0.0356
+temp_b4_90                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0350
+temp_g1_21                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0349 brier_all=0.0354
+temp_g2_21                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0355
+temp_g12_21                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0356
+
+## log8.txt
+temp_b4_21_shrink0.5           od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0356
+temp_b4_21_C0.1                od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0352 brier_all=0.0362
+temp_b4_21_C0.01               od25   acc1=0.9725 acc6=0.9567 acc24=0.9550 acc48=0.9367 brier_1_6_24_48=0.0353 brier_all=0.0352
+temp_b4_21_win180              od25   acc1=0.9651 acc6=0.9567 acc24=0.9569 acc48=0.9338 brier_1_6_24_48=0.0358 brier_all=0.0372
+temp_b4_28_C0.1                od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0356 brier_all=0.0367
+   oos temps 2026-09-22 1785 [1.0, 1.0, 1.0, 1.0]
+   oos temps 2026-09-29 3801 [1.25, 1.65, 2.0, 1.82]
+   oos temps 2026-10-06 5817 [1.2, 1.44, 1.49, 1.47]
+   oos temps 2026-10-13 7833 [1.25, 1.54, 1.62, 1.58]
+   oos temps 2026-10-20 9849 [1.31, 1.58, 1.66, 1.58]
+   oos temps 2026-10-27 11865 [1.32, 1.59, 1.64, 1.61]
+temp_oos_b4                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0351 brier_all=0.0358
+temp_oos_g1                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0351 brier_all=0.0357
+temp_oos_b4_C0.1               od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0353 brier_all=0.0363
+temp_oos_b4_min300             od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0351 brier_all=0.0358
+
+## log9.txt
+t7                             od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0354 brier_all=0.0360
+t10                            od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0353 brier_all=0.0358
+t14                            od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+t14_amax1.5                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0344 brier_all=0.0348
+t14_amax2                      od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+t14_amin0.8_amax2              od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+t14_smooth                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0347 brier_all=0.0351
+t21_smooth                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0350 brier_all=0.0355
+t28_hl7                        od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0347 brier_all=0.0353
+t28_hl10                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0355
+t42_hl10                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0354
+
+## log10.txt
+t14_g1                         od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+t14_g2                         od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0347 brier_all=0.0351
+t14_bf1122                     od25   acc1=0.9688 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0352
+t14_fftw2                      od25   acc1=0.9688 acc6=0.9594 acc24=0.9560 acc48=0.9367 brier_1_6_24_48=0.0343 brier_all=0.0348
+t14_hinge                      od25   acc1=0.9679 acc6=0.9622 acc24=0.9578 acc48=0.9358 brier_1_6_24_48=0.0343 brier_all=0.0351
+t14_intercept                  od25   acc1=0.9688 acc6=0.9613 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0344 brier_all=0.0350
+t14_sharedB4                   od25   acc1=0.9688 acc6=0.9585 acc24=0.9531 acc48=0.9358 brier_1_6_24_48=0.0350 brier_all=0.0353
+t14_C0.1                       od25   acc1=0.9661 acc6=0.9567 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0357
+t14_C0.01                      od25   acc1=0.9725 acc6=0.9567 acc24=0.9550 acc48=0.9367 brier_1_6_24_48=0.0349 brier_all=0.0348
+t14_win180                     od25   acc1=0.9651 acc6=0.9567 acc24=0.9569 acc48=0.9338 brier_1_6_24_48=0.0356 brier_all=0.0370
+t14_win90                      od25   acc1=0.9725 acc6=0.9530 acc24=0.9513 acc48=0.9329 brier_1_6_24_48=0.0357 brier_all=0.0362
+
+## log12.txt
+fixed1.2                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0347 brier_all=0.0352
+fixed1.3                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0349
+fixed1.5                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0343 brier_all=0.0348
+fixed1.7                       od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0350
+t14_amax1.3                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0350
+t14_amax1.4                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0344 brier_all=0.0348
+t14_amin0.8_amax1.5            od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0344 brier_all=0.0348
+t21_amax1.5                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0353
+
+## log13.txt
+t28_amax1.5                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0353 brier_all=0.0360
+t60_amax1.5                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0351 brier_all=0.0356
+t90_amax1.5                    od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0350
+t14_g1_amax1.5                 od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0345 brier_all=0.0350
+t21_g1_amax1.5                 od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0347 brier_all=0.0352
+tmulti_14_28_60                od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0353
+tmulti_14_28_60_amax1.5        od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0353
+tmulti_10_14_21                od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0348 brier_all=0.0354
+
+## log_proposal.txt
+production                     od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0358 brier_all=0.0363
+proposal (temp14)              od25   acc1=0.9679 acc6=0.9604 acc24=0.9560 acc48=0.9377 brier_1_6_24_48=0.0346 brier_all=0.0351
+final model temperatures per bucket: {1: 1.5056306674347035, 4: 1.0907276319225885, 13: 1.105674617549168, 31: 1.153512538931335}
+
+## log_perlead.txt
+ lead    n  brier_prod  brier_prop  acc_prod  acc_prop  mean_p_prod  mean_p_prop    obs  sharp_prod  sharp_prop
+    1 1090      0.0233      0.0230    0.9679    0.9679       0.6669       0.6646 0.6651      0.4533      0.4704
+    2 1089      0.0276      0.0277    0.9596    0.9596       0.6669       0.6649 0.6648      0.4492      0.4661
+    3 1088      0.0321      0.0323    0.9531    0.9531       0.6671       0.6653 0.6645      0.4449      0.4615
+    6 1085      0.0327      0.0309    0.9604    0.9604       0.6660       0.6637 0.6636      0.4316      0.4582
+    9 1082      0.0362      0.0343    0.9519    0.9519       0.6681       0.6654 0.6627      0.4288      0.4560
+   12 1079      0.0360      0.0342    0.9518    0.9518       0.6688       0.6655 0.6617      0.4264      0.4532
+   18 1073      0.0350      0.0327    0.9571    0.9571       0.6682       0.6646 0.6598      0.4251      0.4565
+   24 1067      0.0386      0.0364    0.9560    0.9560       0.6713       0.6674 0.6579      0.4221      0.4534
+   30 1061      0.0376      0.0370    0.9510    0.9510       0.6711       0.6693 0.6560      0.4227      0.4545
+   36 1055      0.0429      0.0413    0.9460    0.9460       0.6699       0.6667 0.6540      0.4113      0.4477
+   42 1049      0.0452      0.0437    0.9390    0.9390       0.6639       0.6614 0.6520      0.4091      0.4436
+   48 1043      0.0491      0.0489    0.9377    0.9377       0.6537       0.6477 0.6500      0.4139      0.4480
+ week    n  brier_prod  brier_prop
+    0 2016      0.0098      0.0095
+    1 2016      0.0782      0.0741
+    2 2016      0.0658      0.0643
+    3 2016      0.0178      0.0161
+    4 2016      0.0267      0.0248
+    5 2016      0.0049      0.0044
+    6  765      0.0742      0.0813
+prod reliability: [(np.float64(0.04), np.float64(0.01), 2741), (np.float64(0.14), np.float64(0.03), 789), (np.float64(0.25), np.float64(0.12), 331), (np.float64(0.35), np.float64(0.29), 262), (np.float64(0.45), np.float64(0.47), 203), (np.float64(0.55), np.float64(0.56), 208), (np.float64(0.66), np.float64(0.71), 273), (np.float64(0.75), np.float64(0.79), 357), (np.float64(0.86), np.float64(0.89), 543), (np.float64(0.99), np.float64(1.0), 7154)]
+prop reliability: [(np.float64(0.02), np.float64(0.02), 3497), (np.float64(0.15), np.float64(0.11), 322), (np.float64(0.25), np.float64(0.21), 212), (np.float64(0.35), np.float64(0.38), 159), (np.float64(0.45), np.float64(0.53), 136), (np.float64(0.55), np.float64(0.55), 139), (np.float64(0.65), np.float64(0.6), 152), (np.float64(0.75), np.float64(0.74), 223), (np.float64(0.86), np.float64(0.82), 388), (np.float64(0.99), np.float64(0.99), 7633)]
+
+## log_perweek.txt
+ week    n   prod  temp_clip1.5  fixed1.5
+    0 2016 0.0098        0.0095    0.0091
+    1 2016 0.0782        0.0741    0.0746
+    2 2016 0.0658        0.0633    0.0634
+    3 2016 0.0178        0.0161    0.0160
+    4 2016 0.0267        0.0248    0.0247
+    5 2016 0.0049        0.0043    0.0043
+    6  765 0.0742        0.0789    0.0789
+ lead   prod  temp_clip1.5  fixed1.5
+    1 0.0233        0.0229    0.0232
+    2 0.0276        0.0276    0.0282
+    3 0.0321        0.0322    0.0330
+    6 0.0327        0.0306    0.0306
+    9 0.0362        0.0342    0.0343
+   12 0.0360        0.0339    0.0338
+   18 0.0350        0.0325    0.0325
+   24 0.0386        0.0361    0.0358
+   30 0.0376        0.0360    0.0356
+   36 0.0429        0.0406    0.0403
+   42 0.0452        0.0436    0.0433
+   48 0.0491        0.0487    0.0484
+brier_1_6_24_48: prod 0.0358 temp_clip1.5 0.0344 fixed1.5 0.0343
+brier_all:       prod 0.0363 temp_clip1.5 0.0348 fixed1.5 0.0348
+final production temps: {1: 1.5, 4: 1.0907276319185821, 13: 1.1056746175487229, 31: 1.153512538925636}

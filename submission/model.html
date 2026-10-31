@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model · FRA Runway Operations</title><link rel="icon" href="data:,">
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--ink2:#6e6e73;--ink3:#86868b;--line:rgba(0,0,0,.08);--fill:#f0f0f3;
+  --accent:#0071e3;--west:#2a78d6;--east:#eda100;--red:#e0352b;--green:#2aa44f;--ok:#cbe9d3;--good:#248a3d;
+  --b1:#a1a1a6;--b2:#d2d2d7;--glass:rgba(255,255,255,.8);--lift:0 10px 30px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.08)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);overflow:hidden}
+body{color:var(--ink);font:400 13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,system-ui,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;width:1280px}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* top bar: sits on the page, no banner; the current page is a soft pill */
+.topbar{display:flex;align-items:center;gap:28px;height:54px;padding:0 28px;flex:none}
+.brand{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.brand span{margin-left:8px;font-weight:400;color:var(--ink3)}
+.nav{display:flex;gap:2px}
+.nav a{font-size:13px;font-weight:500;color:var(--ink2);padding:5px 12px;border-radius:999px;transition:color .15s,background-color .15s}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current]{color:var(--ink);background:rgba(0,0,0,.06)}
+.topbar-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+
+/* controls: feedback on press, not on release */
+.btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;background:var(--card);
+  font-size:12.5px;font-weight:500;white-space:nowrap;box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+  transition:transform .12s ease-out,background-color .15s}
+.btn svg{width:13px;height:13px}
+.btn:hover{background:#fafafa}
+.btn:active,.seg button:active,.icon:active{transform:scale(.96)}
+.seg{position:relative;display:inline-flex;padding:2px;border-radius:9px;background:rgba(118,118,128,.12);flex:none}
+.seg button{position:relative;z-index:1;height:24px;padding:0 12px;border-radius:7px;font-size:12.5px;font-weight:500;
+  color:var(--ink2);white-space:nowrap;transition:color .2s,transform .12s ease-out}
+.seg button[aria-pressed=true]{color:var(--ink)}
+.seg>i{position:absolute;top:2px;left:0;height:24px;border-radius:7px;background:var(--card);pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.seg.on>i{transition:transform .36s cubic-bezier(.2,.9,.25,1),width .36s cubic-bezier(.2,.9,.25,1)}
+.icon{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(118,118,128,.12);flex:none;
+  transition:transform .12s ease-out,background-color .15s}
+.icon svg{width:12px;height:12px}
+.icon:hover{background:rgba(118,118,128,.2)}
+
+.card{background:var(--card);border-radius:18px}
+.tip{position:fixed;z-index:30;pointer-events:none;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  backdrop-filter:blur(20px) saturate(180%);color:var(--ink);font-size:12px;line-height:1.5;padding:7px 11px;border-radius:10px;
+  box-shadow:var(--lift)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+@media (prefers-reduced-transparency:reduce){.tip,.toast,.fs{background:var(--card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media (prefers-contrast:more){:root{--line:rgba(0,0,0,.3);--ink2:#3a3a3c;--ink3:#555}.card{box-shadow:0 0 0 1px rgba(0,0,0,.3)}}
+
+main{padding:4px 24px 12px;display:grid;grid-template-columns:1.55fr 1fr;gap:12px}
+/* hero on the page itself: a two-tone headline (the claim in ink, the comparison in grey) and three numbers */
+.hero{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;padding:14px 4px 18px}
+.hero h1{margin:0;font-size:40px;line-height:1.08;font-weight:700;letter-spacing:-.035em;color:var(--ink3);max-width:640px}
+.hero h1 em{font-style:normal;color:var(--ink)}
+.hero p{margin:10px 0 0;font-size:15px;color:var(--ink2)}
+.kpis{display:grid;grid-template-columns:repeat(3,180px)}
+.kpi{padding:2px 22px;border-left:1px solid var(--line)}
+.kpi b{display:block;font-size:38px;font-weight:700;letter-spacing:-.04em;line-height:1}
+.kpi b small{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.kpi span{display:block;margin-top:8px;font-size:13px;font-weight:600;line-height:1.3}
+.kpi i{display:block;font-style:normal;margin-top:3px;font-size:12px;color:var(--ink2);line-height:1.35}
+.card{display:flex;flex-direction:column;padding:18px 24px 20px}
+h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.lede{margin:3px 0 12px;color:var(--ink2);font-size:13px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--ink2);margin:0 0 8px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-size:12px;fill:var(--ink2)}
+.chart .lead{font-weight:600;fill:var(--ink);font-size:13px}
+.chart .sub{font-size:11px;fill:var(--ink3)}
+.chart .val{font-weight:500;fill:var(--ink2);font-size:11.5px}
+.chart .val.m{font-weight:700;fill:var(--ink);font-size:12.5px}
+.chart .gain{font-weight:700;fill:var(--good);font-size:15px;letter-spacing:-.01em}
+.chart .hit{transition:fill .15s}
+.chart .row:hover .hit{fill:var(--bg)}
+.trio{display:grid;gap:14px;flex:1;align-content:space-evenly}
+.trio h3{margin:0;font-size:13px;font-weight:600}
+.trio h3 small{font-weight:400;color:var(--ink3);font-size:12px;margin-left:6px}
+.bars{margin-top:6px;display:grid;gap:5px}
+.bar{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.bar .t{position:relative;height:18px}
+.bar .f{position:absolute;inset:0 auto 0 0;border-radius:5px}
+.bar .v{position:absolute;top:50%;transform:translateY(-50%);font-weight:600;color:var(--ink);font-size:12px;white-space:nowrap}
+.bar.m{color:var(--ink);font-weight:600}
+.flow{margin-top:12px;display:grid;grid-template-columns:1fr 22px 1.1fr 22px 1fr;align-items:stretch}
+.step{background:var(--bg);border-radius:12px;padding:12px 14px}
+.step.m{background:var(--ink);color:#fff}
+.step h3{margin:0 0 6px;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.step ul{margin:0;padding:0;list-style:none;display:grid;gap:3px;font-size:12px;line-height:1.35}
+.step li small{color:var(--ink3);font-size:11px}
+.step.m li small{color:#a1a1a6}
+.arrow{display:grid;place-items:center;color:var(--ink3)}
+.arrow svg{width:16px;height:16px}
+.weeks{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:4px}
+.wk{border-radius:8px;padding:6px 2px;text-align:center;background:var(--bg);font-size:11px;color:var(--ink2);line-height:1.25}
+.wk b{display:block;font-size:12px;font-weight:600;color:var(--ink)}
+.rules{display:grid;margin-top:10px}
+.rules div{font-size:12px;color:var(--ink2);line-height:1.4;padding:7px 0;border-top:1px solid var(--line)}
+.rules div:first-child{border-top:0}
+.rules b{color:var(--ink);font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{padding:0 28px 12px;font-size:11px;color:var(--ink3)}
+</style></head><body>
+<header class="topbar"><a class="brand" href="dashboard.html">Runway Operations<span>Frankfurt Airport</span></a><nav class="nav" aria-label="Pages"><a href="dashboard.html">Forecast</a><a href="#" aria-current="page">Model</a></nav><div class="topbar-r"></div></header>
+<main>
+  <section class="hero">
+    <div><h1><em>42% fewer wrong hours</em> than the official prognosis.</h1><p>Frankfurt's operating direction, hour by hour, up to 48 h ahead. Tested on 7 unseen weeks.</p></div>
+    <div class="kpis"><div class="kpi"><b>95.4<small>%</small></b><span>right 24 h ahead</span><i>prognosis 92.0%, official rules 90.4%</i></div><div class="kpi"><b>5.7<small> h</small></b><span>fewer wrong hours every week</span><i>8 instead of 13 of 168 hours, 24 h ahead</i></div><div class="kpi"><b>73<small>%</small></b><span>of direction switches caught within ±3 h</span><i>prognosis 63%, official rules 61%</i></div></div>
+  </section>
+  <section class="card">
+    <h2>Wrong less often, at every horizon</h2>
+    <p class="lede">Hours with the wrong operating direction</p>
+    <div class="legend" id="legend"></div>
+    <div class="chart" id="chart"></div>
+    <table class="sr" id="table"></table>
+  </section>
+  <section class="card">
+    <h2>Catches the switches that matter</h2>
+    <p class="lede">A switch moves the noise to the other side of the region. 875 forecasts, 457 real switches.</p>
+    <div class="trio" id="trio"></div>
+  </section>
+  <section class="card">
+    <h2>How it works</h2>
+    <div class="flow">
+      <div class="step"><h3>Five public sources</h3><ul><li>Weather forecasts as issued <small>ECMWF IFS + DWD ICON-D2</small></li><li>Published direction prognosis <small>Umwelthaus INAA</small></li><li>Observed wind and gusts <small>METAR EDDF</small></li><li>Official switching rules <small>tailwind / crosswind limits</small></li><li>What was actually flown <small>11,564 hours</small></li></ul></div>
+      <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div>
+      <div class="step m"><h3>Calibrated logistic regression</h3><ul>
+        <li>Wind, gusts and the prognosis → direction flown</li>
+        <li>Refit on the latest 120 days <small>follows the seasons</small></li>
+        <li>Calibrated on the last 14 days <small>“80%” = right 8 in 10</small></li></ul></div>
+      <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div>
+      <div class="step"><h3>48 h, hour by hour</h3><ul>
+        <li>Probability of 07 vs 25</li>
+        <li>Next switch <small>with a time window</small></li>
+        <li>Runway 18 usable or not <small>tailwind limit</small></li></ul></div>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Tested like it would be used</h2>
+    <p class="lede">Each week forecast by a model trained only on what was known before it, then scored against what was flown.</p>
+    <div class="weeks" style="--n:7"><div class="wk"><b>Wk 1</b>15 Sep</div><div class="wk"><b>Wk 2</b>22 Sep</div><div class="wk"><b>Wk 3</b>29 Sep</div><div class="wk"><b>Wk 4</b>6 Oct</div><div class="wk"><b>Wk 5</b>13 Oct</div><div class="wk"><b>Wk 6</b>20 Oct</div><div class="wk"><b>Wk 7</b>27 Oct</div></div>
+    <div class="rules">
+      <div><b>No look-ahead.</b> Weather forecasts exactly as issued, never observed weather in hindsight.</div>
+      <div><b>Fair comparison.</b> The prognosis as it was online at the time, scored on the same hours.</div>
+      <div><b>Ground truth from radar.</b> 11,564 hours flown (Jun 2025 – Oct 2026), INAA / FANOMOS tracks.</div>
+    </div>
+  </section>
+</main>
+<footer>Wrong hours = hours where the more likely direction was not the one flown. Switches: a change counts as caught when announced within ±3 h of the real one. Runway 18 open/closed is right 99.9% of hours (closures are rare). All sources are public. Details: MODEL_CARD.md.</footer>
+<div class="tip" id="tip" hidden></div>
+<script type="application/json" id="data">{"od": [{"lead": 1, "acc": 0.9688, "rule": 0.9294, "prog": 0.9514, "pers": 0.9633, "n": 1090, "changed": 40}, {"lead": 6, "acc": 0.9613, "rule": 0.8968, "prog": 0.9373, "pers": 0.8885, "n": 1085, "changed": 121}, {"lead": 24, "acc": 0.9541, "rule": 0.9044, "prog": 0.9203, "pers": 0.7254, "n": 1067, "changed": 293}, {"lead": 48, "acc": 0.931, "rule": 0.8897, "prog": 0.8984, "pers": 0.6702, "n": 1043, "changed": 344}], "series": [["acc", "Our model", "var(--ink)"], ["prog", "Published INAA prognosis", "var(--b1)"], ["rule", "Official rules on the weather forecast", "var(--b2)"]], "switch": {"model": {"hit": 0.7265, "mae": 1.0783, "fa": 47, "acc": 0.8034}, "rule": {"hit": 0.6061, "mae": 1.2274, "fa": 170, "acc": 0.6}, "prog": {"hit": 0.6346, "mae": 1.7759, "fa": 72, "acc": 0.7269}, "n": 875, "changes": 457}}</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const pct = v => v == null ? '–' : (v * 100).toFixed(1) + '%';
+const err = v => v == null ? null : 1 - v;
+const tip = document.getElementById('tip');
+function hover(el, html) {
+  el.addEventListener('mousemove', e => {
+    tip.innerHTML = html; tip.hidden = false;
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px';
+    tip.style.top = (e.clientY + 14) + 'px';
+  });
+  el.addEventListener('mouseleave', () => { tip.hidden = true; });
+}
+document.getElementById('legend').innerHTML = D.series.map(([, lab, c]) => `<span><i style="background:${c}"></i>${lab}</span>`).join('');
+// error rate by lead time: grouped horizontal bars from zero, relative gain vs the prognosis on the right
+const rows = D.od, W = 700, L = 92, R = 640, BH = 11, GAP = 2, RG = 16;
+const RH = D.series.length * (BH + GAP) - GAP + RG;
+const xmax = Math.ceil(Math.max(...rows.flatMap(r => D.series.map(([k]) => err(r[k]) || 0))) * 50) / 50;
+const x = v => L + v / xmax * (R - L - 50);
+const H = rows.length * RH + 24;
+let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of hours with the wrong operating direction, by hours ahead: our model vs the published prognosis and the official rules">`;
+s += `<text class="sub" x="${W}" y="${H - 4}" text-anchor="end">vs prognosis</text>`;
+rows.forEach((r, i) => {
+  const y0 = i * RH + RG / 2, mid = y0 + (RH - RG) / 2;
+  s += `<g class="row" data-i="${i}"><rect class="hit" x="0" y="${y0 - RG / 2 + 2}" width="${W}" height="${RH - 4}" rx="8" fill="transparent"/>`
+     + `<text class="lead" x="0" y="${mid}">${r.lead} h ahead</text><text class="sub" x="0" y="${mid + 16}">${r.n.toLocaleString('en')} hours</text>`;
+  D.series.forEach(([k, , c], j) => {
+    const v = err(r[k]); if (v == null) return;
+    const y = y0 + j * (BH + GAP);
+    s += `<rect x="${L}" y="${y}" width="${Math.max(2, x(v) - L)}" height="${BH}" rx="3" fill="${c}"/>`
+       + `<text class="val${j ? '' : ' m'}" x="${x(v) + 6}" y="${y + BH - 2}">${pct(v)}</text>`;
+  });
+  if (r.prog != null) s += `<text class="gain" x="${W}" y="${mid + 5}" text-anchor="end">−${Math.round((1 - err(r.acc) / err(r.prog)) * 100)}%</text>`;
+  s += '</g>';
+});
+const chart = document.getElementById('chart');
+chart.innerHTML = s + '</svg>';
+chart.querySelectorAll('.row').forEach(g => {
+  const r = rows[+g.dataset.i];
+  hover(g, `<b>${r.lead} h ahead</b> · ${r.n.toLocaleString('en')} hours, ${r.changed} with a change<br>`
+    + D.series.map(([k, lab]) => `${lab}: wrong <b>${pct(err(r[k]))}</b> of hours`).join('<br>'));
+});
+document.getElementById('table').innerHTML = '<tr><th>Ahead</th>' + D.series.map(([, lab]) => `<th>${lab}: right</th>`).join('')
+  + '<th>Naive “no change”</th><th>Hours</th></tr>' + rows.map(r => `<tr><td>${r.lead} h</td>`
+  + D.series.map(([k], j) => `<td${j ? '' : ' class="m"'}>${pct(r[k])}</td>`).join('') + `<td>${pct(r.pers)}</td><td>${r.n.toLocaleString('en')}</td></tr>`).join('');
+// direction changes: three small comparisons
+const sw = D.switch;
+if (sw) {
+  const M = [['hit', 'Changes caught', 'within ±3 h', v => Math.round(v * 100) + '%', 1],
+             ['mae', 'Timing error', 'average hours off', v => v.toFixed(1) + ' h', 0],
+             ['fa', 'False alarms', 'switches that never came', v => v, 0]];
+  document.getElementById('trio').innerHTML = M.map(([k, t, sub, f]) => {
+    const mx = Math.max(...D.series.map(([s]) => sw[s === 'acc' ? 'model' : s][k]));
+    return `<div><h3>${t}<small>${sub}</small></h3><div class="bars">` + D.series.map(([s, lab, c], j) => {
+      const v = sw[s === 'acc' ? 'model' : s][k], w = v / mx * 80;
+      return `<div class="bar${j ? '' : ' m'}" data-tip="${lab}: ${f(v)}"><span>${['Our model', 'Prognosis', 'Rules'][j]}</span>`
+        + `<div class="t"><div class="f" style="width:${w}%;background:${c}"></div><span class="v" style="left:calc(${w}% + 6px)">${f(v)}</span></div></div>`;
+    }).join('') + '</div></div>';
+  }).join('');
+  document.querySelectorAll('[data-tip]').forEach(el => hover(el, el.dataset.tip));
+}
+function fit() { // one screen, never a scrollbar: lay out at >= 1280 px wide, then scale to fill the window exactly
+  const b = document.body, height = z => { b.style.zoom = 1; b.style.width = `${Math.max(1280, innerWidth / z)}px`; return b.scrollHeight; };
+  let z = Math.min(2, innerWidth / 1280);
+  for (let k = 0; k < 4; k++) z = Math.min(2, innerWidth / 1280, innerHeight / height(z));
+  const h = height(z);
+  if (h * z > innerHeight) z = innerHeight / h;
+  b.style.zoom = z.toFixed(4);
+}
+addEventListener('resize', fit);
+fit();
+</script>
+</body></html>

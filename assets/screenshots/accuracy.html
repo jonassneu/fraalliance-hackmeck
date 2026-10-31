@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0}
+html,body{background:transparent}
+body{font-family:"SF Pro Display",system-ui,"Noto Sans",sans-serif;color:#1d1d1f;width:1440px;padding:24px}
+html.dark body{color:#f5f5f7}
+.grid{display:grid;grid-template-columns:1fr 1fr;row-gap:56px}
+.lead{font-size:30px;font-weight:600;opacity:.5}
+.big{font-size:230px;line-height:.9;font-weight:700;letter-spacing:-.05em;margin-top:8px}
+.big small{font-size:100px;letter-spacing:-.02em;margin-left:4px}
+</style></head><body><div class="grid" id="g"></div><script>
+if(location.hash=='#dark')document.documentElement.classList.add('dark');
+g.innerHTML=[[1,96.9],[6,96.1],[24,95.4],[48,93.1]].map(([h,m])=>
+ `<div><div class="lead">${h} h ahead</div><div class="big">${m.toFixed(1)}<small>%</small></div></div>`).join('');
+</script></body></html>

@@ -1,0 +1,23 @@
+# Data: downloaded archives, labels, trained models (rebuild with the pipeline in README.md)
+data/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Front end (3D view)
+web/node_modules/
+
+# Generated at runtime
+site/live.json
+site/live.json.tmp
+.shots/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
