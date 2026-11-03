@@ -1,0 +1,51 @@
+{
+  "title": "logit25: does the logistic half of the official blend improve when trained on ~2.5 years instead of the last 120 days?",
+  "registered_utc": "2026-11-03T09:36:00Z",
+  "registered_before_any_score": true,
+  "question": "Hourly radar labels now exist for 2014-2026 (fra.labels history labels) and archived ECMWF IFS single runs from 2024-03-14. Phase 2 found 'all history' ~= 120 d, but its history only reached back to Jun 2025 and was sparsely labelled before 2026-02-11. Is a longer training window better now?",
+  "inputs": {
+    "labels": "fra.labels.history_labels(gap_rule='confirmed') = load_counts(include_history=True, complete_only=True, gap_rule='confirmed') -> to_labels(bridge='night') (as experiments/history12/run.py history_labels('confirmed'); RWY 18 not judged in confirmed suspect hours). In-memory only; data/labels.parquet is not touched.",
+    "ifs": "data/ifs_runs_backfill.parquet + data/ifs_runs.parquet (surface) and data/ifs_runs_upper_backfill.parquet + data/ifs_runs_upper.parquet (100 m wind), concatenated into experiments/logit25/inputs/ (shared files untouched). Same as-of rule as production (newest init <= issue - 6 h); before 2024-08-09 18 UTC only 00/12 UTC runs exist, so older runs are used there.",
+    "prognosis": "data/prognosis_history.parquet (asof <= 2025-04-30 23 UTC) + data/prognosis.parquet (from 2025-05-01), concatenated into experiments/logit25/inputs/.",
+    "metar": "data/metar.parquet (from 2024-01-01), as production (fra.dataset.hourly_metar).",
+    "icon": "ICON-D2 / ICON-EU archives as production (from 2026-04/05); before that the consensus is ECMWF alone, as in production.",
+    "table": "fra.dataset.build with the merged inputs (module paths pointed at the merged files in-process), lag 2 h, ICON-EU fill, leads 1..48, issues 2024-03-14 .. 2026-10-30 (valid < 2026-11-01) -> experiments/logit25/inputs/table.parquet. Clean-label filter: the labels are already night-bridged, so fra.train's direct-label mask is pointed at the same labels (every table row counts as directly observed).",
+    "decision_rollout": "stored blend-v2 decision predictions: experiments/integration/preds_long.parquet column p_dec_main (sha256 prefix 70f2e7c3cc152ce2); blend-v2 = p_blend_main = 0.5 p_logit + 0.5 p_dec_main",
+    "code": "fra/train.py sha256 8b85b11b28323a5e, fra/dataset.py f9e9d8ad2729eb2d, fra/evalkit.py 0b3fa50a592c494b"
+  },
+  "test": {
+    "period": "long test: issue 2026-06-01 .. 2026-10-30 (valid < 2026-11-01), 22 weekly walk-forward folds (fra.evalkit.folds); training rows = outcome published before the week start (valid + 2 h <= week start)",
+    "halves": {"H1": "issue 2026-06-01 .. 2026-07-31", "H2": "issue 2026-08-01 .. 2026-10-30"},
+    "rows": "identical (issue, lead) rows for every method: rows of experiments/integration/preds_long.parquet (the blend-v2 long-test rows, 173,352) where every candidate has a prediction; truth = its od column (same truth as the blend-v2 evaluation)",
+    "metrics": "primary Brier(1,6,24,48) of P(OD 25) pooled over leads 1/6/24/48; also Brier over all leads 1..48 and accuracy (p > 0.5) per lead 1/6/24/48",
+    "ci": "paired day-block bootstrap (fra.evalkit.bootstrap, UTC days of the valid time, 2000 reps, seed fra.evalkit.SEED, 95 %); decisive = 1-day blocks; 3-day blocks reported as sensitivity (not decisive)",
+    "holdout": "no issue or valid time >= 2026-11-01 is used for training, tuning or scoring"
+  },
+  "stage_1": {
+    "what": "logit alone, each candidate vs the control on identical rows",
+    "control": "w120_T: production spec (fra.train.fit: C 0.03, 4 lead buckets, temperature scaling, last 120 days) on the extended table",
+    "candidates": [
+      {"id": "w120_T", "window_days": 120, "temperature": true, "role": "control"},
+      {"id": "w120_noT", "window_days": 120, "temperature": false},
+      {"id": "w365_T", "window_days": 365, "temperature": true},
+      {"id": "w365_noT", "window_days": 365, "temperature": false},
+      {"id": "w540_T", "window_days": 540, "temperature": true},
+      {"id": "w540_noT", "window_days": 540, "temperature": false},
+      {"id": "wall_T", "window_days": "all (since 2024-03-14)", "temperature": true},
+      {"id": "wall_noT", "window_days": "all (since 2024-03-14)", "temperature": false},
+      {"id": "lgbm_blend_all", "what": "0.5 x wall_T + 0.5 x LightGBM with monotone constraints trained on all history (settings of experiments/phase2 lgbm_mono: production logit features + lead + run_age_h; P(OD 25) non-increasing in tw25, tw25_roll6, tw25_prev3, tw25_next3, tw25_100m, tw25_cons, tw25_cons_roll6, tw25_pastmin6, non-decreasing in prog_signed, prog_alt_signed, rule_od25, od_now25; 300 trees, lr 0.03, 7 leaves, min_child_samples 200, reg_lambda 10, subsample 0.8 freq 1, colsample 0.8, n_jobs 1, seed 0)", "optional": true}
+    ],
+    "also_reported": "control vs the stored production logit (p_logit of preds_long.parquet): max |diff| and paired Brier, to show how far the extended table moves the 120-day control"
+  },
+  "stage_2": {
+    "what": "the selected candidate INSIDE the blend: 0.5 x candidate logit + 0.5 x p_dec_main, vs blend-v2 (p_blend_main), identical rows",
+    "selection": "selected candidate = the stage-1 passer with the lowest whole-test paired Brier(1,6,24,48) difference vs the control. If no candidate passes stage 1, the candidate with the lowest stage-1 point estimate is still scored inside the blend as a diagnostic (counted), but cannot be adopted."
+  },
+  "adoption_rule": {
+    "text": "A candidate becomes a SHADOW variant only if it passes the rule in stage 1 (vs the control) AND in stage 2 (in the blend vs blend-v2). The rule: (1) the 95 % CI of the paired Brier(1,6,24,48) difference lies entirely below 0 on the whole long test; (2) the point estimate is below 0 in both halves H1 (Jun-Jul) and H2 (Aug-Oct); (3) no lead 1/6/24/48 is significantly less accurate (no paired accuracy-difference CI entirely below 0).",
+    "never": "an adopted candidate never becomes the official forecast here; it is registered as a shadow challenger (blend-logit25) pre-registered in experiments/integration/preregistration_logit25.json, judged on live issue hours after its registration, and never replaces the champion during the holdout"
+  },
+  "if_adopted": "fit on all rows whose outcome is published before 2026-11-01 00:00 UTC (valid + 2 h <= 2026-11-01), RWY 18 part copied unchanged from blend-v2's model.pkl -> data/archive/models/blend-logit25/model.pkl (+ copy of blend-v2 decision_model.pkl, blend-v2 library); smoke in runtime 2026-10-31-wave2-r5 with a candidate registry; preregistration_logit25.json; amendment A9; atomic registry install with a backup; check the next hourly run",
+  "selection_noise": "every scored variant is counted (stage 1: 9 incl. the control and the optional LightGBM blend; stage 2: 1). Phase 2 scored 21 variants and the integration round ~42 on the same test; the long test is in-sample for the blend design, so the holdout / live record is the referee.",
+  "outputs": "experiments/logit25/run.py, inputs/ (merged inputs + table), preds/*.parquet, results.csv, results.json"
+}

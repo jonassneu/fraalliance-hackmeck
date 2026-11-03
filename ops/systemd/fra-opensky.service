@@ -1,0 +1,13 @@
+[Unit]
+Description=FRA runway forecast: archive live aircraft around FRA (OpenSky snapshot)
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/opensky_archive.py
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/jonas/.t3/projects/fraalliance-hackmeck
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m ops.opensky_archive
+TimeoutStartSec=2min
+Nice=10

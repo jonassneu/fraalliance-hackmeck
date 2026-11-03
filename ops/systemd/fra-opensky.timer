@@ -1,0 +1,10 @@
+[Unit]
+Description=FRA runway forecast: live aircraft snapshot every 5 minutes (288 OpenSky credits/day, limit 400)
+
+[Timer]
+OnCalendar=*:0/5
+AccuracySec=30s
+Unit=fra-opensky.service
+
+[Install]
+WantedBy=timers.target

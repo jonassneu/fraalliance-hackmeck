@@ -1,0 +1,50 @@
+{
+ "rows_ext": 175032,
+ "rows_wf": 174519,
+ "both": 174471,
+ "only_ext": 561,
+ "only_wf": 48,
+ "max_abs_diff": {
+  "prog_signed": 0.0,
+  "prog_alt_signed": 0.0,
+  "rule_od25": 0.0,
+  "od_now25": 0.0,
+  "tw25_roll6": 0.0,
+  "tw25": 0.0,
+  "tw25_prev3": 0.0,
+  "tw25_next3": 0.0,
+  "hour_sin": 0.0,
+  "hour_cos": 0.0,
+  "night": 0.0,
+  "tw25_100m": 0.0,
+  "tw25_cons": 0.0,
+  "tw25_cons_roll6": 0.0,
+  "tw25_pastmin6": 0.0,
+  "xwf_east_tanh": 0.0,
+  "shear_tw25": 0.0
+ },
+ "od_label_diff_rows": 1215,
+ "only_wf_issues": [
+  "2026-08-06 18:00:00+00:00"
+ ],
+ "rows_by_year": {
+  "2024": 334752,
+  "2025": 416307,
+  "2026": 348120
+ },
+ "od_rows_by_year": {
+  "2024": 332228,
+  "2025": 413047,
+  "2026": 347246
+ },
+ "prog_missing_share_by_year": {
+  "2024": 0.0063,
+  "2025": 0.0106,
+  "2026": 0.0125
+ },
+ "tw25_100m_missing_share_by_year": {
+  "2024": 0.0,
+  "2025": 0.0065,
+  "2026": 0.0008
+ }
+}
