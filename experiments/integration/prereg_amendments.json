@@ -54,5 +54,13 @@
   "change": "r4 = r3 with only fra/alerts.py replaced (ops.runtime snapshot --base 2026-10-31-wave2-r3 --files fra/alerts.py): a notification for official hours that were never issued (coverage gaps). blend-v2 and logit-v2 moved to r4; their forecast modules are byte-identical to r3.",
   "effect": "none on any forecast",
   "why": "missing hours are permanent holes in the holdout; systemd lingering is still off (owner decision)"
+ },
+ {
+  "id": "A8",
+  "time_utc": "2026-11-03T06:09:41+00:00",
+  "topic": "exploratory challenger blend-hist12",
+  "change": "new shadow variant blend-hist12 registered after the holdout start, pre-registered in experiments/integration/preregistration_hist12.json before its first forecast; champion, existing variants and their comparison unchanged",
+  "effect": "none on the official forecast or on the pre-registered comparisons",
+  "why": "wave-3 finding (experiments/history12/REPORT.md)"
  }
 ]

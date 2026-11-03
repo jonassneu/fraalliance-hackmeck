@@ -1,0 +1,33 @@
+{
+ "written_utc": "2026-11-03T06:09:41+00:00",
+ "variant": "blend-hist12",
+ "role": "exploratory challenger (not part of the primary holdout comparison of preregistration.json)",
+ "what": "blend-v2 with its decision model retrained on the 2014-2026 radar history without era terms (training set 'hist' of experiments/history12); same logit, same Part B library, same code (runtime 2026-10-31-wave2-r5)",
+ "why": "best candidate of wave 3: blend(hist) - blend(recent) Brier(1,6,24,48) -0.0011 [-0.0019, -0.0004] on the long test (lag 2), a secondary diagnostic that was not pre-registered, so it is judged only on live forecasts issued after this file was written",
+ "artifacts": {
+  "model": "data/archive/models/blend-hist12/model.pkl",
+  "model_sha256": "e67b55b9c6a71b17b1cff5da473abb34e90ebba2a50fc03b141ad5358695198b",
+  "decision": "data/archive/models/blend-hist12/decision_model.pkl",
+  "decision_sha256": "070ebc062ffea40226dff44ab47145218614b1dda8ebad2b4387eb90eb15ce92",
+  "library": "data/archive/models/blend-v2/library/MANIFEST.json"
+ },
+ "training": {
+  "labels": "fra.labels history labels, complete days, bridge='night', gap rule 'confirmed'",
+  "spec": "fra.decision.DEFAULT (no era features)",
+  "rows": 81937,
+  "first_row": "2014-01-01 07:00:00+00:00",
+  "trained_until": "2026-10-31 13:00:00+00:00",
+  "cutoff": "outcome and look-ahead published before 2026-11-01 00:00 UTC"
+ },
+ "evaluation": {
+  "sample": "official issue hours after written_utc where both blend-hist12 and blend-v2 issued (live scoring, fra.scoring)",
+  "primary": "Brier(1,6,24,48) of blend-hist12 minus blend-v2, paired day-block bootstrap (3-day blocks, as the holdout scoring)",
+  "secondary": [
+   "accuracy at 1/6/24/48 h vs blend-v2",
+   "same comparisons vs logit-v2"
+  ],
+  "first_look": "2026-12-03 (4 weeks); if the CI includes 0, extend to 8 weeks (2026-12-31) and decide then",
+  "decision": "candidate for champion only if the primary CI is entirely below 0 and no lead is significantly less accurate; any switch happens after the main holdout verdict, never during it"
+ },
+ "frozen": "no retraining or change of this variant until the decision"
+}
