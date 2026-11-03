@@ -1,0 +1,51 @@
+{
+  "title": "Phase 2: re-test the hackathon model choices on the corrected data layer",
+  "registered_utc": "2026-10-31T16:39:04Z",
+  "registered_before_any_run": true,
+  "inputs": {
+    "table": "data/wf_cache.parquet (production data layer: od_now from the last complete radar hour [t-2h, t-1h), ECMWF+ICON-D2 consensus filled with ICON-EU, leads 1..48); sha256 prefix bf58446ea6fcd0d5",
+    "labels": "data/labels.parquet (sha256 prefix 0c8627e851ed6fff)",
+    "reference": "current production OD spec = fra.train.fit via experiments.harness.prod_model(): lead-bucket logistic regression, C 0.03, 4 lead buckets (1-3, 4-12, 13-30, 31-48), last 120 days, per-bucket temperature scaling (last 14 training days, clip 0.5-1.5); fra/train.py sha256 prefix ba7257e37fe064df",
+    "rwy18": "unchanged (not part of this study)"
+  },
+  "test": {
+    "period": "long walk-forward test: issue 2026-06-01 .. 2026-10-31 (valid < 2026-11-01), weekly folds (fra.evalkit), training rows = labels known at the week start (valid + 2 h <= week start)",
+    "halves": {"H1": "issue 2026-06-01 .. 2026-07-31", "H2": "issue 2026-08-01 .. 2026-10-31"},
+    "also_reported": "selection-free part (valid < 2026-09-15), Brier over all leads 1..48, accuracy at 1/6/24/48 h",
+    "holdout": "issue >= 2026-11-01 is never looked at",
+    "rows": "every variant is scored on identical (issue, lead) rows: OD-labelled rows where both the variant and production have a prediction",
+    "ci": "day-block bootstrap (UTC days of the valid time), 2000 reps, seed fra.evalkit.SEED, 95 %; paired differences variant - production on the same resampled days"
+  },
+  "primary_metric": "Brier(1,6,24,48): Brier of P(OD 25) pooled over leads 1, 6, 24, 48",
+  "adoption_rule": {
+    "text": "A change is adopted only if (1) the paired Brier(1,6,24,48) difference vs current production has a 95 % CI excluding 0 (upper bound < 0) on the whole long test, AND (2) the point estimate of that difference is < 0 on both halves H1 and H2, AND (3) accuracy at 24 h does not get worse beyond noise: the 95 % CI of the paired 24 h accuracy difference does not lie entirely below 0.",
+    "production_feasibility": "a change that needs inputs the live forecast path (fra/predict.py, not owned here) cannot supply is not switched on in fra/train.py; if it passes, it is reported as an open issue instead",
+    "ties": "if several single changes pass, stage 2 applies"
+  },
+  "stage_1_candidates": [
+    {"id": "w180", "group": "window", "change": "training window 180 days (labels as in data/labels.parquet)"},
+    {"id": "w240", "group": "window", "change": "training window 240 days"},
+    {"id": "wall", "group": "window", "change": "all history (labels from 2025-06-01)"},
+    {"id": "w120_clean", "group": "window_clean", "change": "120 days, training rows restricted to directly observed labels: the target label at the valid time AND the od_now source hour must be labels that fra.labels.to_labels(bridge='night') also gives (drops the hours data/labels.parquet fills by carrying the last sampled OD across daytime sampling gaps before hourly labelling started on 2026-02-11)"},
+    {"id": "w180_clean", "group": "window_clean", "change": "180 days, clean rows only"},
+    {"id": "w240_clean", "group": "window_clean", "change": "240 days, clean rows only"},
+    {"id": "wall_clean", "group": "window_clean", "change": "all history, clean rows only"},
+    {"id": "hl60", "group": "recency", "change": "all history, sample weights 0.5 ** (age_days / 60), age relative to the newest training row, normalised to mean 1 (also inside the temperature fit)"},
+    {"id": "hl120", "group": "recency", "change": "as hl60 with half-life 120 d"},
+    {"id": "hl240", "group": "recency", "change": "as hl60 with half-life 240 d"},
+    {"id": "hl60_clean", "group": "recency_clean", "change": "hl60 on clean rows only"},
+    {"id": "hl120_clean", "group": "recency_clean", "change": "hl120 on clean rows only"},
+    {"id": "hl240_clean", "group": "recency_clean", "change": "hl240 on clean rows only"},
+    {"id": "C0.01", "group": "C", "change": "C = 0.01"},
+    {"id": "C0.1", "group": "C", "change": "C = 0.1"},
+    {"id": "C0.3", "group": "C", "change": "C = 0.3"},
+    {"id": "notemp", "group": "temperature", "change": "temperature scaling off"},
+    {"id": "buckets6", "group": "buckets", "change": "6 lead buckets: 1-2, 3-6, 7-12, 13-24, 25-36, 37-48 (temperature per bucket as now)"},
+    {"id": "lgbm_mono", "group": "lgbm", "change": "LightGBM alone, same 120-day window, features = production logit features + lead + run_age_h; monotone constraints: P(OD 25) non-increasing in every tailwind-on-25 feature (tw25, tw25_roll6, tw25_prev3, tw25_next3, tw25_100m, tw25_cons, tw25_cons_roll6, tw25_pastmin6) and non-decreasing in prog_signed, prog_alt_signed, rule_od25, od_now25; params n_estimators 300, learning_rate 0.03, num_leaves 7, min_child_samples 200, reg_lambda 10, subsample 0.8 (freq 1), colsample_bytree 0.8, n_jobs 1, seed 0; NaN left to LightGBM"},
+    {"id": "blend_lgbm", "group": "lgbm", "change": "0.5 * production logit + 0.5 * lgbm_mono (probability average)"},
+    {"id": "pw4", "group": "partB", "change": "production logit + Part B path features (fra.fcerror.path_features, DEFAULT params, n 200, seed 0, all 48 leads): pw_tw25_gt0, pw_tw25_gt5, pw_tw25_mean, pw_tw25_sd; missing rows filled with tw25_cons > 0, tw25_cons > 5, tw25_cons and the training median sd. Needs the path features live (fra/predict.py, not owned here) to be adoptable"}
+  ],
+  "stage_2": "If two or more single changes from DIFFERENT groups pass the rule, evaluate one combination of the best passing change per group (best = lowest whole-test paired Brier difference); adopt the combination only if it passes the rule itself and its whole-test Brier difference is lower than that of the best single change, otherwise adopt the best single change. Window and window_clean (and recency / recency_clean) count as one group each pair. At most one stage-2 variant per combination; every stage-2 variant is counted.",
+  "selection_noise": "every evaluated variant is counted and reported, including diagnostics; with about 22 variants, a single 95 % CI excluding 0 is expected about once by chance, which the both-halves condition partly guards against; the locked holdout (from 2026-11-01) is the referee",
+  "outputs": "experiments/phase2/run.py (variants), experiments/phase2/results.csv (all variants, whole test + halves + selection-free), experiments/phase2/REPORT.md"
+}

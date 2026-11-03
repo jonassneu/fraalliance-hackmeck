@@ -1,0 +1,574 @@
+{
+ "n_issues_scored": 3420,
+ "n_with_change": 1797,
+ "period": "2026-06-08 00:00:00+00:00 .. 2026-10-28 11:00:00+00:00",
+ "methods": [
+  {
+   "method": "blend: hysteresis rule, nested",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1634,
+   "hits": 1163,
+   "hit_rate": 0.6471897607122983,
+   "timing_mae_h": 1.2416165090283748,
+   "wrong_time": 422,
+   "missed": 212,
+   "false_alarm": 49,
+   "correct_no_change": 1574,
+   "precision": 0.7117503059975521,
+   "event_acc": 0.8002923976608187
+  },
+  {
+   "method": "blend: current PARAMS",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1640,
+   "hits": 1147,
+   "hit_rate": 0.6382860322760155,
+   "timing_mae_h": 1.074978204010462,
+   "wrong_time": 456,
+   "missed": 194,
+   "false_alarm": 37,
+   "correct_no_change": 1586,
+   "precision": 0.699390243902439,
+   "event_acc": 0.7991228070175439
+  },
+  {
+   "method": "blend: all-weeks params (in-sample; = fra.blend live)",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1699,
+   "hits": 1216,
+   "hit_rate": 0.6766833611574847,
+   "timing_mae_h": 1.1348684210526316,
+   "wrong_time": 424,
+   "missed": 157,
+   "false_alarm": 59,
+   "correct_no_change": 1564,
+   "precision": 0.7157151265450264,
+   "event_acc": 0.8128654970760234
+  },
+  {
+   "method": "decision paths: P(switched) >= thr, nested",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1917,
+   "hits": 1120,
+   "hit_rate": 0.6232609905397886,
+   "timing_mae_h": 1.1419642857142858,
+   "wrong_time": 530,
+   "missed": 147,
+   "false_alarm": 267,
+   "correct_no_change": 1356,
+   "precision": 0.584246218049035,
+   "event_acc": 0.7239766081871345
+  },
+  {
+   "method": "decision paths: thr 0.5",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1845,
+   "hits": 1126,
+   "hit_rate": 0.6265998887033946,
+   "timing_mae_h": 1.2069271758436946,
+   "wrong_time": 510,
+   "missed": 161,
+   "false_alarm": 209,
+   "correct_no_change": 1414,
+   "precision": 0.6102981029810298,
+   "event_acc": 0.7426900584795322
+  },
+  {
+   "method": "logit: current PARAMS (production today)",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1702,
+   "hits": 1143,
+   "hit_rate": 0.6360601001669449,
+   "timing_mae_h": 1.2213473315835521,
+   "wrong_time": 497,
+   "missed": 157,
+   "false_alarm": 62,
+   "correct_no_change": 1561,
+   "precision": 0.6715628672150411,
+   "event_acc": 0.7906432748538011
+  },
+  {
+   "method": "logit: hysteresis rule, nested",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1632,
+   "hits": 1080,
+   "hit_rate": 0.6010016694490818,
+   "timing_mae_h": 1.237037037037037,
+   "wrong_time": 509,
+   "missed": 208,
+   "false_alarm": 43,
+   "correct_no_change": 1580,
+   "precision": 0.6617647058823529,
+   "event_acc": 0.7777777777777778
+  },
+  {
+   "method": "official rules",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 2235,
+   "hits": 1022,
+   "hit_rate": 0.568725653867557,
+   "timing_mae_h": 1.4500978473581214,
+   "wrong_time": 697,
+   "missed": 78,
+   "false_alarm": 516,
+   "correct_no_change": 1107,
+   "precision": 0.45727069351230426,
+   "event_acc": 0.6225146198830409
+  },
+  {
+   "method": "published prognosis",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 1596,
+   "hits": 893,
+   "hit_rate": 0.4969393433500278,
+   "timing_mae_h": 1.5061590145576709,
+   "wrong_time": 571,
+   "missed": 333,
+   "false_alarm": 132,
+   "correct_no_change": 1491,
+   "precision": 0.5595238095238095,
+   "event_acc": 0.6970760233918128
+  },
+  {
+   "method": "persistence",
+   "n_issues": 3420,
+   "n_actual_change": 1797,
+   "n_pred_change": 0,
+   "hits": 0,
+   "hit_rate": 0.0,
+   "timing_mae_h": NaN,
+   "wrong_time": 0,
+   "missed": 1797,
+   "false_alarm": 0,
+   "correct_no_change": 1623,
+   "precision": 0.0,
+   "event_acc": 0.4745614035087719
+  }
+ ],
+ "event_acc_ci": [
+  {
+   "method": "blend: hysteresis rule, nested",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.8002923976608187,
+   "lo": 0.7496993396861354,
+   "hi": 0.8473205741626795,
+   "p_boot": NaN
+  },
+  {
+   "method": "blend: current PARAMS",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.7991228070175439,
+   "lo": 0.7461301636182655,
+   "hi": 0.8448614107523682,
+   "p_boot": NaN
+  },
+  {
+   "method": "blend: all-weeks params (in-sample; = fra.blend live)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.8128654970760234,
+   "lo": 0.7634976525821596,
+   "hi": 0.8569493006993006,
+   "p_boot": NaN
+  },
+  {
+   "method": "decision paths: P(switched) >= thr, nested",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.7239766081871345,
+   "lo": 0.668990925152586,
+   "hi": 0.7788486842105263,
+   "p_boot": NaN
+  },
+  {
+   "method": "decision paths: thr 0.5",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.7426900584795322,
+   "lo": 0.6909335510980248,
+   "hi": 0.7935745614035087,
+   "p_boot": NaN
+  },
+  {
+   "method": "logit: current PARAMS (production today)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.7906432748538011,
+   "lo": 0.73800221622962,
+   "hi": 0.8392018779342723,
+   "p_boot": NaN
+  },
+  {
+   "method": "logit: hysteresis rule, nested",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.7777777777777778,
+   "lo": 0.7229997529033853,
+   "hi": 0.8304339447102604,
+   "p_boot": NaN
+  },
+  {
+   "method": "official rules",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.6225146198830409,
+   "lo": 0.5634485421299729,
+   "hi": 0.6832765151515152,
+   "p_boot": NaN
+  },
+  {
+   "method": "published prognosis",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.6970760233918128,
+   "lo": 0.6382894736842105,
+   "hi": 0.7538081217028585,
+   "p_boot": NaN
+  },
+  {
+   "method": "persistence",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.4745614035087719,
+   "lo": 0.40501165501165504,
+   "hi": 0.548666958041958,
+   "p_boot": NaN
+  },
+  {
+   "method": "blend: hysteresis rule, nested - decision paths: P(switched) >= thr, nested",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.07631578947368421,
+   "lo": 0.03787878787878788,
+   "hi": 0.11714182460648886,
+   "p_boot": 0.0
+  },
+  {
+   "method": "blend: hysteresis rule, nested - logit: current PARAMS (production today)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.009649122807017544,
+   "lo": -0.010275441987589876,
+   "hi": 0.03001428761297181,
+   "p_boot": 0.354
+  },
+  {
+   "method": "decision paths: P(switched) >= thr, nested - logit: current PARAMS (production today)",
+   "n": 3420,
+   "n_days": 143,
+   "est": -0.06666666666666667,
+   "lo": -0.11131264568764569,
+   "hi": -0.02330679150661547,
+   "p_boot": 0.002
+  },
+  {
+   "method": "blend: hysteresis rule, nested - logit: hysteresis rule, nested",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.022514619883040935,
+   "lo": 0.001162357919446504,
+   "hi": 0.0456140350877193,
+   "p_boot": 0.04
+  },
+  {
+   "method": "blend: hysteresis rule, nested - published prognosis",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.10321637426900584,
+   "lo": 0.05390184742158426,
+   "hi": 0.15341810799082511,
+   "p_boot": 0.0
+  },
+  {
+   "method": "blend: all-weeks params (in-sample; = fra.blend live) - logit: current PARAMS (production today)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.022222222222222223,
+   "lo": 0.007309941520467836,
+   "hi": 0.039477159006671585,
+   "p_boot": 0.003
+  }
+ ],
+ "p48_brier": {
+  "blend: logistic on max smoothed P(other), walk-forward": 0.0685723873868249,
+  "decision paths: recalibrated, walk-forward": 0.08608097725720294,
+  "decision paths: raw P(switch within 48 h)": 0.07339834093279908,
+  "logit: P48_COEF as in production today": 0.06056182676250114,
+  "logit: logistic, walk-forward": 0.06462555570708776,
+  "blend: all-weeks coefficients (in-sample; = fra.blend live)": 0.0543198461613964
+ },
+ "p48_brier_climatology": 0.24935287780855653,
+ "p48_ci": [
+  {
+   "method": "blend: logistic on max smoothed P(other), walk-forward",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.0685723873868249,
+   "lo": 0.04790129410942223,
+   "hi": 0.09138954966798936,
+   "p_boot": NaN
+  },
+  {
+   "method": "decision paths: recalibrated, walk-forward",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.08608097725720294,
+   "lo": 0.0622500264384782,
+   "hi": 0.1116805310058081,
+   "p_boot": NaN
+  },
+  {
+   "method": "decision paths: raw P(switch within 48 h)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.07339834093279908,
+   "lo": 0.05425090728223057,
+   "hi": 0.09397451409186919,
+   "p_boot": NaN
+  },
+  {
+   "method": "logit: P48_COEF as in production today",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.06056182676250114,
+   "lo": 0.03927833318504751,
+   "hi": 0.08417786973181467,
+   "p_boot": NaN
+  },
+  {
+   "method": "logit: logistic, walk-forward",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.06462555570708776,
+   "lo": 0.044175493593564326,
+   "hi": 0.08743923662682024,
+   "p_boot": NaN
+  },
+  {
+   "method": "blend: all-weeks coefficients (in-sample; = fra.blend live)",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.054319846161396394,
+   "lo": 0.037815746685079095,
+   "hi": 0.07274129584926127,
+   "p_boot": NaN
+  },
+  {
+   "method": "blend: logistic on max smoothed P(other), walk-forward - decision paths: recalibrated, walk-forward",
+   "n": 3420,
+   "n_days": 143,
+   "est": -0.017508589870378052,
+   "lo": -0.026761230469346687,
+   "hi": -0.009297564077524861,
+   "p_boot": 0.0
+  },
+  {
+   "method": "decision paths: recalibrated, walk-forward - logit: P48_COEF as in production today",
+   "n": 3420,
+   "n_days": 143,
+   "est": 0.025519150494701808,
+   "lo": 0.004286587101112843,
+   "hi": 0.04941754372595373,
+   "p_boot": 0.015
+  }
+ ],
+ "chosen_blend_rule_per_week": {
+  "1": {
+   "smooth": 1,
+   "enter": 0.55,
+   "leave": 0.55,
+   "k": 1
+  },
+  "2": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.5,
+   "k": 3
+  },
+  "3": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "4": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "5": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "6": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "7": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "8": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "9": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "10": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "11": {
+   "smooth": 5,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 4
+  },
+  "12": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "13": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "14": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "15": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "16": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "17": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "18": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "19": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "20": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "21": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  }
+ },
+ "chosen_path_thr_per_week": {
+  "1": 0.3,
+  "2": 0.3,
+  "3": 0.5,
+  "4": 0.5,
+  "5": 0.5,
+  "6": 0.5,
+  "7": 0.45,
+  "8": 0.45,
+  "9": 0.45,
+  "10": 0.45,
+  "11": 0.45,
+  "12": 0.45,
+  "13": 0.45,
+  "14": 0.45,
+  "15": 0.45,
+  "16": 0.45,
+  "17": 0.45,
+  "18": 0.45,
+  "19": 0.45,
+  "20": 0.45,
+  "21": 0.45
+ },
+ "final_blend_params_all_weeks": {
+  "smooth": 1,
+  "enter": 0.45,
+  "leave": 0.45,
+  "k": 1
+ },
+ "final_logit_params_all_weeks": {
+  "smooth": 1,
+  "enter": 0.5,
+  "leave": 0.5,
+  "k": 3
+ },
+ "final_path_thr_all_weeks": 0.55,
+ "p48_coef_blend_all_weeks": [
+  0.6919888346563947,
+  1.3021850698924888
+ ],
+ "p48_coef_path_all_weeks": [
+  -0.32385753376608134,
+  1.0413378629689058
+ ],
+ "p48_coef_logit_all_weeks": [
+  0.350361806539559,
+  1.184670808967761
+ ],
+ "logit_P48_COEF_in_code": [
+  -1.075,
+  1.503
+ ],
+ "window_blend_cover_width": [
+  0.7242902208201892,
+  5.026498422712934
+ ],
+ "window_path_cover_width": [
+  0.8575757575757575,
+  8.238181818181818
+ ]
+}

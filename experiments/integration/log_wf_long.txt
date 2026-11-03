@@ -1,0 +1,24 @@
+long: 3635 issue times from 2026-06-01
+  week 2026-06-15: 168 issues, model rows 2221, r18 rows 3453
+  week 2026-06-01: 168 issues, model rows 1969, r18 rows 3215
+  week 2026-06-22: 168 issues, model rows 2347, r18 rows 3572
+  week 2026-06-08: 168 issues, model rows 2095, r18 rows 3334
+  week 2026-06-29: 168 issues, model rows 2473, r18 rows 3691
+  week 2026-07-06: 168 issues, model rows 2599, r18 rows 3810
+  week 2026-07-13: 168 issues, model rows 2725, r18 rows 3929
+  week 2026-07-20: 168 issues, model rows 2851, r18 rows 4048
+  week 2026-07-27: 168 issues, model rows 2977, r18 rows 4167
+  week 2026-08-03: 168 issues, model rows 3103, r18 rows 4286
+  week 2026-08-10: 168 issues, model rows 3227, r18 rows 4404
+  week 2026-08-17: 168 issues, model rows 3353, r18 rows 4523
+  week 2026-08-24: 168 issues, model rows 3479, r18 rows 4642
+  week 2026-08-31: 168 issues, model rows 3605, r18 rows 4761
+  week 2026-09-07: 168 issues, model rows 3731, r18 rows 4881
+  week 2026-09-14: 168 issues, model rows 3857, r18 rows 5000
+  week 2026-09-21: 168 issues, model rows 3983, r18 rows 5119
+  week 2026-09-28: 168 issues, model rows 4109, r18 rows 5238
+  week 2026-10-05: 168 issues, model rows 4235, r18 rows 5357
+  week 2026-10-12: 168 issues, model rows 4361, r18 rows 5476
+  week 2026-10-26: 107 issues, model rows 4612, r18 rows 5714
+  week 2026-10-19: 168 issues, model rows 4487, r18 rows 5595
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/integration/dec_long.parquet (697920 rows) in 136s

@@ -1,0 +1,12 @@
+[Unit]
+Description=FRA runway forecast: weekly retrain, Sunday 04:30 local time (shipped DISABLED; see ops/README.md)
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/README.md
+
+[Timer]
+OnCalendar=Sun *-*-* 04:30:00
+Persistent=true
+AccuracySec=1min
+Unit=fra-retrain.service
+
+[Install]
+WantedBy=timers.target

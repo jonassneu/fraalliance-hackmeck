@@ -1,0 +1,37 @@
+rwy18: 5817 issue times from 2025-09-01
+  week 2025-10-13: 147 issues, model rows 0, r18 rows 675
+  week 2025-09-29: 156 issues, model rows 0, r18 rows 605
+  week 2025-10-06: 150 issues, model rows 0, r18 rows 640
+  week 2025-10-20: 156 issues, model rows 0, r18 rows 710
+  week 2025-10-27: 168 issues, model rows 0, r18 rows 746
+  week 2025-11-03: 168 issues, model rows 0, r18 rows 787
+  week 2025-11-17: 168 issues, model rows 0, r18 rows 867
+  week 2025-11-10: 168 issues, model rows 0, r18 rows 827
+  week 2025-11-24: 168 issues, model rows 0, r18 rows 909
+  week 2025-12-01: 168 issues, model rows 0, r18 rows 950
+  week 2025-12-08: 168 issues, model rows 0, r18 rows 990
+  week 2025-12-15: 168 issues, model rows 0, r18 rows 1030
+  week 2025-12-22: 168 issues, model rows 0, r18 rows 1071
+  week 2025-12-29: 168 issues, model rows 0, r18 rows 1112
+  week 2026-01-05: 168 issues, model rows 0, r18 rows 1153
+  week 2026-01-12: 168 issues, model rows 0, r18 rows 1195
+  week 2026-01-19: 168 issues, model rows 0, r18 rows 1237
+  week 2026-01-26: 168 issues, model rows 0, r18 rows 1276
+  week 2026-02-02: 168 issues, model rows 0, r18 rows 1317
+  week 2026-02-09: 168 issues, model rows 0, r18 rows 1358
+  week 2026-02-16: 168 issues, model rows 78, r18 rows 1448
+  week 2026-03-02: 168 issues, model rows 330, r18 rows 1683
+  week 2026-02-23: 168 issues, model rows 204, r18 rows 1566
+  week 2026-03-09: 168 issues, model rows 456, r18 rows 1800
+  week 2026-03-16: 168 issues, model rows 582, r18 rows 1912
+  week 2026-03-23: 168 issues, model rows 708, r18 rows 2030
+  week 2026-03-30: 168 issues, model rows 835, r18 rows 2149
+  week 2026-04-06: 168 issues, model rows 961, r18 rows 2268
+  week 2026-04-13: 168 issues, model rows 1087, r18 rows 2386
+  week 2026-04-20: 168 issues, model rows 1213, r18 rows 2499
+  week 2026-04-27: 168 issues, model rows 1339, r18 rows 2618
+  week 2026-05-04: 168 issues, model rows 1465, r18 rows 2737
+  week 2026-05-11: 168 issues, model rows 1591, r18 rows 2856
+  week 2026-05-18: 168 issues, model rows 1717, r18 rows 2975
+  week 2026-05-25: 168 issues, model rows 1843, r18 rows 3094
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/integration/dec_rwy18.parquet (279216 rows) in 54s

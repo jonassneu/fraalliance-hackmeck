@@ -1,0 +1,24 @@
+[Unit]
+Description=FRA runway forecast: hourly forward archive + live forecast (champion + shadow variants), then live-record scoring, alerts and a backup copy
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Frozen runtime: the code of data/archive/runtime/current (a snapshot made, smoke-tested and promoted with
+# `uv run python -m ops.runtime snapshot|smoke|promote`), never the working tree. The repository's virtual
+# environment is used directly (.venv/bin/python, no `uv run`: no re-lock / re-sync of the environment at each start;
+# package versions are recorded in RUNTIME.json and runs.jsonl and checked by the smoke test).
+# Rollback: `python -m ops.runtime promote <older tag>`.
+WorkingDirectory=/home/jonas/.t3/projects/fraalliance-hackmeck/data/archive/runtime/current
+Environment=OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1
+# '-': a failed step (exit 1 = at least one source failed, details in data/archive/runs.jsonl) never blocks the next
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.archive
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.scoring
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.alerts
+# copy of data/archive + data/inaa_counts.csv + the pre-registration outside the repository (~/fra-archive-backup)
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m ops.backup
+TimeoutStartSec=45min
+Nice=10
+IOSchedulingClass=idle

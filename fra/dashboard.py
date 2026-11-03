@@ -9,6 +9,11 @@ iframe) next to it. Hovering the timeline previews an hour, a click or drag hold
 follow the shown hour. Keys: arrows step / jump between events, Space plays, Esc returns to now.
 Self-contained page (inline CSS + JS, data as JSON); times are rendered client-side so the Local/UTC switch works
 offline.
+
+Live operation (ops/README.md): fra.archive issues a forecast every hour into data/archive/issued/ and rebuilds the
+site from it; a strip below the summary shows the alerts (fra.alerts) and the live record of those hourly forecasts
+(fra.scoring), refreshed from site/alerts.json and site/live_record.json when served over http. For issued forecasts
+the published prognosis and the wind come from what fra.archive retrieved at the issue hour.
 """
 
 import json
@@ -23,12 +28,18 @@ from fra import modelpage, prognosis, scene3d, siteui
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 SITE = ROOT / "site"
+# live operation (fra.archive / fra.scoring / fra.alerts): forecasts issued every hour, the published prognosis and
+# the ECMWF wind as retrieved live, and the scored live record
+ISSUED = DATA / "archive" / "issued"
+PROG_LIVE = DATA / "archive" / "prognosis_live.parquet"
+LIVE_RECORD = DATA / "archive" / "live_record.json"
+RUNS_3D = 24  # newest issued forecasts embedded in the 3D view (plus the hackathon runs in data/)
 
 
 # ---------------------------------------------------------------- data
 
 def newest_forecast():
-    files = sorted(DATA.glob("forecast_*.csv"), key=lambda p: p.stat().st_mtime)
+    files = sorted([*DATA.glob("forecast_*.csv"), *ISSUED.glob("forecast_*.csv")], key=lambda p: p.stat().st_mtime)
     if not files:
         sys.exit("no data/forecast_*.csv found - run `uv run python -m fra.predict` first")
     return files[-1]
@@ -47,12 +58,23 @@ def iso(ts):
     return None if ts is None or pd.isna(ts) else pd.Timestamp(ts).tz_convert("UTC").isoformat()
 
 
+def flown_od():
+    """Flown OD per hour, computed fresh from data/inaa_counts.csv (incl. the forward hours fra.archive appends);
+    falls back to data/labels.parquet."""
+    try:
+        from fra.labels import load_counts, to_labels
+        return to_labels(load_counts())["od"]
+    except Exception:
+        p = DATA / "labels.parquet"
+        return pd.read_parquet(p)["od"] if p.exists() else None
+
+
 def in_use_since(issue, od_now):
     """Start of the current flown operating direction (INAA radar labels), None if the labels are stale."""
-    p = DATA / "labels.parquet"
-    if not p.exists():
+    lab = flown_od()
+    if lab is None:
         return None
-    lab = pd.read_parquet(p)["od"].dropna()
+    lab = lab.dropna()
     lab = lab[lab.index <= issue]
     if lab.empty or issue - lab.index[-1] > pd.Timedelta(hours=12):
         return None
@@ -81,7 +103,101 @@ def next_change(f, od_now):
     return t, t - pd.Timedelta(hours=1), t + pd.Timedelta(hours=1), float(sm[i:i + 6].mean())
 
 
+INTEGRATION = ROOT / "experiments" / "integration"   # walk-forward backtest of the blended forecast (fra.blend)
+
+
+def official_kind():
+    """'blend' if the registry champion (the official forecast) is the blended forecast (fra.blend), else 'logit'."""
+    try:
+        reg = json.loads((DATA / "archive" / "variants.json").read_text())
+        ch = next(v for v in reg.get("variants", []) if v.get("role") == "champion" and v.get("enabled", True))
+        return "blend" if str(ch.get("entry", "")).startswith("fra.blend:") else "logit"
+    except Exception:
+        return "logit"
+
+
+def blend_backtest(r4):
+    """OD rows (leads 1/6/24/48) and next-change numbers of the blended forecast on the long walk-forward test
+    (experiments/integration/final_eval_od.csv, final_wf_long.parquet, nextchange_results.json); None if missing."""
+    try:
+        t = pd.read_csv(INTEGRATION / "final_eval_od.csv")
+        t = t[(t["period"] == "long") & (t["metric"] == "acc")]
+        try:  # changed hours per lead (only for the hover text; the large prediction table is not committed)
+            wf = pd.read_parquet(INTEGRATION / "final_wf_long.parquet", columns=["lead", "od", "od_now", "p_blend"])
+            wf = wf[wf["p_blend"].notna()]
+        except Exception:
+            wf = None
+        g = lambda L, m: t[(t["lead"] == L) & (t["method"] == m)]
+        rows = []
+        for L in (1, 6, 24, 48):
+            if g(L, "blend").empty:
+                return None
+            w = wf[wf["lead"] == L] if wf is not None else None
+            rows.append(dict(lead=L, acc=r4(g(L, "blend")["est"].iloc[0]), rule=r4(g(L, "rules")["est"].iloc[0]),
+                             prog=r4(g(L, "prognosis")["est"].iloc[0]), pers=r4(g(L, "persistence")["est"].iloc[0]),
+                             n=int(g(L, "blend")["n"].iloc[0]),
+                             changed=None if w is None else int((w["od"] != w["od_now"]).sum())))
+        nc = json.loads((INTEGRATION / "nextchange_results.json").read_text())
+        m = {x["method"]: x for x in nc["methods"]}
+        pick = {"model": "blend: hysteresis rule, nested", "rule": "official rules", "prog": "published prognosis"}
+        sw = None
+        if all(v in m for v in pick.values()):
+            sw = {k: dict(hit=r4(m[v]["hit_rate"]), mae=r4(m[v]["timing_mae_h"]), fa=int(m[v]["false_alarm"]),
+                          acc=r4(m[v]["event_acc"])) for k, v in pick.items()}
+            sw["n"], sw["changes"] = int(m[pick["model"]]["n_issues"]), int(m[pick["model"]]["n_actual_change"])
+        return rows, sw
+    except Exception:
+        return None
+
+
+def test_info(kind):
+    """How the backtest was made, for the honest framing on the site: the long walk-forward test (period, days,
+    forecasts per lead), the pooled Brier(1,6,24,48) of the official forecast vs the logistic model alone and the
+    published prognosis with 95 % day-block bootstrap CIs, the part before 2026-09-15, and the locked live holdout.
+    Blend: experiments/integration/final_eval_od.csv; logit: data/eval_long_ci.csv + data/train_meta.json.
+    None if the files are missing."""
+    try:
+        meta = json.loads((DATA / "train_meta.json").read_text()) if (DATA / "train_meta.json").exists() else {}
+        out = dict(kind=kind, start=meta.get("test_start", "2026-06-01"), selection=meta.get("selection_start", "2026-09-15"),
+                   holdout=meta.get("holdout_start", "2026-11-01"), verdict="2026-12-01", verdict_weeks=4)
+        try:  # the pre-registered first verdict of the holdout (4 weeks of issue times, evaluated after their labels)
+            pre = json.loads((INTEGRATION / "preregistration.json").read_text())
+            pw = pre["analysis"]["primary_window"]
+            out["verdict"] = str(pw["evaluate_after_utc"])[:10]
+            out["verdict_weeks"] = round((pd.Timestamp(pw["issue_to_utc"]) - pd.Timestamp(pw["issue_from_utc"])).days / 7)
+        except Exception:
+            pass
+        r = lambda v: None if v is None or pd.isna(v) else round(float(v), 4)
+        if kind == "blend":
+            t = pd.read_csv(INTEGRATION / "final_eval_od.csv")
+            get = lambda per, met, L, m: t[(t["period"] == per) & (t["metric"] == met) & (t["lead"] == L) & (t["method"] == m)]
+            one = get("long", "acc", 1, "blend").iloc[0]
+            ci = lambda per, m: [r(x) for x in get(per, "brier", 0, m)[["est", "lo", "hi"]].iloc[0]]
+            out.update(days=int(one["n_days"]), n=int(one["n"]), brier=ci("long", "blend"), brier_logit=ci("long", "logit"),
+                       brier_prog=ci("long", "prognosis"), brier_diff=ci("long", "blend - logit"),
+                       pre=dict(days=int(get("pre_sep15_part", "acc", 1, "blend")["n_days"].iloc[0]),
+                                acc24=r(get("pre_sep15_part", "acc", 24, "blend")["est"].iloc[0]),
+                                acc24_logit=r(get("pre_sep15_part", "acc", 24, "logit")["est"].iloc[0]),
+                                acc24_prog=r(get("pre_sep15_part", "acc", 24, "prognosis")["est"].iloc[0]),
+                                brier=ci("pre_sep15_part", "blend"), brier_logit=ci("pre_sep15_part", "logit")))
+        else:
+            t = pd.read_csv(DATA / "eval_long_ci.csv")
+            t = t[(t["target"] == "od25") & (t["rows"] == "all")]
+            one = t[(t["metric"] == "acc") & (t["lead"] == 1) & (t["method"] == "model")].iloc[0]
+            b = t[(t["metric"] == "brier") & (t["lead"] == 0) & (t["method"] == "model")]
+            out.update(days=int(one["n_days"]), n=int(one["n"]),
+                       brier=[r(x) for x in b[["est", "lo", "hi"]].iloc[0]] if len(b) else None)
+        return out
+    except Exception:
+        return None
+
+
 def quality():
+    """Walk-forward backtest of the OFFICIAL forecast for the site: the blend's (fra.blend, experiments/integration)
+    when the registry champion is the blend, else the logit's (data/eval.csv, data/changetime_eval.csv). RWY 18 is
+    the logit's in both cases (the blend takes P(RWY 18 open) from the logit). These are walk-forward numbers (each
+    week forecast by models fitted only on earlier data), but the design was chosen on the same weeks; the independent
+    test is the live record from 1 Nov 2026 (kind / honest in the output)."""
     p = DATA / "eval.csv"
     if not p.exists():
         return None
@@ -94,6 +210,15 @@ def quality():
                             pers=r4(r.persistence_acc), n=int(r.n), changed=int(r.n_changed)) for r in rows.itertuples()]
     meta = DATA / "train_meta.json"
     out["test"] = json.loads(meta.read_text()).get("label_kind", "") if meta.exists() else ""
+    out["kind"] = "logit"
+    bb = blend_backtest(r4) if official_kind() == "blend" else None
+    if bb is not None:
+        out["od25"], out["kind"] = bb[0], "blend"
+    out["test_info"] = test_info(out["kind"])
+    if bb is not None:
+        if bb[1] is not None:
+            out["switch"] = bb[1]
+            return out
     ct = DATA / "changetime_eval.csv"  # next-change timing, walk-forward (fra.changetime)
     if ct.exists():
         c = pd.read_csv(ct).set_index("method")
@@ -110,12 +235,19 @@ def quality():
 
 def published_prognosis(issue, valid):
     """Umwelthaus OD prognosis as published at the issue time (latest archived as-of <= issue, at most 3 h old):
-    P(west) per valid hour (1 = OD 25, 0 = OD 07, 0.5 = mixed) and the stated probability. None if unavailable."""
-    try:
-        arch = pd.read_parquet(prognosis.ARCHIVE)
-    except Exception:
+    P(west) per valid hour (1 = OD 25, 0 = OD 07, 0.5 = mixed) and the stated probability. None if unavailable.
+    Sources: data/prognosis.parquet (history) and data/archive/prognosis_live.parquet (fetched hourly by fra.archive)."""
+    parts = []
+    for p in (prognosis.ARCHIVE, PROG_LIVE):
+        try:
+            a = pd.read_parquet(p, columns=["asof", "kind", "start", "state", "prob"])
+            parts.append(a[a["asof"] <= issue])
+        except Exception:
+            pass
+    if not parts:
         return None
-    asof = arch.loc[arch["asof"] <= issue, "asof"].max()
+    arch = pd.concat(parts, ignore_index=True).drop_duplicates(["asof", "kind", "start"], keep="last")
+    asof = arch["asof"].max()
     if pd.isna(asof) or issue - asof > pd.Timedelta(hours=3):
         return None
     leads = [int(round((v - asof) / pd.Timedelta(hours=1))) for v in valid]
@@ -134,9 +266,61 @@ def traffic():
         return None
 
 
+def run_hours(path):
+    """scene3d.forecast_payload (hourly p25 / p18 / od / rule + ECMWF IFS wind from data/ifs_runs.parquet). For live
+    forecasts that archive is older than usual (> 12 h before the issue), so the wind is taken from the live ECMWF IFS
+    forecast fra.archive retrieved at the issue hour instead (display only, the model fetches its own inputs)."""
+    run = scene3d.forecast_payload(Path(path))
+    issue = pd.Timestamp(run["issue"])
+    init = pd.to_datetime(run.get("wind_init"), utc=True, errors="coerce")
+    if pd.notna(init) and init >= issue - pd.Timedelta(hours=12):
+        return run
+    try:
+        from fra.archive import latest_live_wind
+        w = latest_live_wind(issue)
+    except Exception:
+        w = None
+    if w is None:
+        return run
+    for h in run["hours"]:
+        t = pd.Timestamp(h["t"])
+        if t in w.index and pd.notna(w.at[t, "wind_speed"]):
+            h.update(wd=round(float(w.at[t, "wind_direction"])), ws=round(float(w.at[t, "wind_speed"]), 1),
+                     wg=round(float(w.at[t, "wind_gusts"]), 1))
+    run["wind_init"] = w.attrs.get("init")
+    return run
+
+
+def alerts_for(path):
+    """Planning alerts for this forecast, evaluated now (fra.alerts, same thresholds as site/alerts.json): alerts,
+    stale flag (forecast older than fra.alerts.STALE_H: no alerts from it) and the stale message."""
+    try:
+        from fra import alerts
+        rec = alerts.compute(path)
+        return dict(alerts=rec["alerts"], stale=bool(rec.get("stale")), message=rec.get("message"), issue=rec.get("issue"))
+    except Exception as e:
+        print(f"alerts unavailable: {e}")
+        return dict(alerts=[], stale=False, message=None, issue=None)
+
+
+def live_record():
+    """Compact live record for the panel (fra.scoring -> data/archive/live_record.json); 'collecting' until the
+    first issued forecasts can be scored."""
+    try:
+        rec = json.loads(LIVE_RECORD.read_text())
+    except Exception:
+        first = sorted(ISSUED.glob("forecast_*.csv"))
+        start = pd.to_datetime(first[0].stem[9:], format="%Y%m%dT%H", utc=True) if first else None
+        return dict(status="collecting", start=iso(start), windows={})
+    keys = ("name", "n_issues", "n_scored_issues", "first_issue", "last_issue", "od", "switch", "coverage")
+    return dict({k: rec.get(k) for k in ("status", "start", "labels_until", "n_forecasts", "generated", "rolling_days",
+                                         "holdout_from")},
+                windows={k: {kk: w.get(kk) for kk in keys} for k, w in rec.get("windows", {}).items()})
+
+
 def payload(path):
     f = load_forecast(path)
-    run = scene3d.forecast_payload(Path(path))  # hourly p25 / p18 / od / rule + ECMWF IFS wind
+    run = run_hours(path)  # hourly p25 / p18 / od / rule + ECMWF IFS wind
     issue = pd.Timestamp(run["issue"])
     od_now = int(f["od_now"].iloc[0]) if "od_now" in f and pd.notna(f["od_now"].iloc[0]) else int(f["od_pred"].iloc[0])
     t, ws, we, p_change = next_change(f, od_now)
@@ -144,6 +328,7 @@ def payload(path):
     conf6 = np.maximum(p6, 1 - p6).mean()  # how sure the model is about the direction it predicts
     hours = run["hours"]
     pg = published_prognosis(issue, [pd.Timestamp(h["t"]) for h in hours])
+    al = alerts_for(path)
     if pg:
         for h, w, pr in zip(hours, pg["west"], pg["prob"]):
             if pd.notna(w):
@@ -152,7 +337,9 @@ def payload(path):
                 if run.get("wind_init") else None, generated=iso(pd.Timestamp.now("UTC")),
                 od_now=od_now, since=iso(in_use_since(issue, od_now)), conf6=round(float(conf6), 3),
                 change=None if t is None else dict(t=iso(t), start=iso(ws), end=iso(we)), p_change=p_change,
-                hours=hours, quality=quality(), prog_asof=iso(pg["asof"]) if pg else None, traffic=traffic())
+                hours=hours, quality=quality(), prog_asof=iso(pg["asof"]) if pg else None, traffic=traffic(),
+                alerts=al["alerts"], alerts_stale=al["stale"], alerts_msg=al["message"], alerts_issue=al["issue"],
+                live=live_record())
 
 
 # ---------------------------------------------------------------- page
@@ -207,6 +394,25 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 2
 .alert b{font-size:13px}
 .alert b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px}
 .quiet{font-size:12.5px;color:var(--ink2);line-height:1.4}
+
+/* live operation strip: alerts banner (fra.alerts) + live record (fra.scoring); same columns as the row below */
+.strip{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;flex:none}
+.alerts{display:flex;align-items:center;gap:26px;min-width:0;min-height:48px;padding:8px 24px;overflow:hidden}
+.alerts.on{background:#fff5f4;box-shadow:inset 0 0 0 1px rgba(224,53,43,.2)}
+.al{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.al span{overflow:hidden;text-overflow:ellipsis}
+.al b{color:var(--ink);font-weight:600}
+.al i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--red)}
+.al.watch i{background:none;box-shadow:inset 0 0 0 2px var(--red)}
+.al.ok i{background:var(--green)}
+.al.stale i{background:var(--ink3)}
+.lrec{display:flex;align-items:center;gap:14px;min-width:0;min-height:48px;padding:8px 20px}
+.lrec .lh{display:flex;flex-direction:column;flex:none;font-size:13px;font-weight:600;line-height:1.25}
+.lrec .lh small{font-size:11.5px;font-weight:400;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrec dl{display:flex;gap:14px;margin:0 0 0 auto}
+.lrec dt{font-size:11px;color:var(--ink3)}
+.lrec dd{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.lrec .lq{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink2);line-height:1.3}
 
 /* the timeline + the 3D view: take whatever height is left */
 .row2{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px}
@@ -389,6 +595,54 @@ function renderChange() {
   }
 }
 
+// ---- live operation: alerts (fra.alerts) and the record of the forecasts issued live each hour (fra.scoring)
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pc1 = p => (p === null || p === undefined ? '–' : `${(p * 100).toFixed(1)}%`);
+function renderAlerts() {
+  const A = D.alerts || [], iss = D.alerts_issue || D.issue, age = (Date.now() - Date.parse(iss)) / 36e5;
+  if (D.alerts_stale || age > 2) { // fra.alerts.STALE_H: no alerts from a forecast that is no longer current
+    $('alerts').classList.remove('on');
+    $('alerts').innerHTML = `<div class="al stale"><i></i><b>Alerts paused</b><span>${esc(D.alerts_stale && D.alerts_msg ? D.alerts_msg
+      : `No current forecast: the newest was issued ${dhm(iss)} (${Math.round(age)} h ago). Alerts resume with the next forecast.`)}</span></div>`;
+    return;
+  }
+  $('alerts').classList.toggle('on', A.length > 0);
+  $('alerts').innerHTML = A.length ? A.map(a => {
+    const [title, when] = a.kind === 'od_switch'
+      ? [`Direction change ${two(a.od_from)} → ${two(a.od_to)} ${a.lead_h ? `in ${a.lead_h} h` : 'this hour'}`,
+        `around ${dhm(a.t)}${a.start && a.end ? `, window ${hm(a.start)}–${hm(plus1h(a.end))}` : ''} · ${pct(a.p)} at that hour`]
+      : ['Runway 18 West closure risk', `${dhm(a.start)}–${hm(plus1h(a.end))} · lowest ${pct(a.p_min)} usable`];
+    return `<div class="al ${a.level}" title="${esc(a.text)}"><i></i><b>${title}</b><span>${when}</span></div>`;
+  }).join('') : '<div class="al ok"><i></i><b>No alerts</b><span>No direction change expected within 12 h · Runway 18 usable over the next 24 h</span></div>';
+}
+function renderLiveRecord() {
+  const L = D.live || {}, w = (L.windows || {})['30d'], od = (w && w.od) || {};
+  const leads = ['1', '6', '24', '48'].filter(k => od[k] && od[k].n);
+  const since = L.start ? `${dayf(L.start)}, ${hm(L.start)}` : null;
+  // the live record is the independent test: forecasts issued before the outcome exists; issue times from
+  // holdout_from (1 Nov 2026 00 UTC) form the locked holdout that decides between the model variants
+  const ho = (L.windows || {}).holdout, hoN = (ho && ho.n_scored_issues) || 0;
+  const tipL = esc('Each hourly forecast is archived before the outcome is known and scored against the direction flown (radar, ~3 h delay).'
+    + (L.holdout_from ? ` Forecasts issued from ${dayf(L.holdout_from)} ${hm(L.holdout_from)} (${tz === 'UTC' ? 'UTC' : 'local'}) form the locked holdout: the independent test of the model.` : ''));
+  if (!leads.length) {
+    $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${since ? `Collecting since ${since}` : 'Collecting from the first live forecast'}</small></div>`
+      + `<div class="lq" title="${tipL}">First scores ~3 h after<br>each forecast hour is flown</div>`;
+    return;
+  }
+  const old = Date.now() - Date.parse(L.start) > (L.rolling_days || 30) * 864e5;
+  const miss = (w.coverage || {}).missing || 0;
+  $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${w.n_scored_issues} forecasts · ${old ? `last ${L.rolling_days || 30} days` : `since ${dayf(L.start)}`}${hoN ? ` · ${hoN} in the holdout` : ''}${miss ? ` · ${miss} h not issued` : ''}</small></div>`
+    + `<dl>${leads.map(k => `<div title="${od[k].n} hours scored, ${k} h ahead · official rules ${pc1(od[k].rule)} · published prognosis ${pc1(od[k].prog)} · no change ${pc1(od[k].pers)}"><dt>${k} h</dt><dd>${pc1(od[k].acc)}</dd></div>`).join('')}</dl>`;
+}
+async function pollOps() { // alerts.json (fra.alerts) and live_record.json (fra.scoring) are refreshed every hour
+  const get = async f => { try { const r = await fetch(f, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; } };
+  const [a, l] = await Promise.all([get('alerts.json'), get('live_record.json')]);
+  if (a && Date.parse(a.issue) >= Date.parse(D.issue)) {
+    D.alerts = a.alerts; D.alerts_stale = !!a.stale; D.alerts_msg = a.message; D.alerts_issue = a.issue; renderAlerts();
+  }
+  if (l && l.start) { D.live = l; renderLiveRecord(); }
+}
+
 // ---- timeline
 const lanes = $('lanes');
 const geom = () => { const W = $('lod').clientWidth, g = span >= 48 ? 2 : 3, cw = (W - (span - 1) * g) / span; return { W, g, cw }; };
@@ -403,9 +657,10 @@ function renderTimeline() {
   const every = span === 48 ? 6 : span === 24 ? 3 : 2, num = span === 48 ? 3 : span === 24 ? 2 : 1;
   lanes.style.setProperty('--g', `${g}px`);
   let ru = '';
+  const mid = hs.findIndex((h, i) => i > 0 && hourOf(h.t) === 0); // first midnight: no first-day label right before it
   hs.forEach((h, i) => {
     const hr = hourOf(h.t), c = x(i) + cw / 2;
-    if (i === 0) ru += `<span class="d" data-x="34" style="left:0">${dayf(h.t)}</span>`;
+    if (i === 0 && (mid < 0 || x(mid) > 84)) ru += `<span class="d" data-x="34" style="left:0">${dayf(h.t)}</span>`;
     else if (hr === 0) ru += `<i class="t dd" style="left:${x(i) - g / 2}px"></i><span class="d" data-x="${x(i) + 39}" style="left:${x(i) + 5}px">${dayf(h.t)}</span>`;
     if (hr % every === 0 && hr !== 0) {
       ru += `<i class="t" style="left:${c}px"></i>`;
@@ -549,7 +804,9 @@ async function pollLive() {
   try {
     const r = await fetch('live.json', { cache: 'no-store' });
     if (!r.ok) throw new Error(r.status);
-    const d = await r.json(), fresh = !live || live.issue !== d.issue;
+    const d = await r.json();
+    if (d.issue && Date.parse(d.issue) < Date.parse(D.issue)) throw new Error('stale'); // old fra.live feed: keep this forecast
+    const fresh = !live || live.issue !== d.issue;
     live = d;
     if (fresh && d.forecast?.length) {
       const keep = sel >= 0 ? Date.parse(H[sel].t) : null, held = pin >= 0 ? Date.parse(H[pin].t) : null;
@@ -577,9 +834,13 @@ function briefing() {
   const W = r18Windows();
   L.push(W.length ? `Runway 18 West: NOT usable ${W.map(([a, b]) => `${dhm(H[a].t)}-${hm(plus1h(H[b].t))}`).join(', ')}; departures via Centre runway.`
     : `Runway 18 West: usable all 48 h (min ${pct(Math.min(...H.map(h => h.p18)))}).`);
+  if (!D.alerts_stale && (D.alerts || []).length) L.push(`Alerts: ${D.alerts.map(a => a.title).join('; ')}.`);
+  const lw = D.live?.windows?.['30d']?.od?.['24'];
+  if (lw?.n) L.push(`Live record (forecasts issued live since ${dayf(D.live.start)}): direction right ${pc1(lw.acc)} at 24 h ahead, n = ${lw.n} h (official rules ${pc1(lw.rule)}).`);
   const Q = D.quality, q24 = Q?.od25.find(x => x.lead === 24), S = Q?.switch;
-  if (q24) L.push(`Track record (out of sample): direction right ${(q24.acc * 100).toFixed(1)}% at 24 h ahead (official rules ${(q24.rule * 100).toFixed(1)}%)`
-    + (S ? `; changes called within ±3 h ${Math.round(S.model.hit * 100)}%, ${S.model.fa} false alarms (rules ${S.rule.fa}).` : '.'));
+  if (q24) L.push(`Backtest (walk-forward, 1 Jun-30 Oct 2026; settings chosen on the same period, so optimistic): direction right ${(q24.acc * 100).toFixed(1)}% at 24 h ahead (official rules ${(q24.rule * 100).toFixed(1)}%)`
+    + (S ? `; changes called within ±3 h ${Math.round(S.model.hit * 100)}%, ${S.model.fa} false alarms (rules ${S.rule.fa}).` : '.')
+    + (D.live?.holdout_from ? ` The independent test is the live record from ${dayf(D.live.holdout_from)}.` : ''));
   return L.join('\n');
 }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1800); }
@@ -616,7 +877,7 @@ document.addEventListener('webkitfullscreenchange', onFs);
 
 function renderAll() {
   press($('tz'), $('tz').querySelector(`[data-v=${tz === 'UTC' ? 'utc' : 'local'}]`));
-  renderUpdated(); renderChange(); renderTimeline(); renderOD(); renderR18();
+  renderUpdated(); renderChange(); renderTimeline(); renderOD(); renderR18(); renderAlerts(); renderLiveRecord();
 }
 function zoom() { return parseFloat(document.body.style.zoom) || 1; }
 function fit() { // one screen, never a scrollbar: lay out at >= 1280 px wide, scale to the window, the timeline row takes the rest
@@ -635,7 +896,7 @@ setPlaying(0);
 renderAll();
 fit();
 requestAnimationFrame(() => document.querySelectorAll('.seg').forEach(s => s.classList.add('on')));
-if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 30000); }
+if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 30000); pollOps(); setInterval(pollOps, 60000); }
 """
 
 PAGE = """<!doctype html>
@@ -660,6 +921,11 @@ __BAR__
       <div class="val" id="r18val"></div>
       <div class="foot" id="r18foot"></div>
     </section>
+  </div>
+
+  <div class="strip">
+    <section class="card alerts" id="alerts" aria-label="Alerts" aria-live="polite"></section>
+    <section class="card lrec" id="lrec" aria-label="Live record"></section>
   </div>
 
   <div class="row2">
@@ -721,16 +987,47 @@ def page(d):
             .replace("__JS__", JS))
 
 
+def write_atomic(path, text):
+    tmp = path.with_name(f".{path.name}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    tmp.replace(path)  # a browser polling the site never reads a half-written page
+
+
+def render_3d(path):
+    """site/airport3d.html. A forecast issued by fra.archive is embedded together with the hackathon runs
+    (data/forecast_*.csv) and the newest RUNS_3D issued runs, each with run_hours() wind; same page as
+    fra.scene3d.render, which only knows data/forecast_*.csv."""
+    path = Path(path)
+    cache = DATA / "scene3d.json"
+    if path.parent.resolve() != ISSUED.resolve() or not cache.exists() or not scene3d.BUNDLE.exists():
+        return scene3d.render(path)
+    files = {p.name: p for p in sorted(DATA.glob("forecast_*.csv"))}
+    files.update({p.name: p for p in sorted(ISSUED.glob("forecast_*.csv"))[-RUNS_3D:]})
+    files[path.name] = path
+    runs = sorted((run_hours(p) for p in files.values()), key=lambda r: r["issue"])
+    fcj = dict(default=path.name, runs=runs)
+    html = (scene3d.PAGE.replace("__SCENE__", cache.read_text().strip())
+            .replace("__FORECAST__", json.dumps(fcj, separators=(",", ":")))
+            .replace("__BUNDLE__", scene3d.BUNDLE.read_text().replace("</script", "<\\/script")))
+    out = SITE / "airport3d.html"
+    write_atomic(out, html)
+    print(f"wrote {out} ({len(html) / 1e6:.1f} MB), default run {path.name}, {len(runs)} runs")
+    return out
+
+
 def render(path):
     path = Path(path)
     d = payload(path)
     SITE.mkdir(exist_ok=True)
     out = SITE / "index.html"
-    out.write_text(page(d), encoding="utf-8")
+    write_atomic(out, page(d))
     if d.get("quality"):
-        modelpage.render(d["quality"], SITE / "model.html")
+        try:
+            modelpage.render(d["quality"], SITE / "model.html")
+        except Exception as e:  # the hourly rebuild (fra.archive) must not stop at the model page
+            print(f"model page not rebuilt: {type(e).__name__}: {e}")
     try:
-        scene3d.render(path)
+        render_3d(path)
     except (SystemExit, Exception) as e:  # the 3D view needs the data/osm cache + web bundle
         print(f"3D view not rebuilt: {e}")
     return out, d

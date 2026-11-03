@@ -1,0 +1,19 @@
+# run.py --gap-rule confirmed --steps qa,rwy18,lag2 (2026-11-03, fixes)
+backfill: 100.0% of daytime hours, 4424 complete days (100.0%), pass 1 13272/13272, complete=True
+qa done
+rwy18: 67008 rows, 901 closures, 41 folds; {'p_expanding': {'n': 60868, 'closures': 834, 'brier': 0.0083, 'brier_clim': 0.0135, 'bss': 0.3863, 'auc': 0.942, 'hits': 557, 'hit_rate': 0.6679, 'false_alarms': 564, 'fa_per_1000h': 9.266}, 'p_recent365': {'n': 59432, 'closures': 806, 'brier': 0.0086, 'brier_clim': 0.0134, 'bss': 0.3601, 'auc': 0.9405, 'hits': 502, 'hit_rate': 0.6228, 'false_alarms': 578, 'fa_per_1000h': 9.7254}, 'p_clim': {'n': 60868, 'closures': 834, 'brier': 0.0135, 'brier_clim': 0.0135, 'bss': 0.0, 'auc': 0.3965, 'hits': 0, 'hit_rate': 0.0, 'false_alarms': 0, 'fa_per_1000h': 0.0}, 'rule_steady15': {'n': 60868, 'closures': 834, 'hits': 142, 'hit_rate': 0.1703, 'false_alarms': 29, 'fa_per_1000h': 0.4764}, 'rule_gust15': {'n': 60868, 'closures': 834, 'hits': 171, 'hit_rate': 0.205, 'false_alarms': 212, 'fa_per_1000h': 3.4829}}
+LAG-2 SENSITIVITY blend_hist_era - blend_recent [all]: Brier -0.0008 [-0.0018, +0.0003]
+LAG-2 SENSITIVITY blend_hist_era - blend_recent [pre-15-Sep part]: Brier -0.0006 [-0.0022, +0.0009]
+  lag 2 'recent' vs blend-v2 p_dec: max |diff| 0.0 ; clearly wins: False
+PRIMARY clearly wins: False
+done in 91 s -> /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/history12/wave3_confirmedgaps_results.json
+
+# run.py --steps qa,rwy18,lag2 (2026-11-03, fixes)
+backfill: 100.0% of daytime hours, 4424 complete days (100.0%), pass 1 13272/13272, complete=True
+qa done
+rwy18: 67008 rows, 901 closures, 41 folds; {'p_expanding': {'n': 60868, 'closures': 834, 'brier': 0.0083, 'brier_clim': 0.0135, 'bss': 0.3863, 'auc': 0.942, 'hits': 557, 'hit_rate': 0.6679, 'false_alarms': 564, 'fa_per_1000h': 9.266}, 'p_recent365': {'n': 59432, 'closures': 806, 'brier': 0.0086, 'brier_clim': 0.0134, 'bss': 0.3601, 'auc': 0.9405, 'hits': 502, 'hit_rate': 0.6228, 'false_alarms': 578, 'fa_per_1000h': 9.7254}, 'p_clim': {'n': 60868, 'closures': 834, 'brier': 0.0135, 'brier_clim': 0.0135, 'bss': 0.0, 'auc': 0.3965, 'hits': 0, 'hit_rate': 0.0, 'false_alarms': 0, 'fa_per_1000h': 0.0}, 'rule_steady15': {'n': 60868, 'closures': 834, 'hits': 142, 'hit_rate': 0.1703, 'false_alarms': 29, 'fa_per_1000h': 0.4764}, 'rule_gust15': {'n': 60868, 'closures': 834, 'hits': 171, 'hit_rate': 0.205, 'false_alarms': 212, 'fa_per_1000h': 3.4829}}
+LAG-2 SENSITIVITY blend_hist_era - blend_recent [all]: Brier -0.0007 [-0.0018, +0.0003]
+LAG-2 SENSITIVITY blend_hist_era - blend_recent [pre-15-Sep part]: Brier -0.0006 [-0.0021, +0.0009]
+  lag 2 'recent' vs blend-v2 p_dec: max |diff| 0.0 ; clearly wins: False
+PRIMARY clearly wins: False
+done in 91 s -> /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/history12/wave3_results.json

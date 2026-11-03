@@ -1,0 +1,127 @@
+3588 issue times (2026-06-01 .. 2026-10-28), 22 weekly folds, 1868 with a sustained OD change within 48 h
+  week 1: {'smooth': 3, 'enter': 0.7, 'leave': 0.7, 'k': 2}
+  week 2: {'smooth': 3, 'enter': 0.7, 'leave': 0.7, 'k': 2}
+  week 3: {'smooth': 3, 'enter': 0.55, 'leave': 0.45, 'k': 4}
+  week 4: {'smooth': 3, 'enter': 0.55, 'leave': 0.45, 'k': 4}
+  week 5: {'smooth': 3, 'enter': 0.55, 'leave': 0.45, 'k': 4}
+  week 6: {'smooth': 5, 'enter': 0.5, 'leave': 0.5, 'k': 3}
+  week 7: {'smooth': 5, 'enter': 0.5, 'leave': 0.4, 'k': 4}
+  week 8: {'smooth': 5, 'enter': 0.5, 'leave': 0.4, 'k': 4}
+  week 9: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 10: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 11: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 12: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 13: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 14: {'smooth': 5, 'enter': 0.5, 'leave': 0.4, 'k': 4}
+  week 15: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 16: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 17: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 18: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 19: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 20: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  week 21: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+  final (all weeks): {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+
+Next-change timing, out of sample (weeks 1..21, issue times 2026-06-08 .. 2026-10-28), hit = within +-3 h:
+                                        method  n_issues  n_actual_change  n_pred_change  hits  hit_rate  timing_mae_h  wrong_time  missed  false_alarm  correct_no_change  precision  event_acc
+                     model (nested-tuned rule)      3420             1779           1635  1059     0.595         1.306         518     202           58               1583      0.648      0.773
+model (current predict.py: 3h smooth, 0.5, 2h)      3420             1779           1680  1130     0.635         1.293         485     164           65               1576      0.673      0.791
+        model (final PARAMS, chosen in-sample)      3420             1779           1689  1134     0.637         1.253         485     160           70               1571      0.671      0.791
+              model (raw: first p crosses 0.5)      3420             1779           1698  1140     0.641         1.257         484     155           74               1567      0.671      0.792
+                    official rules (rule_od25)      3420             1779           2225   993     0.558         1.502         706      80          526               1115      0.446      0.616
+                official rules, 2h persistence      3420             1779           2099   976     0.549         1.579         671     132          452               1189      0.465      0.633
+             published prognosis (main >= 0.5)      3420             1779           1585   873     0.491         1.572         575     331          137               1504      0.551      0.695
+                    persistence (never change)      3420             1779              0     0     0.000           NaN           0    1779            0               1641      0.000      0.480
+
+P(change within 48 h): walk-forward Brier 0.0626 vs climatology 0.2496; final coef a=0.267 b=1.126
+likely window (enter +-0.15, +-1 h): covers 64% of actual changes when a change is predicted, mean width 4.4 h
+
+PARAMS = {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 4}
+P48_COEF = (0.267, 1.126)
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/eval_long/changetime_old_layer.csv
+3588 issue times (2026-06-01 .. 2026-10-28), 22 weekly folds, 1888 with a sustained OD change within 48 h
+  week 1: {'smooth': 1, 'enter': 0.7, 'leave': 0.7, 'k': 1}
+  week 2: {'smooth': 1, 'enter': 0.7, 'leave': 0.7, 'k': 1}
+  week 3: {'smooth': 3, 'enter': 0.55, 'leave': 0.35, 'k': 4}
+  week 4: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 5: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 6: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 7: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 8: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 9: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 10: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 11: {'smooth': 3, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 12: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 13: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 14: {'smooth': 5, 'enter': 0.5, 'leave': 0.4, 'k': 4}
+  week 15: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 16: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 17: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 18: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 19: {'smooth': 1, 'enter': 0.5, 'leave': 0.5, 'k': 3}
+  week 20: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  week 21: {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+  final (all weeks): {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+
+Next-change timing, out of sample (weeks 1..21, issue times 2026-06-08 .. 2026-10-28), hit = within +-3 h:
+                                        method  n_issues  n_actual_change  n_pred_change  hits  hit_rate  timing_mae_h  wrong_time  missed  false_alarm  correct_no_change  precision  event_acc
+                     model (nested-tuned rule)      3420             1797           1637  1073     0.597         1.199         520     204           44               1579      0.655      0.775
+model (current predict.py: 3h smooth, 0.5, 2h)      3420             1797           1680  1146     0.638         1.237         485     166           49               1574      0.682      0.795
+        model (final PARAMS, chosen in-sample)      3420             1797           1701  1145     0.637         1.225         495     157           61               1562      0.673      0.792
+              model (raw: first p crosses 0.5)      3420             1797           1725  1144     0.637         1.220         507     146           74               1549      0.663      0.787
+                    official rules (rule_od25)      3420             1797           2235  1022     0.569         1.450         697      78          516               1107      0.457      0.623
+                official rules, 2h persistence      3420             1797           2110   998     0.555         1.533         668     131          444               1179      0.473      0.637
+             published prognosis (main >= 0.5)      3420             1797           1596   893     0.497         1.506         571     333          132               1491      0.560      0.697
+                    persistence (never change)      3420             1797              0     0     0.000           NaN           0    1797            0               1623      0.000      0.475
+
+P(change within 48 h): walk-forward Brier 0.0587 vs climatology 0.2494; final coef a=0.559 b=1.191
+likely window (enter +-0.15, +-1 h): covers 68% of actual changes when a change is predicted, mean width 5.0 h
+
+PARAMS = {'smooth': 3, 'enter': 0.5, 'leave': 0.3, 'k': 4}
+P48_COEF = (0.559, 1.191)
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/eval_long/changetime_new_layer.csv
+
+=== next change, long (3420 issue times)
+  old_nested                   77.3 [71.9, 82.5]
+  old_fixed                    79.1 [73.9, 84.0]
+  old_prognosis                69.5 [63.6, 75.2]
+  old_rules                    61.6 [55.7, 67.8]
+  new_nested                   77.5 [72.1, 82.8]
+  new_fixed                    79.2 [73.9, 84.0]
+  new_prognosis                69.7 [63.8, 75.4]
+  new_rules                    62.3 [56.3, 68.3]
+  new_nested - old_nested      +0.3 [-1.2, +1.7]
+  new_fixed - old_fixed        +0.1 [-1.3, +1.4]
+  new_nested - new_prognosis   +7.8 [+2.9, +12.7]
+  new_nested - new_rules       +15.3 [+8.9, +21.8]
+  old_nested - old_prognosis   +7.7 [+3.1, +12.5]
+
+=== next change, pre (2328 issue times)
+  old_nested                   73.8 [66.8, 80.3]
+  old_fixed                    76.7 [70.3, 82.6]
+  old_prognosis                65.6 [58.3, 72.8]
+  old_rules                    61.1 [53.9, 68.0]
+  new_nested                   73.8 [66.9, 80.5]
+  new_fixed                    76.3 [69.9, 82.6]
+  new_prognosis                65.8 [58.5, 72.9]
+  new_rules                    61.9 [54.7, 68.8]
+  new_nested - old_nested      +0.0 [-2.0, +2.0]
+  new_fixed - old_fixed        -0.4 [-2.0, +1.2]
+  new_nested - new_prognosis   +8.1 [+2.7, +13.6]
+  new_nested - new_rules       +12.0 [+4.4, +19.6]
+  old_nested - old_prognosis   +8.2 [+2.9, +13.4]
+
+=== next change, legacy (1044 issue times)
+  old_nested                   83.9 [74.6, 92.2]
+  old_fixed                    83.5 [74.1, 92.1]
+  old_prognosis                76.8 [66.2, 87.3]
+  old_rules                    65.1 [54.4, 75.3]
+  new_nested                   84.8 [76.2, 92.4]
+  new_fixed                    84.6 [76.1, 92.3]
+  new_prognosis                77.1 [66.5, 87.4]
+  new_rules                    65.4 [54.7, 75.6]
+  new_nested - old_nested      +0.9 [-0.8, +3.1]
+  new_fixed - old_fixed        +1.1 [-1.1, +4.0]
+  new_nested - new_prognosis   +7.7 [-2.1, +18.1]
+  new_nested - new_rules       +19.3 [+8.6, +30.8]
+  old_nested - old_prognosis   +7.1 [-2.5, +17.4]

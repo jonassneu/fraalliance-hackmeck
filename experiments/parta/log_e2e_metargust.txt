@@ -1,0 +1,43 @@
+2026-06-22 168 issues
+2026-06-01 168 issues
+2026-06-15 168 issues
+2026-06-08 168 issues
+2026-06-29 168 issues
+2026-07-13 168 issues
+2026-07-06 168 issues
+2026-07-20 168 issues
+2026-07-27 168 issues
+2026-08-10 168 issues
+2026-08-03 168 issues
+2026-08-17 168 issues
+2026-08-24 168 issues
+2026-08-31 168 issues
+2026-09-07 168 issues
+2026-09-14 168 issues
+2026-09-21 168 issues
+2026-09-28 168 issues
+2026-10-05 168 issues
+2026-10-12 168 issues
+2026-10-26 107 issues
+2026-10-19 168 issues
+{
+ "tw25_cross_3kt_per48h_sim": 4.893529573590096,
+ "tw25_cross_3kt_per48h_obs": 4.469041227566319,
+ "lead24_tw25_spread_kt": 3.023934684391875,
+ "lead24_tw25_ensmean_rmse_kt": 2.841475610120231,
+ "lead24_tw25_bias_kt": 0.16926087913746338,
+ "tw25_hourly_change_rms_sim": 3.1756118834547657,
+ "tw25_hourly_change_rms_obs": 3.053715452250905,
+ "gust_minus_speed_mean_sim": 0.26611997835207446,
+ "gust_minus_speed_mean_obs": 0.7004327753808407,
+ "share_gust_gt_speed_plus5_sim": 0.020749197615772583,
+ "share_gust_gt_speed_plus5_obs": 0.03801456536335933,
+ "n_issues_lead24": 3635
+}
+logit_C0.1_f6_mg             e2e          acc 96.8/94.7/94.9/91.8 B=0.0432 (rows 43401)
+logit_C0.1_f6_mg             production   acc 96.3/94.3/94.1/92.2 B=0.0428 (rows 43401)
+logit_C0.1_f6_mg             blend_50_50  acc 97.1/94.9/94.7/92.6 B=0.0396 (rows 43401)
+logit_C0.1_f6_antmean_mg     e2e          acc 96.8/94.6/94.6/92.0 B=0.0408 (rows 43401)
+logit_C0.1_f6_antmean_mg     production   acc 96.3/94.3/94.1/92.2 B=0.0428 (rows 43401)
+logit_C0.1_f6_antmean_mg     blend_50_50  acc 97.0/94.7/94.8/92.7 B=0.0386 (rows 43401)
+done in 27s; Part B blob 5031bba333, stable=True

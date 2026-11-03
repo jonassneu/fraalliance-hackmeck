@@ -1,0 +1,191 @@
+{
+ "w180": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -2e-05,
+  "needs_live_inputs": null
+ },
+ "w240": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.0002,
+  "needs_live_inputs": null
+ },
+ "wall": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.00075,
+  "needs_live_inputs": null
+ },
+ "w120_clean": {
+  "group": "window",
+  "ci_excludes_0": true,
+  "both_halves_better": true,
+  "acc24_ok": true,
+  "passes": true,
+  "d_brier": -6e-05,
+  "needs_live_inputs": null
+ },
+ "w180_clean": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 8e-05,
+  "needs_live_inputs": null
+ },
+ "w240_clean": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": false,
+  "passes": false,
+  "d_brier": -9e-05,
+  "needs_live_inputs": null
+ },
+ "wall_clean": {
+  "group": "window",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": false,
+  "passes": false,
+  "d_brier": -0.00026,
+  "needs_live_inputs": null
+ },
+ "hl60": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00015,
+  "needs_live_inputs": null
+ },
+ "hl120": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.0003,
+  "needs_live_inputs": null
+ },
+ "hl240": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 1e-05,
+  "needs_live_inputs": null
+ },
+ "hl60_clean": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.00017,
+  "needs_live_inputs": null
+ },
+ "hl120_clean": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00026,
+  "needs_live_inputs": null
+ },
+ "hl240_clean": {
+  "group": "recency",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": false,
+  "passes": false,
+  "d_brier": -0.00028,
+  "needs_live_inputs": null
+ },
+ "C0.01": {
+  "group": "C",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.00085,
+  "needs_live_inputs": null
+ },
+ "C0.1": {
+  "group": "C",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00022,
+  "needs_live_inputs": null
+ },
+ "C0.3": {
+  "group": "C",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00024,
+  "needs_live_inputs": null
+ },
+ "notemp": {
+  "group": "temperature",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00018,
+  "needs_live_inputs": null
+ },
+ "buckets6": {
+  "group": "buckets",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.0001,
+  "needs_live_inputs": null
+ },
+ "lgbm_mono": {
+  "group": "lgbm",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": 0.00136,
+  "needs_live_inputs": "fra.train has no LightGBM production path (would need code, not a constant)"
+ },
+ "blend_lgbm": {
+  "group": "lgbm",
+  "ci_excludes_0": false,
+  "both_halves_better": false,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00048,
+  "needs_live_inputs": "fra.train has no LightGBM production path (would need code, not a constant)"
+ },
+ "pw4": {
+  "group": "partB",
+  "ci_excludes_0": false,
+  "both_halves_better": true,
+  "acc24_ok": true,
+  "passes": false,
+  "d_brier": -0.00064,
+  "needs_live_inputs": "Part B path features are not computed by the live forecast (fra/predict.py)"
+ }
+}

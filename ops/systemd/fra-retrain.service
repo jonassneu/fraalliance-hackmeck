@@ -1,0 +1,17 @@
+[Unit]
+Description=FRA runway forecast: weekly input refresh, candidate refit, smoke test, promotion, calibration report
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/jonas/.t3/projects/fraalliance-hackmeck
+Environment=OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1
+# --require-clean: refuses (exit 2, report written) while the recipe code (fra/train.py, fra/dataset.py, ...) has
+# uncommitted changes, so an unattended run never trains with half-finished experiment code. The new model is only
+# promoted to data/archive/models/production/model.pkl after a live smoke test; fra.train is not run.
+ExecStart=/home/jonas/.local/bin/uv run python -m ops.retrain --require-clean
+TimeoutStartSec=5h
+Nice=15
+IOSchedulingClass=idle

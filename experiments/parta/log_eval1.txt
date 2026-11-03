@@ -1,0 +1,12 @@
+logit_C0.03            1step ll=0.0743 br=0.0203 P/R=1.00/0.11 (mor ll=0.195) | perfect acc 96.7/94.8/94.1/94.1 B=0.0371 [2.1s]
+logit_C0.1             1step ll=0.0721 br=0.0199 P/R=1.00/0.24 (mor ll=0.204) | perfect acc 97.0/94.7/93.7/93.8 B=0.0365 [2.1s]
+logit_C0.3             1step ll=0.0742 br=0.0204 P/R=0.94/0.33 (mor ll=0.218) | perfect acc 96.7/94.4/93.5/93.4 B=0.0384 [2.1s]
+logit_C1               1step ll=0.0780 br=0.0214 P/R=0.88/0.38 (mor ll=0.236) | perfect acc 96.6/94.2/93.1/92.6 B=0.0405 [2.1s]
+logit_C0.1_dur         1step ll=0.0724 br=0.0198 P/R=0.95/0.24 (mor ll=0.206) | perfect acc 97.0/94.8/93.5/93.5 B=0.0367 [5.5s]
+logit_C0.1_100m        1step ll=0.0694 br=0.0195 P/R=0.90/0.25 (mor ll=0.183) | perfect acc 96.9/95.1/94.5/94.5 B=0.0344 [0.7s]
+logit_C0.1_nofuture    1step ll=0.0845 br=0.0217 P/R=0.92/0.18 (mor ll=0.196) | perfect acc 96.5/94.0/92.8/93.1 B=0.0436 [1.5s]
+logit_C0.1_compact     1step ll=0.0723 br=0.0200 P/R=1.00/0.13 (mor ll=0.216) | perfect acc 96.7/94.5/93.5/93.5 B=0.0377 [1.5s]
+lgbm_mono              1step ll=0.0744 br=0.0202 P/R=0.78/0.46 (mor ll=0.238) | perfect acc 96.9/94.8/94.6/94.6 B=0.0356 [7.3s]
+lgbm_free              1step ll=0.0749 br=0.0205 P/R=0.77/0.43 (mor ll=0.239) | perfect acc 96.8/94.7/94.5/94.5 B=0.0364 [7.2s]
+lgbm_mono_small        1step ll=0.0719 br=0.0196 P/R=0.75/0.18 (mor ll=0.235) | perfect acc 97.0/95.3/94.9/94.8 B=0.0343 [3.4s]
+PRODUCTION (same rows) acc 96.3/94.3/94.1/92.2 B=0.0428

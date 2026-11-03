@@ -1,0 +1,310 @@
+{
+ "period": "issues 2025-09-29 00:00:00+00:00 .. 2026-10-30 10:00:00+00:00",
+ "warning_level": 0.8,
+ "all_leads": {
+  "p_r1": {
+   "n": 247863,
+   "closed_rows": 1632,
+   "closed_hours": 34,
+   "brier": 0.004949361597145328,
+   "brier_clim": 0.006574670288040118,
+   "bss": 0.24720763470852125,
+   "auc": 0.661940341510176,
+   "hit_rate_p_open_lt_0.8": 0.39889705882352944,
+   "false_alarms_per_1000h": 2.331144331948455,
+   "closed_hours_flagged_any_lead": 15
+  },
+  "p_r2": {
+   "n": 247863,
+   "closed_rows": 1632,
+   "closed_hours": 34,
+   "brier": 0.005902988437178346,
+   "brier_clim": 0.006574670288040118,
+   "bss": 0.10216205854210181,
+   "auc": 0.8392417418332109,
+   "hit_rate_p_open_lt_0.8": 0.1875,
+   "false_alarms_per_1000h": 1.0396741271407743,
+   "closed_hours_flagged_any_lead": 11
+  },
+  "p_r3": {
+   "n": 247863,
+   "closed_rows": 1632,
+   "closed_hours": 34,
+   "brier": 0.00517865118807949,
+   "brier_clim": 0.006574670288040118,
+   "bss": 0.21233294428468985,
+   "auc": 0.8124706456897122,
+   "hit_rate_p_open_lt_0.8": 0.3939950980392157,
+   "false_alarms_per_1000h": 1.5432662824745869,
+   "closed_hours_flagged_any_lead": 15
+  },
+  "p_clim": {
+   "n": 247863,
+   "closed_rows": 1632,
+   "closed_hours": 34,
+   "brier": 0.006574670288040118,
+   "brier_clim": 0.006574670288040118,
+   "bss": 0.0,
+   "auc": 0.30144117420107897,
+   "hit_rate_p_open_lt_0.8": 0.0,
+   "false_alarms_per_1000h": 0.0,
+   "closed_hours_flagged_any_lead": 0
+  }
+ },
+ "per_lead": {
+  "1": {
+   "p_r1": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.0045762687862265184,
+    "brier_clim": 0.006579145001050535,
+    "bss": 0.3044280395863299,
+    "auc": 0.6519234961392398,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 1.5603666861712502,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_r2": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.00593578017661289,
+    "brier_clim": 0.006579145001050535,
+    "bss": 0.09778851573189451,
+    "auc": 0.842747163230418,
+    "hit_rate_p_open_lt_0.8": 0.3235294117647059,
+    "false_alarms_per_1000h": 4.876145894285157,
+    "closed_hours_flagged_any_lead": 11
+   },
+   "p_r3": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.004856449153689663,
+    "brier_clim": 0.006579145001050535,
+    "bss": 0.2618419030262744,
+    "auc": 0.81243474569465,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 2.5355958650282817,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_clim": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.006579145001050535,
+    "brier_clim": 0.006579145001050535,
+    "bss": 0.0,
+    "auc": 0.2890407186865384,
+    "hit_rate_p_open_lt_0.8": 0.0,
+    "false_alarms_per_1000h": 0.0,
+    "closed_hours_flagged_any_lead": 0
+   }
+  },
+  "6": {
+   "p_r1": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.004588218946145797,
+    "brier_clim": 0.006579156808086207,
+    "bss": 0.3026129213843056,
+    "auc": 0.646921144115926,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 1.7554125219426566,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_r2": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.005920126279089767,
+    "brier_clim": 0.006579156808086207,
+    "bss": 0.10016945153008805,
+    "auc": 0.8079257449029934,
+    "hit_rate_p_open_lt_0.8": 0.17647058823529413,
+    "false_alarms_per_1000h": 1.1702750146284377,
+    "closed_hours_flagged_any_lead": 6
+   },
+   "p_r3": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.0048270870675102195,
+    "brier_clim": 0.006579156808086207,
+    "bss": 0.266306122757643,
+    "auc": 0.7849619660620245,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 1.5603666861712502,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_clim": {
+    "n": 5161,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.006579156808086207,
+    "brier_clim": 0.006579156808086207,
+    "bss": 0.0,
+    "auc": 0.28886001445633835,
+    "hit_rate_p_open_lt_0.8": 0.0,
+    "false_alarms_per_1000h": 0.0,
+    "closed_hours_flagged_any_lead": 0
+   }
+  },
+  "24": {
+   "p_r1": {
+    "n": 5156,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.0050980869070647,
+    "brier_clim": 0.006584651242287927,
+    "bss": 0.2257620457825037,
+    "auc": 0.6923880836989228,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 2.147598594299102,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_r2": {
+    "n": 5156,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.005948812278388829,
+    "brier_clim": 0.006584651242287927,
+    "bss": 0.09656380277449095,
+    "auc": 0.8698520798401359,
+    "hit_rate_p_open_lt_0.8": 0.17647058823529413,
+    "false_alarms_per_1000h": 1.1714174150722374,
+    "closed_hours_flagged_any_lead": 6
+   },
+   "p_r3": {
+    "n": 5156,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.005398813651522171,
+    "brier_clim": 0.006584651242287927,
+    "bss": 0.18009117675816655,
+    "auc": 0.8501389622619842,
+    "hit_rate_p_open_lt_0.8": 0.4411764705882353,
+    "false_alarms_per_1000h": 0.9761811792268645,
+    "closed_hours_flagged_any_lead": 15
+   },
+   "p_clim": {
+    "n": 5156,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.006584651242287927,
+    "brier_clim": 0.006584651242287927,
+    "bss": 0.0,
+    "auc": 0.29956416381468637,
+    "hit_rate_p_open_lt_0.8": 0.0,
+    "false_alarms_per_1000h": 0.0,
+    "closed_hours_flagged_any_lead": 0
+   }
+  },
+  "48": {
+   "p_r1": {
+    "n": 5151,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.005263922178890011,
+    "brier_clim": 0.006590008888678813,
+    "bss": 0.20122684691168302,
+    "auc": 0.6724700824242146,
+    "hit_rate_p_open_lt_0.8": 0.3235294117647059,
+    "false_alarms_per_1000h": 2.93140512018761,
+    "closed_hours_flagged_any_lead": 11
+   },
+   "p_r2": {
+    "n": 5151,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.00603094767710895,
+    "brier_clim": 0.006590008888678813,
+    "bss": 0.08483466729920386,
+    "auc": 0.8488027221832646,
+    "hit_rate_p_open_lt_0.8": 0.08823529411764706,
+    "false_alarms_per_1000h": 0.19542700801250734,
+    "closed_hours_flagged_any_lead": 3
+   },
+   "p_r3": {
+    "n": 5151,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.005442447095629241,
+    "brier_clim": 0.006590008888678813,
+    "bss": 0.17413660777013595,
+    "auc": 0.8279954936831094,
+    "hit_rate_p_open_lt_0.8": 0.35294117647058826,
+    "false_alarms_per_1000h": 1.7588430721125659,
+    "closed_hours_flagged_any_lead": 12
+   },
+   "p_clim": {
+    "n": 5151,
+    "closed_rows": 34,
+    "closed_hours": 34,
+    "brier": 0.006590008888678813,
+    "brier_clim": 0.006590008888678813,
+    "bss": 0.0,
+    "auc": 0.31232397199645934,
+    "hit_rate_p_open_lt_0.8": 0.0,
+    "false_alarms_per_1000h": 0.0,
+    "closed_hours_flagged_any_lead": 0
+   }
+  }
+ },
+ "closure_days": [
+  "2025-12-24",
+  "2026-02-14",
+  "2026-04-13",
+  "2026-04-14",
+  "2026-04-15",
+  "2026-05-10",
+  "2026-05-29",
+  "2026-07-30",
+  "2026-10-28"
+ ],
+ "pooled_brier_ci": {
+  "R1_logit": [
+   0.0049493615971453265,
+   0.0017436213021787728,
+   0.00887308225878297
+  ],
+  "R2_paths": [
+   0.005902988437178344,
+   0.002033034020319485,
+   0.010830012962121254
+  ],
+  "R3_blend": [
+   0.005178651188079489,
+   0.0018134585037066192,
+   0.009254971926454643
+  ],
+  "climatology": [
+   0.00657467028804009,
+   0.0019621067329041756,
+   0.0124832284721846
+  ],
+  "rule": [
+   0.03061368578609958,
+   0.0215655036064798,
+   0.04070185295811715
+  ],
+  "R2_paths - R1_logit": [
+   0.0009536268400330184,
+   -0.00011117263987413347,
+   0.002898069644444492
+  ],
+  "R3_blend - R1_logit": [
+   0.00022928959093416164,
+   -0.00011643059595482928,
+   0.0008145383270277701
+  ],
+  "R1_logit - climatology": [
+   -0.001625308690894789,
+   -0.005046145878559586,
+   0.00040089705195074497
+  ]
+ },
+ "decision": "p_r1"
+}

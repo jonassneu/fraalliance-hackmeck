@@ -1,0 +1,80 @@
+{
+ "champion_choice": {
+  "rule": "blend-v2 (fra.blend:forecast) is the champion if it beat the production logit on the long walk-forward test, else logit-v1 stays champion",
+  "decided": "decided and promoted at 2026-10-31 17:35 UTC on the long test (runtime/history.jsonl), written down here afterwards (18:13 UTC): the rule is post hoc, not pre-registered",
+  "outcome": "blend-v2 is champion: long test (issues 2026-06-01 .. 2026-10-30, 152 days) paired Brier(1,6,24,48) blend - logit -0.0041 [-0.0067, -0.0018] (1-day blocks; 3-day blocks [-0.0071, -0.0014]); Brier over all 48 leads -0.0042 [-0.0069, -0.0019]; part before 15 Sep (valid < 2026-09-15) -0.0043 [-0.0073, -0.0016]",
+  "in_sample": "All of Jun-Oct 2026 was used to select the blend design (waves 1 and 2: Part A specification, Part B DEFAULT, anticipate='mean', the 50/50 weight, BLEND_CHANGE_PARAMS / BLEND_P48_COEF, the data layer, CLEAN_LABELS; ~38 integration and 21 phase-2 variants were compared on these rows); no part of the long test is selection-free for the blend, and its long-test gain is an in-sample upper bound. Only the holdout decides."
+ },
+ "streams": {
+  "official": "data/archive/issued/forecast_YYYYMMDDTHH.csv (+ .json, .features.parquet): the champion, issued once per hour by fra-archive.timer (:30 local time since 2026-10-31 18:57 UTC; :12 before, see amendment A6) from the runtime data/archive/runtime/current; the .json records variant, runtime, model sha256 and, for the blend, the decision part's status",
+  "shadow": "data/archive/issued_shadow/<variant>/forecast_YYYYMMDDTHH.*: every challenger, the same issue hour, in its own frozen runtime and process right after the champion, with the same prognosis snapshot and the radar hours the champion fetched (run_cache/); weather inputs are fetched by each variant itself seconds to a minute later",
+  "never_backfilled": "a missing hour stays missing; shadows are not issued if the official forecast of the hour is older than 20 min",
+  "embedded_logit": "the official blend-v2 file also holds p_od25_logit = the logit-v2 model on exactly the champion's inputs; used as a consistency check of the logit-v2 shadow stream, not for the decision"
+ },
+ "truth": {
+  "od": "flown operating direction of the radar hour starting at the valid time: fra.labels.to_labels(fra.labels.load_counts(), bridge=\"night\") on data/inaa_counts.csv (INAA FANOMOS radar, appended hourly by the live job, re-checked once >= 6 h later): majority of west/east movements if >= 4 movements, carried (<= 8 h) only through the night ban and fetched quiet hours, never across a daytime hour that was not fetched; hours without a label are not scored; fra.scoring reports per window the valid hours observed / bridged / unlabelled",
+  "rwy18": "rwy18_open of the same labels: judged only in busy hours (>= 15 movements, from 06 local), closed = no RWY 18 departure",
+  "computed_by": "fra.scoring (python -m fra.scoring, every hour): data/archive/live_record_variants.json"
+ },
+ "analysis": {
+  "rows": "identical rows only: issue hours that BOTH compared variants issued (official or shadow), leads 1, 6, 24 and 48, valid hour labelled; pooled = all these rows with equal weight",
+  "ci": "95 % percentile CI of a block bootstrap: blocks = 3 consecutive UTC days of the valid time (fixed calendar blocks, fra.evalkit.day_blocks(block_days=3)), 2000 draws, seed 20261031 (fra.evalkit.bootstrap, block_days=3; fra.scoring.BLOCK_DAYS); paired differences are computed on the same resampled blocks. Sensitivity (reported, not decisive): the pooled Brier difference with 1- and 7-day blocks (live_record_variants.json -> brier_pooled_by_block_days). Reason (amendment A3): the daily paired Brier differences are autocorrelated (long test: lag-1 0.21, lag-2 0.07), so 1-day blocks give CIs ~15-25 % too narrow (long test blend - logit: width 0.0048 with 1-day, 0.0057 with 3-day, 0.0065 with 7-day blocks)",
+  "primary_window": {
+   "name": "holdout_4w",
+   "issue_from_utc": "2026-11-01T00:00:00+00:00",
+   "issue_to_utc": "2026-11-28T23:00:00+00:00",
+   "evaluate_after_utc": "2026-12-01T08:00:00+00:00",
+   "where": "data/archive/live_record_variants.json -> windows.holdout_4w.pairs['logit-v2'].od.pooled['blend-v2 - logit-v2'].brier",
+   "note": "the last valid hour of the window is 2026-11-30 23:00 UTC; its radar hour is stored >= 100 min after its end and re-checked >= 6 h later, so the evaluation waits until 08:00 UTC"
+  },
+  "extension_window": {
+   "name": "holdout_8w",
+   "issue_from_utc": "2026-11-01T00:00:00+00:00",
+   "issue_to_utc": "2026-12-26T23:00:00+00:00",
+   "evaluate_after_utc": "2026-12-29T08:00:00+00:00",
+   "used_only_if": "the primary decision is inconclusive (rule D3)"
+  },
+  "primary_metric": "Brier score of P(OD 25) pooled over leads 1, 6, 24 and 48",
+  "primary_comparison": "blend-v2 (champion) minus logit-v2 (the same logit alone, same code and data layer): negative = blend better",
+  "secondary": [
+   "S1 accuracy at 24 h (P(OD 25) >= 0.5 vs flown OD), paired blend-v2 - logit-v2 with the same bootstrap",
+   "S2 event accuracy of the next change (fra.changetime definitions as in fra.scoring.switch_events: issue hours whose whole 48 h horizon is labelled; an actual change lasts >= 2 flown hours; a predicted change is a hit within +-3 h; 'no change' predicted and observed counts as correct), per variant on the common issue hours; paired difference with a day-block bootstrap over issue days (fra.evalkit.bootstrap_means)",
+   "S3 RWY 18 warnings: P(RWY 18 open) < 0.8 at any lead: closed hours flagged and false alarms (per 1,000 forecast hours), plus RWY 18 Brier pooled over leads 1/6/24/48; blend-v2 and logit-v2 use the same RWY 18 logit (fra.blend.RWY18_MODE = 'logit'), so this compares the new logit with logit-v1 and hackathon; closures are rare (34 closure hours in 14 months), so S3 is descriptive unless >= 10 closure hours occur",
+   "S4 Brier over all 48 leads and accuracy at 1, 6 and 48 h (paired, same bootstrap)",
+   "S5 accuracy on changed hours (flown OD at the valid hour differs from the issued od_now) at 1 h and 6 h: the long test showed the blend worse at 6 h (-5.8 pp [-10.4, -2.2]); watched, not a decision criterion"
+  ],
+  "descriptive": [
+   "blend-v2 and logit-v2 vs logit-v1 (the previous official system: old code, od_now from the newest partly published radar hour, stitched live ECMWF forecast) and vs hackathon (the frozen hackathon model); their long-test numbers are not comparable (logit-v1's backtest used the complete hour [t-1h, t), which is not available live)",
+   "all variants vs the published INAA prognosis, the official rules on the forecast wind and persistence (fra.scoring baselines on the champion's issue hours)",
+   "coverage: expected vs issued hours per variant; blend fallback rate (share of champion issues with blend_ok = false)",
+   "od_now checks: od_now_vs_source_hour (should be ~1.0 for the new code) and od_now_vs_full_hour (staleness)"
+  ]
+ },
+ "decision_rule": {
+  "D1_confirm": "at holdout_4w: if the upper CI bound of Brier(blend-v2) - Brier(logit-v2) is < 0, blend-v2 is confirmed as champion",
+  "D2_demote": "at holdout_4w: if the lower CI bound is > 0, blend-v2 is demoted: logit-v2 becomes champion (registry roles swapped, its runtime promoted), blend-v2 stays as a challenger",
+  "D3_inconclusive": "otherwise (CI includes 0) blend-v2 stays champion and the comparison is extended to holdout_8w; there: confirm if the upper bound < 0; demote if the lower bound > 0 OR the point estimate is > 0; else (point estimate <= 0, CI includes 0) blend-v2 stays champion",
+  "secondary_role": "secondary metrics never override the primary rule; they are reported together with the decision and can motivate a NEW pre-registered variant, never a silent change",
+  "other_variants": "logit-v1 and hackathon are references; no decision is taken on them in this plan",
+  "power_note": "on the long test the CI half-width of the paired difference was ~0.0025 over 152 days; over 28 days it is expected to be ~0.006 and over 56 days ~0.004, so a true gain of the size seen on the long test (-0.004) will often be inconclusive at 4 weeks; D3 handles that by default to the long-test choice"
+ },
+ "fixed_during_holdout": [
+  "model files of every variant (sha256 above; read-only copies under data/archive/models/<variant>/); no retraining: the weekly retrain timer stays disabled (data/archive/RETRAIN_PAUSED); the decision bundle is not refitted",
+  "forecast code of every variant (runtime tags and module sha256 above); fra.blend weights (0.5 / 0.5), N_PATHS 200, Part B DEFAULT parameters, BLEND_CHANGE_PARAMS / BLEND_P48_COEF, fra.changetime PARAMS / P48_COEF, RWY18_MODE; the Part B analogue library inputs (frozen read-only copy data/archive/models/blend-v2/library/, registry models.library, sha256 per file in its MANIFEST.json)",
+  "the data layer: od_now from the last complete radar hour (fra.dataset.KNOWN_LAG_H = 2, read by the job at :30 local time, ~90 min after that hour ended), ICON-EU fill, the as-of rules for the ECMWF / ICON runs (a served run is used only if complete for the hours the forecast needs, else the run one cycle earlier; every fallback is recorded in the issued .json live_inputs)",
+  "this analysis plan: metric, rows, windows, bootstrap, decision rule"
+ ],
+ "allowed_changes": [
+  "scoring, report and site code that does not change any issued forecast (new runtime snapshots are logged in data/archive/runtime/history.jsonl; the forecast-module sha256 must stay as registered)",
+  "operations fixes needed to keep the hourly job running; if a fix changes the forecast code or a model of a variant, that variant gets a new name (e.g. blend-v2.1), its record restarts at the change and the primary comparison is done separately before and after it",
+  "data files the live forecast reads at run time keep growing as in normal operation (radar counts); the Part B library of blend-v2 is read from its frozen copy, so refreshes of data/ifs_runs*.parquet, icon_runs.parquet or metar_full.parquet do not reach it",
+  "snapshots during the holdout are made with `ops.runtime snapshot --base <current tag> --files <scoring/site files>`; ops.runtime promote refuses a runtime whose forecast modules differ from this registration (unless explicitly overridden for a NEW variant name); every run records the check in runs.jsonl (prereg)"
+ ],
+ "handling": {
+  "missing_hours": "not imputed; only issue hours both variants issued are compared; coverage is reported",
+  "blend_fallback": "an hour in which the decision part failed and blend-v2 issued the logit (blend_ok = false) still counts as blend-v2 (intention to treat)",
+  "shadow_failures": "a challenger hour that failed or timed out is missing for that pair",
+  "label_corrections": "late or corrected radar hours are picked up automatically; the analysis uses the labels as of the evaluation time"
+ },
+ "leakage": "every variant uses only information available at issue time: the logit models (blend-v2 / logit-v2) were refit on 2026-10-31 on labels up to 2026-10-30 11:00 UTC, the decision bundle on rows known before 2026-10-31 16:00 UTC (labels up to 2026-10-30 11:00 UTC); live inputs are fetched at issue time with the as-of rules of training; no issue time >= 2026-11-01 was used for any choice in this plan"
+}

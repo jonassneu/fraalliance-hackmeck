@@ -1,0 +1,57 @@
+{
+ "written_utc": "2026-10-31T16:44:12+00:00",
+ "status": "pre-registered before any integration result was computed (no blend / change-time / RWY 18 numbers of this round seen)",
+ "data_layer": "fra.dataset KNOWN_LAG_H = 2 (od_now = label of [t-2h, t-1h)), ICON-EU fill, 48 training leads; production logit = experiments.harness.production_preds (fra.train exactly)",
+ "test": {
+  "long": "issue 2026-06-01 .. holdout start, valid < 2026-11-01 (fra.evalkit TEST_START, weekly walk-forward folds)",
+  "selection_free": "valid < 2026-09-15 (fra.evalkit SELECTION_START), reported separately",
+  "holdout": "issue >= 2026-11-01 never used for any choice below"
+ },
+ "main_configuration_fixed_in_advance": {
+  "decision_model": "fra.decision.DEFAULT (logit C 0.1, 10 m wind, look-ahead h+1..h+6), refit weekly on transition rows with h + 6 h <= week start; RWY 18 closure model on rows with h + 2 h <= week start",
+  "wind_paths": "fra.fcerror.DEFAULT, 200 paths per issue, seed 0, strict walk-forward library",
+  "rollout": "starts at label hour t-1 from od_now = label of hour t-2 (the production od_now); wind hours <= t observed (METAR, no gap interpolation), later hours = Part B paths; look-ahead features from the ensemble-mean path (anticipate='mean')",
+  "blend": "P(OD 25) = 0.5 * production logit + 0.5 * decision rollout"
+ },
+ "comparisons": {
+  "1_od_blend": {
+   "primary_metric": "paired Brier over all leads 1..48 and Brier(1,6,24,48) vs the production logit, day-block bootstrap 95 % CI (fra.evalkit, 2000 reps), same (issue, lead) rows",
+   "reported": "accuracy and Brier at 1/6/24/48 h with paired CIs vs logit, long test and selection-free part; decision rollout alone; legacy-lag rollout (start t from label t-1) as a reference for what the honest od_now costs"
+  },
+  "2_blend_weights": {
+   "candidates": [
+    "fixed w = 0.5",
+    "per lead bucket (1-3, 4-12, 13-30, 31-48 h) weight on the logit, grid 0..1 step 0.05, each test week fitted (min Brier) on the out-of-sample rows of earlier test weeks with valid + 2 h <= week start; 0.5 until 2 earlier weeks exist"
+   ],
+   "rule": "adopt per-bucket weights only if the paired Brier(all leads) difference vs fixed 0.5 has a 95 % CI upper bound < 0 on the long test AND a negative point estimate on the selection-free part; otherwise keep 0.5"
+  },
+  "3_part_b_variants": {
+   "candidates": [
+    "DEFAULT (keep)",
+    "DEFAULT with simulated gust mapped to the METAR convention (gust kept only if >= mean + 10 kt)",
+    "DEFAULT_NATIVE"
+   ],
+   "rule": "replace DEFAULT only if the blend with the variant beats the blend with DEFAULT on paired Brier(all leads) with 95 % CI upper bound < 0 on the long test and a negative point estimate on the selection-free part"
+  },
+  "4_change_time": {
+   "issues": "issue times whose whole 48 h horizon is labelled and ends before the holdout (fra.changetime.walk_forward_paths rule), od_now = production od_now; actual change = fra.changetime.actual_first_change (>= 2 h), hit = +-3 h",
+   "candidates": {
+    "i_hysteresis_on_blend": "fra.changetime rule (smooth, enter, leave, k over fra.changetime.GRID) applied to the blended P(other OD), nested walk-forward (week w scored with parameters best on weeks < w); P(change within 48 h) = walk-forward logistic on logit(max smoothed P(other OD)); window = enter +- WINDOW_BAND crossings",
+    "ii_decision_paths": "from the rollout: P(changed by lead L) = 1 - P(no switch through lead L) (switches in the unpublished hours t-1, t count for lead 1); predicted change = first lead with P(changed) >= thr, thr in {0.30, 0.35, ..., 0.70} nested walk-forward; P(change within 48 h) = 1 - P(no switch through lead 48), walk-forward logistic recalibration (raw also reported); window = quartiles of the conditional first-change distribution",
+    "references": "current PARAMS on the logit (production today), nested rule on the logit, published prognosis, official rules, persistence"
+   },
+   "rule": "change time from the candidate with the higher out-of-sample event accuracy (weeks >= 1); if the paired difference CI includes 0 and |diff| < 1 pp, prefer the one with fewer false alarms; P(change within 48 h) from the candidate with the lower walk-forward Brier; the window comes with the chosen change time"
+  },
+  "5_rwy18": {
+   "period": "weekly walk-forward from 2025-09-01 (fold weeks counted from 2025-09-01), valid < 2026-11-01; rows where every candidate has a prediction",
+   "candidates": {
+    "R1": "production logit (fra.train rwy18 spec)",
+    "R2": "decision-study RWY 18 closure model (P(closed | steady tailwind on 18, OD)) on Part B wind paths, combined with the logit P(OD 25): P(open) = 1 - [P25 * mean_paths c25 + (1 - P25) * mean_paths c07]",
+    "R3": "0.5 * R1 + 0.5 * R2"
+   },
+   "metrics": "Brier (pooled all leads, and 1/6/24/48), Brier skill vs walk-forward climatology (training closure rate), AUC of P(closed), hit rate of closure hours at P(open) < 0.8, false alarms (open hours flagged) per 1,000 h",
+   "rule": "replace R1 only if the candidate's paired pooled Brier difference vs R1 has a 95 % CI upper bound < 0 and its false alarms per 1,000 h are at most 2x R1's; among several, the lowest Brier"
+  }
+ },
+ "noise_note": "about 38 variants were compared on the same June-October test in the previous round; gains of ~0.001-0.002 Brier are within selection noise; the locked holdout from 2026-11-01 is the referee"
+}

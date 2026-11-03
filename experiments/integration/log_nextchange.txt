@@ -1,0 +1,41 @@
+3588 issue times, 3588 with decision paths
+                                               method  n_issues  n_actual_change  n_pred_change  hits  hit_rate  timing_mae_h  false_alarm  correct_no_change  event_acc
+                       blend: hysteresis rule, nested      3420             1797           1634  1163     0.647         1.242           49               1574      0.800
+                                blend: current PARAMS      3420             1797           1640  1147     0.638         1.075           37               1586      0.799
+blend: all-weeks params (in-sample; = fra.blend live)      3420             1797           1699  1216     0.677         1.135           59               1564      0.813
+           decision paths: P(switched) >= thr, nested      3420             1797           1917  1120     0.623         1.142          267               1356      0.724
+                              decision paths: thr 0.5      3420             1797           1845  1126     0.627         1.207          209               1414      0.743
+             logit: current PARAMS (production today)      3420             1797           1702  1143     0.636         1.221           62               1561      0.791
+                       logit: hysteresis rule, nested      3420             1797           1632  1080     0.601         1.237           43               1580      0.778
+                                       official rules      3420             1797           2235  1022     0.569         1.450          516               1107      0.623
+                                  published prognosis      3420             1797           1596   893     0.497         1.506          132               1491      0.697
+                                          persistence      3420             1797              0     0     0.000           NaN            0               1623      0.475
+                                                                                          method    n  n_days     est      lo      hi  p_boot
+                                                                  blend: hysteresis rule, nested 3420     143  0.8003  0.7497  0.8473     NaN
+                                                                           blend: current PARAMS 3420     143  0.7991  0.7461  0.8449     NaN
+                                           blend: all-weeks params (in-sample; = fra.blend live) 3420     143  0.8129  0.7635  0.8569     NaN
+                                                      decision paths: P(switched) >= thr, nested 3420     143  0.7240  0.6690  0.7788     NaN
+                                                                         decision paths: thr 0.5 3420     143  0.7427  0.6909  0.7936     NaN
+                                                        logit: current PARAMS (production today) 3420     143  0.7906  0.7380  0.8392     NaN
+                                                                  logit: hysteresis rule, nested 3420     143  0.7778  0.7230  0.8304     NaN
+                                                                                  official rules 3420     143  0.6225  0.5634  0.6833     NaN
+                                                                             published prognosis 3420     143  0.6971  0.6383  0.7538     NaN
+                                                                                     persistence 3420     143  0.4746  0.4050  0.5487     NaN
+                     blend: hysteresis rule, nested - decision paths: P(switched) >= thr, nested 3420     143  0.0763  0.0379  0.1171   0.000
+                       blend: hysteresis rule, nested - logit: current PARAMS (production today) 3420     143  0.0096 -0.0103  0.0300   0.354
+           decision paths: P(switched) >= thr, nested - logit: current PARAMS (production today) 3420     143 -0.0667 -0.1113 -0.0233   0.002
+                                 blend: hysteresis rule, nested - logit: hysteresis rule, nested 3420     143  0.0225  0.0012  0.0456   0.040
+                                            blend: hysteresis rule, nested - published prognosis 3420     143  0.1032  0.0539  0.1534   0.000
+blend: all-weeks params (in-sample; = fra.blend live) - logit: current PARAMS (production today) 3420     143  0.0222  0.0073  0.0395   0.003
+P48 Brier {'blend: logistic on max smoothed P(other), walk-forward': 0.0686, 'decision paths: recalibrated, walk-forward': 0.0861, 'decision paths: raw P(switch within 48 h)': 0.0734, 'logit: P48_COEF as in production today': 0.0606, 'logit: logistic, walk-forward': 0.0646, 'blend: all-weeks coefficients (in-sample; = fra.blend live)': 0.0543} clim 0.2494
+                                                                                             method    n  n_days     est      lo      hi  p_boot
+                                             blend: logistic on max smoothed P(other), walk-forward 3420     143  0.0686  0.0479  0.0914     NaN
+                                                         decision paths: recalibrated, walk-forward 3420     143  0.0861  0.0623  0.1117     NaN
+                                                          decision paths: raw P(switch within 48 h) 3420     143  0.0734  0.0543  0.0940     NaN
+                                                             logit: P48_COEF as in production today 3420     143  0.0606  0.0393  0.0842     NaN
+                                                                      logit: logistic, walk-forward 3420     143  0.0646  0.0442  0.0874     NaN
+                                        blend: all-weeks coefficients (in-sample; = fra.blend live) 3420     143  0.0543  0.0378  0.0727     NaN
+blend: logistic on max smoothed P(other), walk-forward - decision paths: recalibrated, walk-forward 3420     143 -0.0175 -0.0268 -0.0093   0.000
+                decision paths: recalibrated, walk-forward - logit: P48_COEF as in production today 3420     143  0.0255  0.0043  0.0494   0.015
+final blend params {'smooth': 1, 'enter': 0.45, 'leave': 0.45, 'k': 1} path thr 0.55 coef blend (0.6919888346563947, 1.3021850698924888) path (-0.32385753376608134, 1.0413378629689058) logit (0.350361806539559, 1.184670808967761)
+window blend (0.7242902208201892, 5.026498422712934) path (0.8575757575757575, 8.238181818181818)

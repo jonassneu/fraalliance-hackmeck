@@ -4,8 +4,9 @@ Research code behind the design decisions in [research/conclusion.md](../researc
 needed to train or run the forecast; the production pipeline is in [`fra/`](../fra).
 
 Every study uses the shared walk-forward harness [`harness.py`](harness.py). It caches the production feature table,
-reproduces the production model exactly and scores a variant on the same test hours. The test period is 15 Sep to
-30 Oct 2026, split into weekly folds, and each week is predicted by a model trained only on outcomes known before it.
+reproduces the production model exactly and scores a variant on the same test hours. The test period was 15 Sep to
+30 Oct 2026 at the hackathon and is 1 Jun to 30 Oct 2026 since (`fra/evalkit.py`), split into weekly folds; each week
+is predicted by a model trained only on outcomes known before it. Issue times from 1 Nov 2026 are a locked holdout.
 
 ```python
 from experiments.harness import load, evaluate, PROD_OD
@@ -27,6 +28,19 @@ model at leads 1/6/24/48 h; lower is better. Production started at 0.0358.
 | [`rwy18/`](rwy18) | Are the Runway 18 closure labels right, and how should closure skill be measured? | Label bug found and fixed. A single-bucket model with C = 3 was **adopted**, together with closure metrics (Brier skill, AUC, hits and false alarms at P(open) < 0.8). |
 
 Each folder has a README with the details, its scripts, and a `results/` folder with the result tables.
+
+## Studies after the hackathon
+
+| Study | Question | Outcome |
+| --- | --- | --- |
+| [`eval_long/`](eval_long) | How good is the model on the longest test the hourly labels allow, with error bars? | Long test 1 Jun – 30 Oct 2026 with day-block bootstrap intervals; the radar hour the model may use is the last one completely published at issue time. |
+| [`parta/`](parta) | What does the airport do, given the actual wind? | Hour-by-hour decision model, run forward along wind paths. |
+| [`partb/`](partb) | How wrong is the weather forecast? | 200 simulated wind futures from past forecast errors in similar situations. |
+| [`phase2/`](phase2) | Do the hackathon's choices still hold on the better data? | 21 pre-registered variants; only "train on directly observed labels" passed (tiny gain). |
+| [`integration/`](integration) | Does a blend of the logistic model and the decision model help? | 50/50 blend, Brier 0.039 vs 0.043. **Adopted** as the official forecast; pre-registered holdout plan. |
+| [`history12/`](history12) | Do 12 years of radar history help? | Labels match the published shares; the pre-registered 12-year model was not a clear win. Runway 18 closure model on 850 closures. |
+
+Each folder has a `REPORT.md` with method, numbers and the exact commands.
 
 ## Re-running
 

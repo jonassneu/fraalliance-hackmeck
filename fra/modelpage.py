@@ -1,14 +1,16 @@
 """Third dashboard page "Model" -> site/model.html: the pitch for the forecast - how much better it is than what
 exists today, why that matters, how it works and how it was tested.
 
-Built by fra.dashboard.render from the same walk-forward evaluation (data/eval.csv, data/changetime_eval.csv) that
-feeds the quality section, so the numbers always match the model card. Every claim is a comparison against the
-published INAA prognosis and the official switching rules on the same hours.
+Built by fra.dashboard.render from the same walk-forward evaluation that feeds the quality section
+(fra.dashboard.quality: the backtest of the OFFICIAL forecast, i.e. of the blend when the registry champion is the
+blend, else data/eval.csv / data/changetime_eval.csv). Every claim is a comparison against the published INAA
+prognosis and the official switching rules on the same hours. The weeks are walk-forward (each forecast only from
+earlier data), but the design was chosen on the same weeks: the independent test is the live record from 1 Nov 2026.
+The last slide ("How it was tested", `testing`) says so on the page, with the numbers of fra.dashboard.test_info.
 """
 
 import html
 import json
-import re
 from pathlib import Path
 
 import pandas as pd
@@ -79,6 +81,9 @@ h2{margin:0;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.03em
 .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:22px}
 .rules div{padding-top:14px;border-top:1px solid var(--line)}
 .rules b{color:var(--ink);font-weight:600;font-size:18px}
+.rules p{margin:8px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
+.rules p em{font-style:normal;color:var(--ink);font-weight:600}
+.fine{margin:14px 0 0;font-size:12.5px;line-height:1.4;color:var(--ink3)}
 .notes{position:absolute;left:28px;right:28px;bottom:48px;z-index:3;padding:16px 20px;border-radius:14px;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:var(--lift);font-size:16px;line-height:1.5}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 /* deck controls: counter + arrows in the top bar, dots at the bottom */
@@ -135,7 +140,7 @@ const chart = document.getElementById('chart');
 chart.innerHTML = s + '</svg>';
 chart.querySelectorAll('.row').forEach(g => {
   const r = rows[+g.dataset.i];
-  hover(g, `<b>${r.lead} h ahead</b> · ${r.n.toLocaleString('en')} hours, ${r.changed} with a change<br>`
+  hover(g, `<b>${r.lead} h ahead</b> · ${r.n.toLocaleString('en')} hours${r.changed != null ? `, ${r.changed} with a change` : ''}<br>`
     + D.series.map(([k, lab]) => `${lab}: wrong <b>${pct(err(r[k]))}</b> of hours`).join('<br>'));
 });
 document.getElementById('table').innerHTML = '<tr><th>Ahead</th>' + D.series.map(([, lab]) => `<th>${lab}: right</th>`).join('')
@@ -222,6 +227,7 @@ __BAR__
       <div class="legend" id="legend"></div>
       <div class="chart" id="chart"></div>
       <table class="sr" id="table"></table>
+      <p class="fine">__FINE__</p>
     </div>
   </section>
   __SWITCH__
@@ -231,12 +237,16 @@ __BAR__
     <div class="flow">
       <div class="step"><h3>Public data</h3><ul>__SOURCES__</ul></div>
       <div class="arrow">__ARROW__</div>
-      <div class="step m"><h3>Logistic regression</h3><ul>
-        <li>Wind + prognosis → direction</li><li>Refit on the last 120 days</li><li>Calibrated probabilities</li></ul></div>
+      <div class="step m"><h3>__MODELNAME__</h3><ul>__MODELITEMS__</ul></div>
       <div class="arrow">__ARROW__</div>
       <div class="step"><h3>Every hour, 48 h ahead</h3><ul>
         <li>07 or 25, with probability</li><li>Next switch</li><li>Runway 18 open?</li></ul></div>
     </div>
+  </section>
+  <section class="slide" data-title="How it was tested" data-notes="__N5__">
+    <h2>How it was tested</h2>
+    <p class="lede">__TESTLEDE__</p>
+    <div class="rules">__TESTCOLS__</div>
   </section>
   <nav class="dots" id="dots" aria-label="Slides"></nav>
   <div class="hint"><kbd>←</kbd><kbd>→</kbd> slides · <kbd>N</kbd> notes</div>
@@ -267,13 +277,64 @@ def _labels():
         return ("radar tracks", "Flown direction from Umwelthaus INAA / FANOMOS radar tracks, hour by hour.")
 
 
+def _live_count():
+    """Forecasts issued live so far (data/archive/live_record.json, written every hour by fra.scoring); 0 if none."""
+    try:
+        return int(json.loads((DATA / "archive" / "live_record.json").read_text()).get("n_forecasts") or 0)
+    except Exception:
+        return 0
+
+
+def _day(s, year=True):
+    t = pd.Timestamp(s)
+    return f"{t.day} {t:%b}" + (f" {t.year}" if year else "")
+
+
+def testing(q):
+    """Honest framing of the backtest (q["test_info"] from fra.dashboard.test_info): the caption under the accuracy
+    chart, and lede, three columns and speaker notes of the "How it was tested" slide. The long walk-forward test
+    was also used to choose the design, so it is optimistic; the referee is the locked live holdout."""
+    ti = q.get("test_info") or {}
+    blend = q.get("kind") == "blend"
+    start = pd.Timestamp(ti.get("start", "2026-06-01"))
+    days = int(ti.get("days") or 152)
+    end = start + pd.Timedelta(days=days - 1)
+    n = ti.get("n") or (q["od25"][0]["n"] if q.get("od25") else 0)
+    hold, verdict, vw = ti.get("holdout", "2026-11-01"), ti.get("verdict", "2026-12-01"), ti.get("verdict_weeks", 4)
+    fine = (f"Walk-forward test {_day(start, False)} – {_day(end)}: {n:,} forecasts per lead time, each made from earlier "
+            f"data only. The settings were chosen on the same weeks; the independent test runs live from {_day(hold)}.")
+    lede = f"{days} days walk-forward, then a locked live test"
+    b, bl, bp = ti.get("brier"), ti.get("brier_logit"), ti.get("brier_prog")
+    if blend and b and bl and bp:
+        chosen = (f"The blend and its settings were picked on these {days} days, so the numbers flatter it. Brier score "
+                  f"<em>{b[0]:.3f}</em> vs {bl[0]:.3f} for the logistic model alone and {bp[0]:.3f} for the prognosis "
+                  "(lower is better).")
+    elif b:
+        chosen = (f"The settings were picked on these weeks, so the numbers flatter the model. Brier score "
+                  f"<em>{b[0]:.3f}</em> (lower is better).")
+    else:
+        chosen = "The settings were picked on these weeks, so the numbers flatter the model."
+    live = _live_count()
+    cols = [(f"Walk-forward, {_day(start, False)} – {_day(end, False)}",
+             "Each week is forecast by models trained only on the weeks before it, with only what was known at the "
+             "time: weather runs already published, the prognosis as published, the last complete radar hour."),
+            ("Chosen on the same weeks", chosen),
+            (f"The referee: live from {_day(hold, False)}",
+             "Every hour a forecast is issued and archived before the outcome exists. Forecasts from "
+             f"{_day(hold)} form the locked holdout; first verdict after {vw} weeks ({_day(verdict, False)})."
+             + (f" So far <em>{live:,}</em> forecasts issued live." if live else ""))]
+    cols_html = "".join(f"<div><b>{html.escape(t)}</b><p>{p}</p></div>" for t, p in cols)
+    note = (f"Walk-forward over {days} days: each week forecast only from earlier data. The settings were chosen on the "
+            f"same weeks, so these numbers are optimistic. The referee is the live record: forecasts from {_day(hold)} "
+            f"are a locked holdout, first verdict on {_day(verdict)}.")
+    return fine, lede, cols_html, note
+
+
 def render(q, out):
     """q = fra.dashboard.quality(); writes the page to `out`."""
     od = q["od25"]
-    meta = json.loads((DATA / "train_meta.json").read_text()) if (DATA / "train_meta.json").exists() else {}
-    start = pd.Timestamp(meta.get("test_start", "2026-09-15"))
-    m = re.search(r"\((\d+) weeks\)", meta.get("label_kind", ""))
-    weeks = int(m.group(1)) if m else (pd.Timestamp.now().normalize() - start).days // 7
+    blend = q.get("kind") == "blend"
+    fine, lede, cols_html, note5 = testing(q)
     by = {r["lead"]: r for r in od}
     d24 = by.get(24, od[-1])
     e_m, e_p = 1 - d24["acc"], 1 - (d24["prog"] or 0)
@@ -290,8 +351,6 @@ def render(q, out):
     sw = q.get("switch")
     if sw:
         kpis.append((f"{sw['model']['hit'] * 100:.0f}<small>%</small>", "of switches caught"))
-    ws = [start + pd.Timedelta(weeks=i) for i in range(weeks)]
-    week_html = "".join(f'<div class="wk"><b>Wk {i + 1}</b>{w:%-d %b}</div>' for i, w in enumerate(ws))
     # speaker notes (press N): what to say on each slide, with the numbers filled in
     notes = {
         "__N1__": (f"We forecast which way Frankfurt flies, every hour, 48 h ahead. {gain * 100:.0f}% fewer wrong hours "
@@ -299,17 +358,24 @@ def render(q, out):
         "__N2__": "Black is us, grey the official prognosis. Shorter is better, and we win at every horizon.",
         "__N3__": (f"We also catch more switches: {sw['model']['hit'] * 100:.0f}% vs {sw['prog']['hit'] * 100:.0f}%, "
                    "with fewer false alarms." if sw else ""),
-        "__N4__": "Public weather forecasts plus radar tracks of what was flown. Logistic regression, retrained on the last 120 days.",
-        "__N5__": f"Tested on {weeks} weeks it had never seen, no hindsight.",
+        "__N4__": ("Public weather forecasts plus radar tracks of what was flown. Half a logistic regression (retrained on "
+                   "the last 120 days), half an hour-by-hour decision model rolled out on 200 simulated wind paths."
+                   if blend else
+                   "Public weather forecasts plus radar tracks of what was flown. Logistic regression, retrained on the last 120 days."),
+        "__N5__": note5,
     }
+    if blend:
+        mname, mitems = "Two models, 50 / 50", ["Logistic regression: wind + prognosis", "Hourly decisions on 200 simulated wind paths", "Calibrated probabilities"]
+    else:
+        mname, mitems = "Logistic regression", ["Wind + prognosis → direction", "Refit on the last 120 days", "Calibrated probabilities"]
     page = (PAGE.replace("__BASE__", siteui.BASE_CSS).replace("__CSS__", CSS).replace("__BAR__", siteui.bar("model", CONTROLS))
             .replace("__ARROW__", ARROW)
             .replace("__HEADLINE__", headline).replace("__SUB__", sub)
             .replace("__KPIS__", "".join(f'<div class="kpi"><b>{a}</b><span>{b}</span></div>' for a, b in kpis))
             .replace("__SWITCH__", SWITCH if sw else "")
             .replace("__SOURCES__", "".join(f"<li>{a}</li>" for a in SOURCES))
-            .replace("__TESTLEDE__", f"{weeks} unseen weeks, each forecast only from the past")
-            .replace("__NWEEKS__", str(weeks)).replace("__WEEKS__", week_html)
+            .replace("__MODELNAME__", html.escape(mname)).replace("__MODELITEMS__", "".join(f"<li>{html.escape(x)}</li>" for x in mitems))
+            .replace("__FINE__", html.escape(fine)).replace("__TESTLEDE__", html.escape(lede)).replace("__TESTCOLS__", cols_html)
             .replace("__DATA__", json.dumps(dict(od=od, series=SERIES, switch=sw)).replace("</", "<\\/"))
             .replace("__JS__", JS))
     for k, v in notes.items():

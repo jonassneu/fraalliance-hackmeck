@@ -1,0 +1,46 @@
+backfill: 100.0% of daytime hours, 4424 complete days (100.0%), pass 1 13272/13272, complete=True
+qa done
+labels: {'hist_observed_days_before_2025_06': 4167, 'transition_rows_hist': 81937, 'transition_rows_recent': 4693, 'recent_rows_identical_in_hist': 4693}
+  week 2026-06-22: 168 issues
+  week 2026-06-15: 168 issues
+  week 2026-06-01: 168 issues
+  week 2026-06-08: 168 issues
+  week 2026-06-29: 168 issues
+  week 2026-07-06: 168 issues
+  week 2026-07-13: 168 issues
+  week 2026-07-20: 168 issues
+  week 2026-07-27: 168 issues
+  week 2026-08-03: 168 issues
+  week 2026-08-10: 168 issues
+  week 2026-08-17: 168 issues
+  week 2026-08-24: 168 issues
+  week 2026-08-31: 168 issues
+  week 2026-09-14: 168 issues
+  week 2026-09-07: 168 issues
+  week 2026-09-21: 168 issues
+  week 2026-09-28: 168 issues
+  week 2026-10-05: 168 issues
+  week 2026-10-12: 168 issues
+  week 2026-10-26: 107 issues
+  week 2026-10-19: 168 issues
+PRIMARY blend_partb_hist_era - blend_partb_recent [all]: Brier -0.0006 [-0.0016, +0.0004]
+PRIMARY blend_partb_hist_era - blend_partb_recent [selection_free]: Brier -0.0005 [-0.0020, +0.0010]
+  production               acc 96.3/94.3/94.1/92.2  Brier(1,6,24,48) 0.0428
+  perfect_recent           acc 96.9/94.8/93.9/94.0  Brier(1,6,24,48) 0.0356
+  perfect_hist             acc 97.2/95.7/95.1/95.1  Brier(1,6,24,48) 0.0313
+  perfect_hist_era         acc 97.2/95.5/95.0/95.0  Brier(1,6,24,48) 0.0319
+  perfect_hist_era_nocovid acc 97.2/95.7/95.0/95.0  Brier(1,6,24,48) 0.0319
+  partb_recent             acc 96.9/94.6/94.7/91.6  Brier(1,6,24,48) 0.0408
+  partb_hist               acc 97.2/95.3/95.0/92.2  Brier(1,6,24,48) 0.0388
+  partb_hist_era           acc 97.0/94.9/94.8/91.6  Brier(1,6,24,48) 0.0400
+  partb_hist_era_nocovid   acc 97.1/94.9/94.8/91.5  Brier(1,6,24,48) 0.0398
+  blend_partb_recent       acc 97.1/94.8/94.9/92.6  Brier(1,6,24,48) 0.0386
+  blend_partb_hist         acc 97.4/95.0/94.9/92.8  Brier(1,6,24,48) 0.0376
+  blend_partb_hist_era     acc 97.4/95.0/94.8/92.5  Brier(1,6,24,48) 0.0380
+  blend_partb_hist_era_nocovid acc 97.3/95.1/94.8/92.6  Brier(1,6,24,48) 0.0379
+  blend_perfect_recent     acc 97.2/95.7/95.3/94.9  Brier(1,6,24,48) 0.0337
+  blend_perfect_hist       acc 97.6/96.1/95.7/95.3  Brier(1,6,24,48) 0.0311
+  blend_perfect_hist_era   acc 97.5/96.2/95.7/95.2  Brier(1,6,24,48) 0.0314
+  blend_perfect_hist_era_nocovid acc 97.5/96.1/95.7/95.2  Brier(1,6,24,48) 0.0314
+rwy18: 67008 rows, 901 closures, 41 folds; {'p_expanding': {'n': 60885, 'closures': 850, 'brier': 0.0086, 'brier_clim': 0.0138, 'bss': 0.3791, 'auc': 0.9388, 'hits': 559, 'hit_rate': 0.6576, 'false_alarms': 563, 'fa_per_1000h': 9.2469}, 'p_recent365': {'n': 59449, 'closures': 822, 'brier': 0.0088, 'brier_clim': 0.0137, 'bss': 0.3546, 'auc': 0.9366, 'hits': 514, 'hit_rate': 0.6253, 'false_alarms': 601, 'fa_per_1000h': 10.1095}, 'p_clim': {'n': 60885, 'closures': 850, 'brier': 0.0138, 'brier_clim': 0.0138, 'bss': 0.0, 'auc': 0.403, 'hits': 0, 'hit_rate': 0.0, 'false_alarms': 0, 'fa_per_1000h': 0.0}, 'rule_steady15': {'n': 60885, 'closures': 850, 'hits': 142, 'hit_rate': 0.1671, 'false_alarms': 29, 'fa_per_1000h': 0.4763}, 'rule_gust15': {'n': 60885, 'closures': 850, 'hits': 171, 'hit_rate': 0.2012, 'false_alarms': 212, 'fa_per_1000h': 3.482}}
+done in 60 s -> /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/history12/wave3_results.json

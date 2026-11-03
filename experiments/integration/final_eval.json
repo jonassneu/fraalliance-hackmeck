@@ -1,0 +1,543 @@
+{
+ "written_utc": "2026-10-31T18:50:36.829414+00:00",
+ "consistency": {
+  "dataset.KNOWN_LAG_H": 2,
+  "dataset.ICONEU_FILL": true,
+  "dataset.LEADS": [
+   1,
+   48,
+   48
+  ],
+  "harness_cache_known_lag_h": [
+   2
+  ],
+  "harness_cache_leads": [
+   1,
+   48,
+   48
+  ],
+  "train.spec_od25": {
+   "features": "['prog_signed', 'prog_alt_signed', 'rule_od25', 'od_now25', 'tw25_roll6', 'tw25', 'tw25_prev3', 'tw25_next3', 'hour_sin', 'hour_cos', 'night', 'tw25_100m', 'tw25_cons', 'tw25_cons_roll6', 'tw25_pastmin6', 'xwf_east_tanh', 'shear_tw25']",
+   "C": 0.03,
+   "window": 120,
+   "temperature": true,
+   "buckets": "[(1, 3), (4, 12), (13, 30), (31, 48)]",
+   "half_life": null,
+   "clean": true
+  },
+  "train.spec_rwy18": {
+   "features": "['rule_18', 'rwy18_now_f', 'tw18_gust', 'tw18_roll6', 'obs_tw18']",
+   "C": 3.0,
+   "window": null,
+   "temperature": false,
+   "buckets": "[(1, 48)]",
+   "half_life": null,
+   "clean": false
+  },
+  "train_meta.od_spec": {
+   "C": 0.03,
+   "window": 120,
+   "temperature": true,
+   "buckets": [
+    [
+     1,
+     3
+    ],
+    [
+     4,
+     12
+    ],
+    [
+     13,
+     30
+    ],
+    [
+     31,
+     48
+    ]
+   ],
+   "half_life": null,
+   "clean": true
+  },
+  "blend.W_LOGIT": 0.5,
+  "blend.N_PATHS": 200,
+  "blend.RWY18_MODE": "logit",
+  "blend.CHANGE_MODE": "hysteresis",
+  "blend.BLEND_CHANGE_PARAMS": {
+   "smooth": 1,
+   "enter": 0.45,
+   "leave": 0.45,
+   "k": 1
+  },
+  "blend.BLEND_P48_COEF": [
+   0.692,
+   1.302
+  ],
+  "blend.rollout_lag_h": 2,
+  "changetime.PARAMS": {
+   "smooth": 1,
+   "enter": 0.5,
+   "leave": 0.4,
+   "k": 3
+  },
+  "changetime.P48_COEF": [
+   -1.075,
+   1.503
+  ],
+  "decision_bundle": {
+   "spec": "DEFAULT",
+   "fitted_before": "2026-10-31 16:00:00+00:00",
+   "trained_until": "2026-10-30 11:00:00+00:00",
+   "n_train": {
+    "25": 3047,
+    "7": 1646
+   },
+   "n_switch": {
+    "25": 61,
+    "7": 62
+   }
+  },
+  "evalkit": {
+   "TEST_START": "2026-06-01 00:00:00+00:00",
+   "SELECTION_START": "2026-09-15 00:00:00+00:00",
+   "HOLDOUT_START": "2026-11-01 00:00:00+00:00",
+   "N_BOOT": 2000,
+   "SEED": 20261031
+  },
+  "ok": true
+ },
+ "reproduction": {
+  "rows_new": 173352,
+  "rows_stored": 173352,
+  "rows_both": 173352,
+  "max_abs_diff_p_logit": 0.0,
+  "max_abs_diff_p_dec": 0.0,
+  "max_abs_diff_p_blend": 0.0
+ },
+ "rows": 173352,
+ "issues": 3635,
+ "days": 152,
+ "issue_range": [
+  "2026-06-01 00:00:00+00:00",
+  "2026-10-30 10:00:00+00:00"
+ ],
+ "changed_hours": {
+  "lead_1": {
+   "n": 205,
+   "table": [
+    {
+     "method": "blend",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.5414634146341464,
+     "lo": 0.45538974588270364,
+     "hi": 0.6237126161069715,
+     "p_boot": NaN
+    },
+    {
+     "method": "logit",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.551219512195122,
+     "lo": 0.45410566400473235,
+     "hi": 0.6405585879826405,
+     "p_boot": NaN
+    },
+    {
+     "method": "decision",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.45365853658536587,
+     "lo": 0.36071706810361615,
+     "hi": 0.5392737124071593,
+     "p_boot": NaN
+    },
+    {
+     "method": "prognosis",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.5365853658536586,
+     "lo": 0.46510453370918486,
+     "hi": 0.6062261105920326,
+     "p_boot": NaN
+    },
+    {
+     "method": "rules",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.5853658536585366,
+     "lo": 0.5,
+     "hi": 0.6666666666666666,
+     "p_boot": NaN
+    },
+    {
+     "method": "blend - logit",
+     "n": 205,
+     "n_days": 51,
+     "est": -0.00975609756097561,
+     "lo": -0.04808272946859904,
+     "hi": 0.02956400264686416,
+     "p_boot": 0.684
+    },
+    {
+     "method": "blend - prognosis",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.004878048780487805,
+     "lo": -0.06436444017536082,
+     "hi": 0.06829268292682927,
+     "p_boot": 0.928
+    },
+    {
+     "method": "logit - prognosis",
+     "n": 205,
+     "n_days": 51,
+     "est": 0.014634146341463415,
+     "lo": -0.06104006112144565,
+     "hi": 0.08491977100467658,
+     "p_boot": 0.72
+    }
+   ]
+  },
+  "lead_6": {
+   "n": 446,
+   "table": [
+    {
+     "method": "blend",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.6883408071748879,
+     "lo": 0.6045370813397128,
+     "hi": 0.7697520867237125,
+     "p_boot": NaN
+    },
+    {
+     "method": "logit",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.7466367713004485,
+     "lo": 0.6712635805384979,
+     "hi": 0.813239496750135,
+     "p_boot": NaN
+    },
+    {
+     "method": "decision",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.6524663677130045,
+     "lo": 0.5656770689784771,
+     "hi": 0.7362843729040911,
+     "p_boot": NaN
+    },
+    {
+     "method": "prognosis",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.6838565022421524,
+     "lo": 0.6100098535437313,
+     "hi": 0.7572432764393796,
+     "p_boot": NaN
+    },
+    {
+     "method": "rules",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.647982062780269,
+     "lo": 0.579280367922989,
+     "hi": 0.7133828109655153,
+     "p_boot": NaN
+    },
+    {
+     "method": "blend - logit",
+     "n": 446,
+     "n_days": 53,
+     "est": -0.05829596412556054,
+     "lo": -0.10398321617607062,
+     "hi": -0.02231405365009444,
+     "p_boot": 0.003
+    },
+    {
+     "method": "blend - prognosis",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.004484304932735426,
+     "lo": -0.06205979680869425,
+     "hi": 0.06742989848216038,
+     "p_boot": 0.914
+    },
+    {
+     "method": "logit - prognosis",
+     "n": 446,
+     "n_days": 53,
+     "est": 0.06278026905829596,
+     "lo": 0.0,
+     "hi": 0.13053346488081,
+     "p_boot": 0.054
+    }
+   ]
+  }
+ },
+ "next_change": {
+  "n_issues_scored": 3420,
+  "n_with_change": 1797,
+  "period": "2026-06-08 00:00:00+00:00 .. 2026-10-28 11:00:00+00:00",
+  "logit_paths_max_abs_diff_vs_blend_table": 0.0,
+  "methods": [
+   {
+    "method": "blend: deployed BLEND_CHANGE_PARAMS (tuned on all weeks)",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 1699,
+    "hits": 1216,
+    "hit_rate": 0.6766833611574847,
+    "timing_mae_h": 1.1348684210526316,
+    "wrong_time": 424,
+    "missed": 157,
+    "false_alarm": 59,
+    "correct_no_change": 1564,
+    "precision": 0.7157151265450264,
+    "event_acc": 0.8128654970760234
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 1634,
+    "hits": 1163,
+    "hit_rate": 0.6471897607122983,
+    "timing_mae_h": 1.2416165090283748,
+    "wrong_time": 422,
+    "missed": 212,
+    "false_alarm": 49,
+    "correct_no_change": 1574,
+    "precision": 0.7117503059975521,
+    "event_acc": 0.8002923976608187
+   },
+   {
+    "method": "logit: deployed PARAMS",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 1702,
+    "hits": 1143,
+    "hit_rate": 0.6360601001669449,
+    "timing_mae_h": 1.2213473315835521,
+    "wrong_time": 497,
+    "missed": 157,
+    "false_alarm": 62,
+    "correct_no_change": 1561,
+    "precision": 0.6715628672150411,
+    "event_acc": 0.7906432748538011
+   },
+   {
+    "method": "logit: hysteresis rule, nested walk-forward",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 1632,
+    "hits": 1080,
+    "hit_rate": 0.6010016694490818,
+    "timing_mae_h": 1.237037037037037,
+    "wrong_time": 509,
+    "missed": 208,
+    "false_alarm": 43,
+    "correct_no_change": 1580,
+    "precision": 0.6617647058823529,
+    "event_acc": 0.7777777777777778
+   },
+   {
+    "method": "published prognosis",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 1596,
+    "hits": 893,
+    "hit_rate": 0.4969393433500278,
+    "timing_mae_h": 1.5061590145576709,
+    "wrong_time": 571,
+    "missed": 333,
+    "false_alarm": 132,
+    "correct_no_change": 1491,
+    "precision": 0.5595238095238095,
+    "event_acc": 0.6970760233918128
+   },
+   {
+    "method": "official rules",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 2235,
+    "hits": 1022,
+    "hit_rate": 0.568725653867557,
+    "timing_mae_h": 1.4500978473581214,
+    "wrong_time": 697,
+    "missed": 78,
+    "false_alarm": 516,
+    "correct_no_change": 1107,
+    "precision": 0.45727069351230426,
+    "event_acc": 0.6225146198830409
+   },
+   {
+    "method": "persistence",
+    "n_issues": 3420,
+    "n_actual_change": 1797,
+    "n_pred_change": 0,
+    "hits": 0,
+    "hit_rate": 0.0,
+    "timing_mae_h": NaN,
+    "wrong_time": 0,
+    "missed": 1797,
+    "false_alarm": 0,
+    "correct_no_change": 1623,
+    "precision": 0.0,
+    "event_acc": 0.4745614035087719
+   }
+  ],
+  "event_acc_ci": [
+   {
+    "method": "blend: deployed BLEND_CHANGE_PARAMS (tuned on all weeks)",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.8128654970760234,
+    "lo": 0.7634976525821596,
+    "hi": 0.8569493006993006,
+    "p_boot": NaN
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.8002923976608187,
+    "lo": 0.7496993396861354,
+    "hi": 0.8473205741626795,
+    "p_boot": NaN
+   },
+   {
+    "method": "logit: deployed PARAMS",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.7906432748538011,
+    "lo": 0.73800221622962,
+    "hi": 0.8392018779342723,
+    "p_boot": NaN
+   },
+   {
+    "method": "logit: hysteresis rule, nested walk-forward",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.7777777777777778,
+    "lo": 0.7229997529033853,
+    "hi": 0.8304339447102604,
+    "p_boot": NaN
+   },
+   {
+    "method": "published prognosis",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.6970760233918128,
+    "lo": 0.6382894736842105,
+    "hi": 0.7538081217028585,
+    "p_boot": NaN
+   },
+   {
+    "method": "official rules",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.6225146198830409,
+    "lo": 0.5634485421299729,
+    "hi": 0.6832765151515152,
+    "p_boot": NaN
+   },
+   {
+    "method": "persistence",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.4745614035087719,
+    "lo": 0.40501165501165504,
+    "hi": 0.548666958041958,
+    "p_boot": NaN
+   },
+   {
+    "method": "blend: deployed BLEND_CHANGE_PARAMS (tuned on all weeks) - logit: deployed PARAMS",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.022222222222222223,
+    "lo": 0.007309941520467836,
+    "hi": 0.039477159006671585,
+    "p_boot": 0.003
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward - logit: hysteresis rule, nested walk-forward",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.022514619883040935,
+    "lo": 0.001162357919446504,
+    "hi": 0.0456140350877193,
+    "p_boot": 0.04
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward - logit: deployed PARAMS",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.009649122807017544,
+    "lo": -0.010275441987589876,
+    "hi": 0.03001428761297181,
+    "p_boot": 0.354
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward - published prognosis",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.10321637426900584,
+    "lo": 0.05390184742158426,
+    "hi": 0.15341810799082511,
+    "p_boot": 0.0
+   },
+   {
+    "method": "blend: hysteresis rule, nested walk-forward - official rules",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.17777777777777778,
+    "lo": 0.11227845452854752,
+    "hi": 0.24214015151515147,
+    "p_boot": 0.0
+   },
+   {
+    "method": "logit: deployed PARAMS - published prognosis",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.0935672514619883,
+    "lo": 0.04690413752913753,
+    "hi": 0.14277389277389277,
+    "p_boot": 0.0
+   }
+  ],
+  "p48_brier_ci": [
+   {
+    "method": "blend: deployed BLEND_P48_COEF",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.054320810713180706,
+    "lo": 0.037817346718071486,
+    "hi": 0.07273945010710584,
+    "p_boot": NaN
+   },
+   {
+    "method": "logit: deployed P48_COEF",
+    "n": 3420,
+    "n_days": 143,
+    "est": 0.06056182676250114,
+    "lo": 0.03927833318504751,
+    "hi": 0.08417786973181467,
+    "p_boot": NaN
+   },
+   {
+    "method": "blend: deployed BLEND_P48_COEF - logit: deployed P48_COEF",
+    "n": 3420,
+    "n_days": 143,
+    "est": -0.00624101604932044,
+    "lo": -0.01743470441759811,
+    "hi": 0.005259535805965491,
+    "p_boot": 0.292
+   }
+  ],
+  "p48_brier_climatology": 0.24935287780855653
+ },
+ "runtime_s": 244
+}

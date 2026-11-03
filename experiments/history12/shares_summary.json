@@ -1,0 +1,233 @@
+{
+ "built_at": "2026-11-03T02:58:21.797186+00:00",
+ "radar_years": [
+  2014,
+  2015,
+  2016,
+  2017,
+  2018,
+  2019,
+  2020,
+  2021,
+  2022,
+  2023,
+  2024,
+  2025,
+  2026
+ ],
+ "history_first_hour": "2014-01-01T03:00:00+00:00",
+ "sampling_error_pass1_vs_all_2026": {
+  "months": 9,
+  "rms_month_time_pp": 0.6337732404505827,
+  "rms_month_mv_pp": 0.8733656651911984,
+  "span_all_time": 64.57892509521794,
+  "span_pass1_time": 64.38529784537388,
+  "span_all_mv": 64.4995428983018,
+  "span_pass1_mv": 63.913030448333735,
+  "span": "2026-02-11 .. 2026-10-31",
+  "time_vs_movement_all_pp": 0.07938219691614279
+ },
+ "compared": 20,
+ "flagged_gt3pp": [
+  {
+   "year": 2024.0,
+   "period": "Q1",
+   "local_hours": "all",
+   "metric": "time_share",
+   "verified": "no",
+   "br25_pct": 70.0,
+   "radar_time_share": 77.4074074074074,
+   "radar_movement_share": 78.30036454909461,
+   "diff_time_pp": 7.407407407407405,
+   "diff_movement_pp": 8.30036454909461
+  }
+ ],
+ "diffs": [
+  {
+   "year": 2014.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "yes",
+   "diff_time_pp": 0.43919413919412875,
+   "diff_movement_pp": -1.0045016469440071
+  },
+  {
+   "year": 2015.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "yes",
+   "diff_time_pp": 0.059360730593596145,
+   "diff_movement_pp": -1.6606540278544628
+  },
+  {
+   "year": 2016.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "yes",
+   "diff_time_pp": -0.06539162112932217,
+   "diff_movement_pp": -1.1031249606229636
+  },
+  {
+   "year": 2017.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "yes",
+   "diff_time_pp": -0.15627864344638454,
+   "diff_movement_pp": -0.717359087091836
+  },
+  {
+   "year": 2018.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "yes",
+   "diff_time_pp": -0.3100456621004568,
+   "diff_movement_pp": -1.6580527731928498
+  },
+  {
+   "year": 2014.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": 0.4061705989110749,
+   "diff_movement_pp": -1.3831595865794668
+  },
+  {
+   "year": 2015.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": 0.4347826086956559,
+   "diff_movement_pp": -1.002185363666925
+  },
+  {
+   "year": 2016.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -0.5333333333333456,
+   "diff_movement_pp": -1.737558685446018
+  },
+  {
+   "year": 2017.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -0.820289855072474,
+   "diff_movement_pp": -1.8016593404064452
+  },
+  {
+   "year": 2018.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -1.4057971014492736,
+   "diff_movement_pp": -2.7333312372927523
+  },
+  {
+   "year": 2020.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -6.291042047531988,
+   "diff_movement_pp": 0.366804338595756
+  },
+  {
+   "year": 2021.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -0.2715063520871155,
+   "diff_movement_pp": -1.1018675054059344
+  },
+  {
+   "year": 2022.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": 0.2188405797101396,
+   "diff_movement_pp": -1.3101395013450912
+  },
+  {
+   "year": 2023.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": -0.1545454545454561,
+   "diff_movement_pp": -0.48783767114839094
+  },
+  {
+   "year": 2024.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": 0.22021857923496668,
+   "diff_movement_pp": -0.06318587431175615
+  },
+  {
+   "year": 2025.0,
+   "period": "6vM",
+   "metric": "movement_share_inferred",
+   "verified": "yes",
+   "diff_time_pp": 0.20000000000000284,
+   "diff_movement_pp": -1.1529199386226168
+  },
+  {
+   "year": 2021.0,
+   "period": "full_year",
+   "metric": "time_share",
+   "verified": "no",
+   "diff_time_pp": -0.5164835164835182,
+   "diff_movement_pp": -0.9861391496180971
+  },
+  {
+   "year": 2024.0,
+   "period": "Q1",
+   "metric": "time_share",
+   "verified": "no",
+   "diff_time_pp": 7.407407407407405,
+   "diff_movement_pp": 8.30036454909461
+  },
+  {
+   "year": 2025.0,
+   "period": "Q1",
+   "metric": "time_share",
+   "verified": "no",
+   "diff_time_pp": -0.8127340823970002,
+   "diff_movement_pp": -1.8412288257249472
+  },
+  {
+   "year": 2025.0,
+   "period": "Q3",
+   "metric": "time_share",
+   "verified": "no",
+   "diff_time_pp": 1.602898550724646,
+   "diff_movement_pp": 0.5799646595079508
+  }
+ ],
+ "mean_abs_diff_time_pp": 1.1163160432023975,
+ "mean_abs_diff_movement_pp": 1.549601936123644,
+ "flagged_gt3pp_all_hours": [
+  {
+   "year": 2024.0,
+   "period": "Q1",
+   "metric": "time_share",
+   "verified": "no",
+   "br25_pct": 70.0,
+   "all_time_share": 76.90417690417691,
+   "all_movement_share": 77.37525921537095
+  }
+ ],
+ "gap_rule": "traffic",
+ "monthly_2015_2018": {
+  "months_compared": 48,
+  "mae_pp": 0.8368192257507466,
+  "mae_all_hours_pp": 0.16544257422306663,
+  "max_abs_all_hours_pp": 0.6777777777777843,
+  "corr_all_hours": 0.9999233590023133,
+  "corr": 0.9975872568128351
+ },
+ "suspects": {
+  "confirmed": 1216,
+  "recovered": 26
+ }
+}

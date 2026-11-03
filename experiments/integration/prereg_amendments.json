@@ -1,0 +1,58 @@
+[
+ {
+  "id": "A1",
+  "time_utc": "2026-10-31T18:46:32+00:00",
+  "topic": "next-change evidence: strict nesting",
+  "change": "Nested walk-forward choices for test week w (change-rule parameters, path threshold, walk-forward P(change within 48 h) maps) now use only issues whose whole 48 h outcome was known at the start of week w (fra.changetime.known_before: issue + 48 h + KNOWN_LAG_H <= week start); the blend's walk-forward P48 map uses the features of week w's nested parameters, not the all-weeks choice. fra/changetime.py main, experiments/integration/nextchange.py, final_eval.py; data/changetime_eval.csv, nextchange_results.json, final_eval.json regenerated.",
+  "effect": "out-of-sample next-change event accuracy restated: blend nested 0.802 -> 0.800, logit nested 0.779 -> 0.778; walk-forward P48 Brier logit 0.0586 -> 0.0646, blend 0.0629 -> 0.0686 (mostly less training data in the early weeks). Deployed parameters (BLEND_CHANGE_PARAMS, PARAMS, P48 coefficients) and every forecast unchanged.",
+  "why": "independent review: the earlier nested masks let outcomes up to 50 h inside week w inform week w's parameters (small look-ahead)"
+ },
+ {
+  "id": "A2",
+  "time_utc": "2026-10-31T18:56:17+00:00",
+  "topic": "truth definition implemented as registered",
+  "change": "fra.scoring computes the truth with fra.labels.to_labels(load_counts(), bridge=\"night\") (the code used the default bridge \"ffill\", which also carries the OD across unfetched daytime hours); per window it reports valid hours observed / bridged / unlabelled.",
+  "effect": "before the holdout, 1 hour since 1 Jun (2026-08-06 16 UTC) was labelled only by a daytime carry-over; no live hour affected so far",
+  "why": "the registered text already said 'carried through the night ban and quiet hours'; the code now matches it"
+ },
+ {
+  "id": "A3",
+  "time_utc": "2026-10-31T18:56:17+00:00",
+  "topic": "bootstrap blocks",
+  "change": "analysis.ci: 3-day blocks of the valid time (fra.evalkit.day_blocks(block_days=3); fra.scoring.BLOCK_DAYS) instead of 1-day blocks for every CI of the variant comparison incl. the decision rules D1-D3; the pooled Brier difference is also reported with 1- and 7-day blocks (sensitivity, not decisive).",
+  "effect": "CIs ~18 % wider (long test blend - logit Brier(1,6,24,48) -0.0041: 1-day [-0.0067, -0.0018], 3-day [-0.0071, -0.0014], 7-day [-0.0075, -0.0010])",
+  "why": "daily paired Brier differences are autocorrelated (long test lag-1 0.21, lag-2 0.07, lag-3 0.09); with 1-day blocks D1/D2 would fire more often than nominal"
+ },
+ {
+  "id": "A4",
+  "time_utc": "2026-10-31T18:56:17+00:00",
+  "topic": "claims: no selection-free part for the blend",
+  "change": "'selection_free' renamed 'pre_sep15_part' in the integration outputs and here; champion_choice marked as decided at 17:35 UTC on the long test (in-sample) and documented afterwards; statement added that all of Jun-Oct 2026 was used to select the blend design and that only the holdout decides.",
+  "effect": "no number changed; the blend's long-test gain is an in-sample upper bound",
+  "why": "independent review: Part A / Part B defaults, anticipate='mean', the 50/50 weight and the change parameters were chosen on the whole long test"
+ },
+ {
+  "id": "A5",
+  "time_utc": "2026-10-31T18:56:17+00:00",
+  "topic": "new runtime 2026-10-31-wave2-r3 for blend-v2 and logit-v2 (before the holdout)",
+  "change": "Forecast-module changes that do not change any forecast under normal operation: (a) a champion entry that cannot be resolved (import / attribute / signature error) is a model error -> next candidate at once; first fallback candidate = the champion's own logit with fra.predict (intention to treat: still blend-v2); (b) a served ECMWF / ICON single run is used only if it covers every hour the forecast needs, else the run one cycle earlier; every run used and every fallback is recorded in the issued .json (live_inputs) and runs.jsonl; (c) live METAR and second-NWP requests with (5, 30) s timeouts, the second NWP (not a feature of the production logit) NaN instead of failing the hour; (d) the Part B analogue library is read from a frozen read-only copy (data/archive/models/blend-v2/library/, MANIFEST.json sha256 d38e3f72b613, registry models.library + models_sha256 pin) instead of the live data/ files; (e) run records: package versions, registry sha256, a check of the forecast-module hashes against this registration; (f) corrected comments. logit-v1 and hackathon keep their runtimes.",
+  "effect": "verified identical: the working-tree champion reproduced the official 18 UTC forecast exactly (p_od25, p_rwy18_open, logit and decision parts max |diff| 0.0) with the frozen library; smoke PASS for all four variants",
+  "why": "independent review: silent fallbacks, unfrozen library inputs, an entry failure losing the hour"
+ },
+ {
+  "id": "A6",
+  "time_utc": "2026-10-31T18:56:56+00:00",
+  "topic": "job time :12 -> :30 local time; unit hardening; backup",
+  "change": "fra-archive.timer OnCalendar *:30 (was *:12); the unit calls <repo>/.venv/bin/python directly (no `uv run`, which re-locks / re-syncs the shared environment at each start); a backup step copies data/archive, data/inaa_counts.csv and this file to ~/fra-archive-backup every hour (+ a daily sha256 manifest of the issued files).",
+  "effect": "the od_now source hour [t-2h, t-1h) is read ~90 min after its end instead of ~72 min (it was complete in every measured hour after 75-79 min; at 72 min 2 of 3 measured hours still lacked 1-2 movements); ECMWF run init <= t-6h is read 6.5 h after init instead of 6.2 h. Issue hours and leads are unchanged (valid = issue + lead); logit-v1 / hackathon read their newest, partly published radar hour 18 min later than at :12.",
+  "why": "independent review: residual train/serve skew of od_now / rwy18_now / west_frac_now and an IFS publication buffer on the edge"
+ },
+ {
+  "id": "A7",
+  "time_utc": "2026-10-31T18:58:34+00:00",
+  "topic": "runtime 2026-10-31-wave2-r4 (operations only)",
+  "change": "r4 = r3 with only fra/alerts.py replaced (ops.runtime snapshot --base 2026-10-31-wave2-r3 --files fra/alerts.py): a notification for official hours that were never issued (coverage gaps). blend-v2 and logit-v2 moved to r4; their forecast modules are byte-identical to r3.",
+  "effect": "none on any forecast",
+  "why": "missing hours are permanent holes in the holdout; systemd lingering is still off (owner decision)"
+ }
+]

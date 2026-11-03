@@ -9,6 +9,6 @@ html.dark body{color:#f5f5f7}
 .big small{font-size:100px;letter-spacing:-.02em;margin-left:4px}
 </style></head><body><div class="grid" id="g"></div><script>
 if(location.hash=='#dark')document.documentElement.classList.add('dark');
-g.innerHTML=[[1,96.9],[6,96.1],[24,95.4],[48,93.1]].map(([h,m])=>
+g.innerHTML=[[1,96.8],[6,94.9],[24,94.7],[48,93.0]].map(([h,m])=>
  `<div><div class="lead">${h} h ahead</div><div class="big">${m.toFixed(1)}<small>%</small></div></div>`).join('');
 </script></body></html>

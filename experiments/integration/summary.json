@@ -1,0 +1,299 @@
+{
+ "written_utc": "2026-10-31T17:20:40+00:00",
+ "blend": "P(OD 25) = 0.5 * production logit + 0.5 * fra.decision.DEFAULT rolled out on 200 fra.fcerror.DEFAULT wind paths (ensemble-mean look-ahead), rollout from label hour t-1 with od_now = label of t-2 and observed wind up to t",
+ "long_test": {
+  "rows": 173352,
+  "issues": 3635,
+  "days": 152,
+  "brier_1_6_24_48": {
+   "logit": [
+    0.04293168913380308,
+    0.03277923166176624,
+    0.05306519167729205
+   ],
+   "decision": [
+    0.04196671680316943,
+    0.032177517089889335,
+    0.05196420679862069
+   ],
+   "blend": [
+    0.038879868235332626,
+    0.029646086500865122,
+    0.048112053711020716
+   ],
+   "blend - logit": [
+    -0.004051820898470453,
+    -0.006677484119948553,
+    -0.0018343820890718628
+   ]
+  },
+  "brier_all": {
+   "logit": [
+    0.044605958651679274,
+    0.03374106275050226,
+    0.05528596705445246
+   ],
+   "decision": [
+    0.041895426159508406,
+    0.031344748630761414,
+    0.05228505460471172
+   ],
+   "blend": [
+    0.04037402201153436,
+    0.030434748539300893,
+    0.05057094788781779
+   ],
+   "blend - logit": [
+    -0.004231936640144902,
+    -0.0068987920064659215,
+    -0.0019284296721431293
+   ]
+  },
+  "acc": {
+   "logit": {
+    "1": [
+     0.9546079779917469,
+     0.9419359768608367,
+     0.9668040684983148
+    ],
+    "6": [
+     0.9460055096418732,
+     0.930367062199641,
+     0.9608167770419426
+    ],
+    "24": [
+     0.9410299003322259,
+     0.9247464963887694,
+     0.9570793610669748
+    ],
+    "48": [
+     0.9289297658862876,
+     0.9096726326820441,
+     0.947636117221873
+    ]
+   },
+   "blend": {
+    "1": [
+     0.9675378266850069,
+     0.9580571530260742,
+     0.9766867800329128
+    ],
+    "6": [
+     0.9490358126721763,
+     0.933109859707215,
+     0.9640923476692764
+    ],
+    "24": [
+     0.9465669988925803,
+     0.9311053511705686,
+     0.9621716880155687
+    ],
+    "48": [
+     0.9300445930880713,
+     0.9109931347120789,
+     0.9493355481727574
+    ]
+   },
+   "blend - logit": {
+    "1": [
+     0.012929848693259973,
+     0.006649995509840358,
+     0.01918859649122807
+    ],
+    "6": [
+     0.0030303030303030303,
+     -0.003025302530253025,
+     0.00912106135986733
+    ],
+    "24": [
+     0.005537098560354375,
+     0.0002750048853569567,
+     0.011314405440291005
+    ],
+    "48": [
+     0.0011148272017837235,
+     -0.006899027707494517,
+     0.009136973975636764
+    ]
+   }
+  }
+ },
+ "pre_sep15_part": {
+  "brier_1_6_24_48": {
+   "logit": [
+    0.04672192295076969,
+    0.03450192753164112,
+    0.060177571339415876
+   ],
+   "blend": [
+    0.0424201008249162,
+    0.031413054562656376,
+    0.055116985000079395
+   ],
+   "blend - logit": [
+    -0.004301822125853477,
+    -0.007327623915692092,
+    -0.0016131501452392439
+   ]
+  },
+  "brier_all": {
+   "logit": [
+    0.04856748087745695,
+    0.03550125791830586,
+    0.06263692369559326
+   ],
+   "blend": [
+    0.044041126188933646,
+    0.032098715305956496,
+    0.057448586612045514
+   ],
+   "blend - logit": [
+    -0.004526354688523285,
+    -0.007316932625370294,
+    -0.001967364095320873
+   ]
+  },
+  "acc": {
+   "logit": {
+    "1": [
+     0.9492725127801809,
+     0.9327559253847203,
+     0.9638222571765631
+    ],
+    "6": [
+     0.9401103230890465,
+     0.9190363349131122,
+     0.9578433053436817
+    ],
+    "24": [
+     0.9345238095238095,
+     0.9127358490566038,
+     0.9547955974842768
+    ],
+    "48": [
+     0.9246794871794872,
+     0.9006371359223301,
+     0.9470091952949963
+    ]
+   },
+   "blend": {
+    "1": [
+     0.9657884388517499,
+     0.9539908963158613,
+     0.9764058198977585
+    ],
+    "6": [
+     0.9428684003152088,
+     0.9223752282836432,
+     0.9606012199473661
+    ],
+    "24": [
+     0.9416666666666667,
+     0.9209905660377359,
+     0.9602987421383647
+    ],
+    "48": [
+     0.9194711538461539,
+     0.891426282051282,
+     0.9439136904761904
+    ]
+   },
+   "blend - logit": {
+    "1": [
+     0.01651592607156901,
+     0.009031308707016255,
+     0.02477437659041348
+    ],
+    "6": [
+     0.0027580772261623326,
+     -0.003537735849056604,
+     0.009456264775413711
+    ],
+    "24": [
+     0.007142857142857143,
+     0.00039673180592991915,
+     0.014426100628930802
+    ],
+    "48": [
+     -0.005208333333333333,
+     -0.016426282051282052,
+     0.005555555555555556
+    ]
+   }
+  }
+ },
+ "pre_sep15_part_note": "valid < 2026-09-15 (renamed from 'selection_free' on 31 Oct 2026): selection-free only for the logit specification, not for the blend, whose components and weights were chosen on the whole Jun-Oct test; no part of the long test is selection-free for the blend, only the holdout is",
+ "decisions": {
+  "weights": "fixed 0.5",
+  "part_b": {
+   "gust_metar": "keep DEFAULT",
+   "native": "keep DEFAULT"
+  },
+  "rwy18": "p_r1",
+  "change_time": "hysteresis rule on the blend (BLEND_CHANGE_PARAMS smooth 1, enter 0.45, leave 0.45, k 1; BLEND_P48_COEF (0.692, 1.302))"
+ },
+ "next_change_event_acc": {
+  "blend: hysteresis rule, nested": 0.8002923976608187,
+  "blend: current PARAMS": 0.7991228070175439,
+  "blend: all-weeks params (in-sample; = fra.blend live)": 0.8128654970760234,
+  "decision paths: P(switched) >= thr, nested": 0.7239766081871345,
+  "decision paths: thr 0.5": 0.7426900584795322,
+  "logit: current PARAMS (production today)": 0.7906432748538011,
+  "logit: hysteresis rule, nested": 0.7777777777777778,
+  "official rules": 0.6225146198830409,
+  "published prognosis": 0.6970760233918128,
+  "persistence": 0.4745614035087719
+ },
+ "live": {
+  "seconds_total": 6.6,
+  "attrs": {
+   "status": "ok",
+   "w_logit": 0.5,
+   "rwy18_mode": "logit",
+   "change_mode": "hysteresis",
+   "seconds_logit": 6.06,
+   "seconds_total": 6.6,
+   "n_paths": 200,
+   "ess": 406.9,
+   "n_eligible": 21964,
+   "icon_d2": true,
+   "ifs_run": "2026-10-31 06:00:00+00:00",
+   "icon_run": "2026-10-31 12:00:00+00:00",
+   "metar_last": "2026-10-31 17:00:00+00:00",
+   "metar_now_age_min": 10.0,
+   "trained_until": "2026-10-30 11:00:00+00:00",
+   "seconds_inputs": 0.26,
+   "seconds_forecast_frame": 0.16,
+   "seconds_paths_rollout": 0.12
+  },
+  "fallback": {
+   "blend_ok": false,
+   "status": "fallback to logit: FileNotFoundError: [Errno 2] No such file or directory: '/nonexistent/decision.pkl'",
+   "logit_unchanged": true,
+   "check_output": "passed"
+  },
+  "code_path_max_abs_diff": 0.0
+ },
+ "registry_entry": {
+  "name": "blend-v1",
+  "role": "challenger",
+  "runtime": "<new snapshot of this round's fra/*.py, e.g. 2026-10-31-wave2>",
+  "entry": "fra.blend:forecast",
+  "models": {
+   "model": "data/archive/models/blend-v1/model.pkl",
+   "decision": "data/archive/models/blend-v1/decision_model.pkl"
+  },
+  "sha256": "e67b55b9c6a7",
+  "timeout_s": 240,
+  "note": "0.5 x production logit (copy of data/model.pkl, new data layer, sha256 e67b55b9c6a7 at writing) + 0.5 x hourly decision model on 200 simulated wind paths (copy of experiments/integration/decision_model.pkl, sha256 a9e3f00f4209); next change: hysteresis rule on the blend; RWY 18: logit; falls back to the logit forecast (blend_ok False) if the decision part fails"
+ },
+ "next_change_event_acc_note": "recomputed 31 Oct 2026 ~18:46 UTC with strict nesting (fra.changetime.known_before: a nested choice for week w uses only issues whose whole 48 h outcome was known at the start of week w); before: blend nested 0.8023, logit nested 0.7789",
+ "p48_brier_walk_forward": {
+  "blend: logistic on max smoothed P(other), walk-forward": 0.0685723873868249,
+  "decision paths: recalibrated, walk-forward": 0.08608097725720294,
+  "decision paths: raw P(switch within 48 h)": 0.07339834093279908,
+  "logit: P48_COEF as in production today": 0.06056182676250114,
+  "logit: logistic, walk-forward": 0.06462555570708776,
+  "blend: all-weeks coefficients (in-sample; = fra.blend live)": 0.0543198461613964
+ }
+}

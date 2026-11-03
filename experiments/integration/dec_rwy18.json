@@ -1,0 +1,39 @@
+{
+ "what": "rwy18",
+ "start": "2025-09-01 00:00:00+00:00",
+ "n_issues": 5817,
+ "rows": 279216,
+ "configs": [
+  {
+   "name": "main",
+   "params": "DEFAULT",
+   "lag_h": 2
+  }
+ ],
+ "n_paths": 200,
+ "seed": 0,
+ "seconds": 54,
+ "run_at": "2026-10-31T16:50:44.087336+00:00",
+ "fcerror_blob": "07c3aed706ebea3020293475b07452b0e591359f",
+ "decision_blob": "0fda43fb382db0b313facb7ca4b55fe46ea1a5c7",
+ "blend_blob": "d1bb0905892e5ac36fba1604dce46ec2faa082df",
+ "partb_lib": [
+  [
+   "/home/jonas/.t3/projects/fraalliance-hackmeck/data/ifs_runs.parquet",
+   1793358787743574495
+  ],
+  [
+   "/home/jonas/.t3/projects/fraalliance-hackmeck/data/ifs_runs_backfill.parquet",
+   1793455116573521132
+  ],
+  [
+   "/home/jonas/.t3/projects/fraalliance-hackmeck/data/icon_runs.parquet",
+   1793362673760272130
+  ],
+  [
+   "/home/jonas/.t3/projects/fraalliance-hackmeck/data/metar_full.parquet",
+   1793453178167237605
+  ]
+ ],
+ "labels_mtime": 1793452675.6770074
+}

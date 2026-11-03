@@ -1,0 +1,193 @@
+{
+ "written_utc": "2026-11-03T02:53:14+00:00",
+ "purpose": "Provenance of the wave-3 outputs (experiments/history12/REPORT.md, 'Provenance'). Hashes taken before the fixes of 2026-11-03 ~02:55 UTC re-ran any step.",
+ "preregistered_output": "wave3_confirmedgaps_results.json",
+ "preregistered_rule": "confirmed: every confirmed suspect hour is an OD label gap (fra.labels.history_gaps('confirmed'), the only rule that existed when REPORT.md section 6 was written on 31 Oct 2026)",
+ "post_hoc_change": "fra.labels.GAP_RULE 'traffic' (0.4 x median of the same local hour, +-7 days, >= 5 reference hours), coded 02:10-02:13 UTC, after run 1 had printed PRIMARY (about 02:07 UTC); its outputs are wave3_* (sensitivity, not the result of record)",
+ "timeline_utc": [
+  [
+   "02:06:18",
+   "run 1 started: 'uv run python experiments/history12/run.py' exactly as documented (wave3_run1_results.json 'started')"
+  ],
+  [
+   "~02:07:20",
+   "run 1 done (60 s); PRIMARY printed to stdout (wave3_confirmedgaps_run.log): all -0.0006 [-0.0016, +0.0004], pre-15-Sep part -0.0005 [-0.0020, +0.0010]"
+  ],
+  [
+   "02:10:01",
+   "fra/history.py last modified (status line for both gap rules)"
+  ],
+  [
+   "02:13:11",
+   "fra/labels.py modified: GAP_RULE 'traffic' (mtime recorded in the review; later edits of 2026-11-03 ~02:52 UTC moved it)"
+  ],
+  [
+   "02:14:22",
+   "run-1 outputs, renamed wave3_confirmedgaps_* and with a 'label_gaps' note added to the results JSON, copied outside the repository (this copy: wave3_run1_results.json; data files hashed below)"
+  ],
+  [
+   "02:16:05",
+   "run-1 stdout saved as wave3_confirmedgaps_run.log"
+  ],
+  [
+   "02:22:08",
+   "suspects.py last modified"
+  ],
+  [
+   "02:25:12",
+   "run 2 started: run.py with GAP_RULE 'traffic' (outputs wave3_*)"
+  ],
+  [
+   "02:26:10",
+   "run 3 started: run.py --gap-rule confirmed, overwrote the renamed run-1 files wave3_confirmedgaps_* (same prefix)"
+  ]
+ ],
+ "run1_vs_run3": {
+  "wave3_confirmedgaps_parta_bootstrap.csv": {
+   "run1_sha256": "bf7a3d50bc76f5e1a20035eeb3649217b2e55d373df4ba6a633fd70be5da7f9f",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "bf7a3d50bc76f5e1a20035eeb3649217b2e55d373df4ba6a633fd70be5da7f9f",
+   "repo_mtime_utc": "2026-11-03T02:27:04+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_parta_coefficients.csv": {
+   "run1_sha256": "2a57f18aa9cfa76cb277ea4464b79d9226dc68d027c5de7a735b369d16c41d7b",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "2a57f18aa9cfa76cb277ea4464b79d9226dc68d027c5de7a735b369d16c41d7b",
+   "repo_mtime_utc": "2026-11-03T02:27:04+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_parta_preds.parquet": {
+   "run1_sha256": "d41b95fc6ef19f45666df4a22f5e92a33080af51a845e6b80bacbc61ccc26933",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "d41b95fc6ef19f45666df4a22f5e92a33080af51a845e6b80bacbc61ccc26933",
+   "repo_mtime_utc": "2026-11-03T02:27:04+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_parta_transition_era.csv": {
+   "run1_sha256": "772299c87fa53afe6c96f3ca32b4a19a447699f080a5f423d73d05d079ab0c4d",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "772299c87fa53afe6c96f3ca32b4a19a447699f080a5f423d73d05d079ab0c4d",
+   "repo_mtime_utc": "2026-11-03T02:27:05+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_results.json": {
+   "run1_sha256": "f720860f9ca3acb5fef22adb7baa7e30defd6c729a34bed1eeeb3092cfc6f185",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "b371dbd40b0f4d77bd9caecc669035470485016db7c5d70886060954c8026a50",
+   "repo_mtime_utc": "2026-11-03T02:27:07+00:00",
+   "identical": false
+  },
+  "wave3_confirmedgaps_run.log": {
+   "run1_sha256": "5be61622cf97f0358114b1018e57553ae707b80fcd98b71ecb8b96bfedfe083d",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "5be61622cf97f0358114b1018e57553ae707b80fcd98b71ecb8b96bfedfe083d",
+   "repo_mtime_utc": "2026-11-03T02:16:05+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_rwy18_bootstrap.csv": {
+   "run1_sha256": "60020b85896fa92cce1b24b1c95ecddb7776ef1581b249f17f6a22f22621aa9a",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "60020b85896fa92cce1b24b1c95ecddb7776ef1581b249f17f6a22f22621aa9a",
+   "repo_mtime_utc": "2026-11-03T02:27:07+00:00",
+   "identical": true
+  },
+  "wave3_confirmedgaps_rwy18_walkforward.parquet": {
+   "run1_sha256": "165245c1b446f6ce32c1718f227cd0575e8056db60cd2041082170a28fbbcb93",
+   "run1_copy_mtime_utc": "2026-11-03T02:14:22+00:00",
+   "repo_sha256_before_fixes": "165245c1b446f6ce32c1718f227cd0575e8056db60cd2041082170a28fbbcb93",
+   "repo_mtime_utc": "2026-11-03T02:27:06+00:00",
+   "identical": true
+  }
+ },
+ "run1_vs_run3_note": "All run-1 data outputs (Part A predictions, bootstrap, coefficients, transition era, RWY 18 walk-forward and bootstrap) are byte-identical to the run-3 reproduction. The results JSON differs in start time, duration, the added 'primary_block_sensitivity', the hand-added 'label_gaps' note and one count: labels.by_year 2026 observed_hours 5532 (run 1) vs 5496 (run 3), because run 1's label_stats counted 36 label hours from 2026-11-01 on (a count only, never used for training or scoring; run.label_stats cuts at the holdout start since run 2). PRIMARY and all Part A and RWY 18 metrics in the JSON are identical (-0.000632509 [-0.001639922, +0.000433543] all rows; -0.000479277 [-0.001964093, +0.001037057] pre-15-Sep part).",
+ "snapshot_before_fixes": {
+  "wave3_confirmedgaps_parta_bootstrap.csv": {
+   "sha256": "bf7a3d50bc76f5e1a20035eeb3649217b2e55d373df4ba6a633fd70be5da7f9f",
+   "mtime_utc": "2026-11-03T02:27:04+00:00"
+  },
+  "wave3_confirmedgaps_parta_coefficients.csv": {
+   "sha256": "2a57f18aa9cfa76cb277ea4464b79d9226dc68d027c5de7a735b369d16c41d7b",
+   "mtime_utc": "2026-11-03T02:27:04+00:00"
+  },
+  "wave3_confirmedgaps_parta_preds.parquet": {
+   "sha256": "d41b95fc6ef19f45666df4a22f5e92a33080af51a845e6b80bacbc61ccc26933",
+   "mtime_utc": "2026-11-03T02:27:04+00:00"
+  },
+  "wave3_confirmedgaps_parta_transition_era.csv": {
+   "sha256": "772299c87fa53afe6c96f3ca32b4a19a447699f080a5f423d73d05d079ab0c4d",
+   "mtime_utc": "2026-11-03T02:27:05+00:00"
+  },
+  "wave3_confirmedgaps_results.json": {
+   "sha256": "b371dbd40b0f4d77bd9caecc669035470485016db7c5d70886060954c8026a50",
+   "mtime_utc": "2026-11-03T02:27:07+00:00"
+  },
+  "wave3_confirmedgaps_run.log": {
+   "sha256": "5be61622cf97f0358114b1018e57553ae707b80fcd98b71ecb8b96bfedfe083d",
+   "mtime_utc": "2026-11-03T02:16:05+00:00"
+  },
+  "wave3_confirmedgaps_rwy18_bootstrap.csv": {
+   "sha256": "60020b85896fa92cce1b24b1c95ecddb7776ef1581b249f17f6a22f22621aa9a",
+   "mtime_utc": "2026-11-03T02:27:07+00:00"
+  },
+  "wave3_confirmedgaps_rwy18_walkforward.parquet": {
+   "sha256": "165245c1b446f6ce32c1718f227cd0575e8056db60cd2041082170a28fbbcb93",
+   "mtime_utc": "2026-11-03T02:27:06+00:00"
+  },
+  "wave3_parta_bootstrap.csv": {
+   "sha256": "5b5937d205a1f89aea2c1e449618d86980e17ba3691a4d131a84e307c8fdd69f",
+   "mtime_utc": "2026-11-03T02:26:06+00:00"
+  },
+  "wave3_parta_coefficients.csv": {
+   "sha256": "979c78a54ecae082a6361e27705589abdbb06a7e9e17bb29518776c8d3c0fc25",
+   "mtime_utc": "2026-11-03T02:26:06+00:00"
+  },
+  "wave3_parta_preds.parquet": {
+   "sha256": "93ea3945a0ae4beab0b373e02d64a80477f905a3eb9c3257535b86fe3f717bb5",
+   "mtime_utc": "2026-11-03T02:26:06+00:00"
+  },
+  "wave3_parta_transition_era.csv": {
+   "sha256": "0dc4b3fef50ef45d78b12c381d105fc9d7bd865f3c3bba81a575aa0c24e63096",
+   "mtime_utc": "2026-11-03T02:26:07+00:00"
+  },
+  "wave3_results.json": {
+   "sha256": "3c1a0ea5dc749d7d72fd6df58689e83fae3a837703049549ed1e8e1f2df1ca06",
+   "mtime_utc": "2026-11-03T02:26:09+00:00"
+  },
+  "wave3_run.log": {
+   "sha256": "42330f9af047e399e04384ead0c91c6309c77d9250c7f2dbe1e788f483baa28a",
+   "mtime_utc": "2026-11-03T02:26:09+00:00"
+  },
+  "wave3_run1_results.json": {
+   "sha256": "f720860f9ca3acb5fef22adb7baa7e30defd6c729a34bed1eeeb3092cfc6f185",
+   "mtime_utc": "2026-11-03T02:14:22+00:00"
+  },
+  "wave3_rwy18_bootstrap.csv": {
+   "sha256": "60020b85896fa92cce1b24b1c95ecddb7776ef1581b249f17f6a22f22621aa9a",
+   "mtime_utc": "2026-11-03T02:26:09+00:00"
+  },
+  "wave3_rwy18_walkforward.parquet": {
+   "sha256": "165245c1b446f6ce32c1718f227cd0575e8056db60cd2041082170a28fbbcb93",
+   "mtime_utc": "2026-11-03T02:26:09+00:00"
+  }
+ },
+ "run1_rwy18_preserved": {
+  "written_utc": "2026-11-03T03:19:35+00:00",
+  "why": "The post-review fix run '--gap-rule confirmed --steps qa,rwy18,lag2' (2026-11-03 02:56 UTC) rewrote wave3_confirmedgaps_rwy18_* with the extended outage filter (fra.decision.rwy18_outage_days, now also 2017-05-25). The run-1 originals are kept here, copied from the copy made outside the repository at 02:14:22 UTC.",
+  "files": {
+   "wave3_run1_rwy18_walkforward.parquet": {
+    "sha256": "165245c1b446f6ce32c1718f227cd0575e8056db60cd2041082170a28fbbcb93",
+    "equals_run1": "wave3_confirmedgaps_rwy18_walkforward.parquet"
+   },
+   "wave3_run1_rwy18_bootstrap.csv": {
+    "sha256": "60020b85896fa92cce1b24b1c95ecddb7776ef1581b249f17f6a22f22621aa9a",
+    "equals_run1": "wave3_confirmedgaps_rwy18_bootstrap.csv"
+   }
+  },
+  "current_wave3_confirmedgaps_rwy18": {
+   "wave3_confirmedgaps_rwy18_walkforward.parquet": "546cf53ff14e35a38d0a7ec89f49059fa2167a083a5ac546d4f0acdbd048e34a",
+   "wave3_confirmedgaps_rwy18_bootstrap.csv": "64317a58ea9eb6a6555bd5d05c59bf1ed7cdc91a1e984de1e096bbc610e381f5",
+   "note": "post-review outage filter (834 test closures, skill score 0.386); run 1: 850 closures, 0.38"
+  }
+ }
+}

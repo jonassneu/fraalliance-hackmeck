@@ -1,0 +1,54 @@
+  week 2026-06-15: 168 issues, model rows 2221, r18 rows 3453
+  week 2026-06-08: 168 issues, model rows 2095, r18 rows 3334
+  week 2026-06-22: 168 issues, model rows 2347, r18 rows 3572
+  week 2026-06-01: 168 issues, model rows 1969, r18 rows 3215
+  week 2026-06-29: 168 issues, model rows 2473, r18 rows 3691
+  week 2026-07-06: 168 issues, model rows 2599, r18 rows 3810
+  week 2026-07-20: 168 issues, model rows 2851, r18 rows 4048
+  week 2026-07-13: 168 issues, model rows 2725, r18 rows 3929
+  week 2026-07-27: 168 issues, model rows 2977, r18 rows 4167
+  week 2026-08-03: 168 issues, model rows 3103, r18 rows 4286
+  week 2026-08-10: 168 issues, model rows 3227, r18 rows 4404
+  week 2026-08-17: 168 issues, model rows 3353, r18 rows 4523
+  week 2026-08-24: 168 issues, model rows 3479, r18 rows 4642
+  week 2026-08-31: 168 issues, model rows 3605, r18 rows 4761
+  week 2026-09-07: 168 issues, model rows 3731, r18 rows 4881
+  week 2026-09-14: 168 issues, model rows 3857, r18 rows 5000
+  week 2026-09-21: 168 issues, model rows 3983, r18 rows 5119
+  week 2026-09-28: 168 issues, model rows 4109, r18 rows 5238
+  week 2026-10-05: 168 issues, model rows 4235, r18 rows 5357
+  week 2026-10-12: 168 issues, model rows 4361, r18 rows 5476
+  week 2026-10-26: 107 issues, model rows 4612, r18 rows 5714
+  week 2026-10-19: 168 issues, model rows 4487, r18 rows 5595
+metric  lead           method      n  n_days     est      lo      hi  p_boot
+ brier     1            logit   3635     152  0.0339  0.0256  0.0424     NaN
+ brier     1         decision   3635     152  0.0273  0.0200  0.0347     NaN
+ brier     1            blend   3635     152  0.0269  0.0203  0.0339     NaN
+ brier     1    blend - logit   3635     152 -0.0070 -0.0101 -0.0043   0.000
+ brier     1 decision - logit   3635     152 -0.0067 -0.0113 -0.0022   0.000
+ brier     6            logit   3630     152  0.0406  0.0306  0.0512     NaN
+ brier     6         decision   3630     152  0.0402  0.0298  0.0512     NaN
+ brier     6            blend   3630     152  0.0377  0.0284  0.0477     NaN
+ brier     6    blend - logit   3630     152 -0.0029 -0.0059 -0.0004   0.020
+ brier     6 decision - logit   3630     152 -0.0004 -0.0054  0.0041   0.884
+ brier    24            logit   3612     151  0.0442  0.0336  0.0552     NaN
+ brier    24         decision   3612     151  0.0395  0.0297  0.0497     NaN
+ brier    24            blend   3612     151  0.0393  0.0297  0.0494     NaN
+ brier    24    blend - logit   3612     151 -0.0049 -0.0080 -0.0022   0.000
+ brier    24 decision - logit   3612     151 -0.0047 -0.0100  0.0001   0.055
+ brier    48            logit   3588     150  0.0532  0.0403  0.0663     NaN
+ brier    48         decision   3588     150  0.0612  0.0465  0.0756     NaN
+ brier    48            blend   3588     150  0.0518  0.0394  0.0644     NaN
+ brier    48    blend - logit   3588     150 -0.0013 -0.0056  0.0028   0.525
+ brier    48 decision - logit   3588     150  0.0080 -0.0010  0.0168   0.076
+ brier     0            logit  14465     152  0.0429  0.0328  0.0531     NaN
+ brier     0         decision  14465     152  0.0420  0.0322  0.0520     NaN
+ brier     0            blend  14465     152  0.0389  0.0296  0.0481     NaN
+ brier     0    blend - logit  14465     152 -0.0041 -0.0067 -0.0018   0.000
+ brier     0 decision - logit  14465     152 -0.0010 -0.0057  0.0031   0.680
+ brier    -1            logit 173352     152  0.0446  0.0337  0.0553     NaN
+ brier    -1         decision 173352     152  0.0419  0.0313  0.0523     NaN
+ brier    -1            blend 173352     152  0.0404  0.0304  0.0506     NaN
+ brier    -1    blend - logit 173352     152 -0.0042 -0.0069 -0.0019   0.000
+ brier    -1 decision - logit 173352     152 -0.0027 -0.0074  0.0014   0.220
+-> /home/jonas/.t3/projects/fraalliance-hackmeck/experiments/integration/wf_long.parquet

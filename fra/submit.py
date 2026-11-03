@@ -34,12 +34,16 @@ def main(issue=None):
   `next_change_utc`, `p_change_48h`, likely change window). Current flown OD at issue: {od_now}.
   Next probable change: {change if change is not None else "none expected within 48 h"}.
 - `forecast_{tag}.png`, `dashboard.html`: the same forecast as a chart and dashboard (open the HTML offline; it
-  includes the 14-day track record and the published-prognosis comparison). `airport3d.html`: 3D view, embedded next to the timeline.
+  includes the published-prognosis comparison, the alerts and the live record of the hourly forecasts).
+  `airport3d.html`: 3D view, embedded next to the timeline.
   `model.html`: the pitch page: how much better than the published prognosis, direction switches, how it works, how it was tested.
-- `MODEL_CARD.md`: data sources, model, quality (walk-forward), key drivers, limitations.
-- `eval.csv`, `changetime_eval.csv`: raw evaluation tables.
+- `MODEL_CARD.md`: data sources, model, quality (walk-forward test 1 Jun - 30 Oct 2026), key drivers, limitations.
+- `eval.csv`, `changetime_eval.csv`: raw evaluation tables of the logistic model (the official blended forecast:
+  `experiments/integration/final_eval_od.csv` in the repository).
 
-Reproduce any issue time: `uv run python -m fra.predict YYYY-MM-DDTHH:00` (UTC; past times use only data available then).
+Reproduce any issue time: `uv run python -m fra.predict YYYY-MM-DDTHH:00` (logistic model) or
+`uv run python -m fra.blend YYYY-MM-DDTHH:00` (the official blended forecast); UTC, past times use only data available then.
+The independent test is the live record: forecasts issued every hour since 31 Oct 2026, locked holdout from 1 Nov 2026.
 """)
     print(f"submission written to {OUT} (issue {issue}, OD now {od_now}, next change {change})")
 

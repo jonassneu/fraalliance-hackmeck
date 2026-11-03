@@ -1,0 +1,32 @@
+labels: real, walk-forward weekly evaluation from 2026-09-15 (7 weeks), holdout from 2026-11-01 excluded | 52407 test rows
+target  lead_h    n  model_acc  model_brier  rule_acc  persistence_acc  prognosis_acc  n_changed  model_acc_changed  rule_acc_changed
+  od25       1 1091      0.967        0.024     0.926            0.950          0.951         55              0.673             0.655
+  od25       6 1086      0.959        0.031     0.894            0.875          0.937        136              0.824             0.551
+  od25      24 1068      0.957        0.036     0.905            0.719          0.920        300              0.913             0.797
+  od25      48 1044      0.937        0.047     0.889            0.666          0.898        349              0.911             0.851
+ rwy18       1  770      0.999        0.001     0.995            0.997            NaN          2              0.500             0.500
+ rwy18       6  768      0.999        0.001     0.996            0.999            NaN          1              0.000             0.000
+ rwy18      24  753      0.999        0.002     0.992            0.997            NaN          2              0.500             0.500
+ rwy18      48  736      0.999        0.002     0.982            0.999            NaN          1              0.000             0.000
+95 % CIs (day-block bootstrap, 2000 reps):
+  od25 model        acc % 1h 96.7 [94.8, 98.4] 6h 95.9 [93.6, 98.1] 24h 95.7 [93.6, 97.7] 48h 93.7 [90.5, 96.6]
+  od25 rule         acc % 1h 92.6 [89.4, 95.6] 6h 89.4 [85.2, 93.5] 24h 90.5 [86.6, 94.1] 48h 88.9 [84.5, 93.2]
+  od25 persistence  acc % 1h 95.0 [92.5, 97.2] 6h 87.5 [81.5, 92.9] 24h 71.9 [62.9, 81.2] 48h 66.6 [56.3, 76.9]
+  od25 prognosis    acc % 1h 95.1 [91.8, 97.6] 6h 93.7 [90.1, 96.8] 24h 92.0 [88.1, 95.5] 48h 89.8 [85.4, 94.1]
+  od25 model - rule         acc pp 1h +4.1 [+1.8, +6.6] 6h +6.5 [+3.6, +10.1] 24h +5.1 [+2.7, +8.0] 48h +4.8 [+1.7, +8.0]
+  od25 model - persistence  acc pp 1h +1.7 [+0.1, +3.6] 6h +8.5 [+4.5, +12.9] 24h +23.8 [+15.5, +31.9] 48h +27.1 [+17.9, +36.9]
+  od25 model - prognosis    acc pp 1h +1.6 [-0.5, +4.6] 6h +2.2 [+0.1, +5.3] 24h +3.7 [+1.2, +6.6] 48h +3.8 [+1.3, +6.6]
+  od25 model Brier(1,6,24,48) 0.0344 [0.0193, 0.0505]
+  od25 model Brier(all leads) 0.0359 [0.0205, 0.0534]
+  rwy18 model        acc % 1h 99.9 [99.6, 100.0] 6h 99.9 [99.6, 100.0] 24h 99.9 [99.6, 100.0] 48h 99.9 [99.6, 100.0]
+  rwy18 rule         acc % 1h 99.5 [98.8, 100.0] 6h 99.6 [99.0, 100.0] 24h 99.2 [97.7, 100.0] 48h 98.2 [95.7, 99.7]
+  rwy18 persistence  acc % 1h 99.7 [99.2, 100.0] 6h 99.9 [99.6, 100.0] 24h 99.7 [99.3, 100.0] 48h 99.9 [99.6, 100.0]
+  rwy18 model - rule         acc pp 1h +0.4 [+0.0, +1.0] 6h +0.3 [+0.0, +0.8] 24h +0.7 [+0.0, +2.1] 48h +1.6 [+0.1, +4.1]
+  rwy18 model - persistence  acc pp 1h +0.1 [+0.0, +0.4] 6h +0.0 [+0.0, +0.0] 24h +0.1 [+0.0, +0.4] 48h +0.0 [+0.0, +0.0]
+  rwy18 model Brier(1,6,24,48) 0.0016 [0.0000, 0.0044]
+  rwy18 model Brier(all leads) 0.0015 [0.0000, 0.0042]
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/data/eval_long_legacy.csv, /home/jonas/.t3/projects/fraalliance-hackmeck/data/eval_long_legacy_ci.csv
+
+real	0m14,994s
+user	0m14,335s
+sys	0m0,609s

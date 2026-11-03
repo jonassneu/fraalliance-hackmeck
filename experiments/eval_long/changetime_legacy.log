@@ -1,0 +1,31 @@
+1044 issue times (2026-09-15 .. 2026-10-28), 7 weekly folds, 508 with a sustained OD change within 48 h
+  week 1: {'smooth': 1, 'enter': 0.4, 'leave': 0.4, 'k': 1}
+  week 2: {'smooth': 1, 'enter': 0.4, 'leave': 0.4, 'k': 3}
+  week 3: {'smooth': 1, 'enter': 0.55, 'leave': 0.45, 'k': 3}
+  week 4: {'smooth': 5, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 5: {'smooth': 5, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  week 6: {'smooth': 5, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+  final (all weeks): {'smooth': 5, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+
+Next-change timing, out of sample (weeks 1..6, issue times 2026-09-22 .. 2026-10-28), hit = within +-3 h:
+                                        method  n_issues  n_actual_change  n_pred_change  hits  hit_rate  timing_mae_h  wrong_time  missed  false_alarm  correct_no_change  precision  event_acc
+                     model (nested-tuned rule)       876              463            486   333     0.719         1.330         123       7           30                383      0.685      0.817
+model (current predict.py: 3h smooth, 0.5, 2h)       876              463            479   334     0.721         1.195         118      11           27                386      0.697      0.822
+        model (final PARAMS, chosen in-sample)       876              463            488   334     0.721         1.198         119      10           35                378      0.684      0.813
+              model (raw: first p crosses 0.5)       876              463            494   334     0.721         1.198         119      10           41                372      0.676      0.806
+                    official rules (rule_od25)       876              463            607   283     0.611         1.184         156      24          168                245      0.466      0.603
+                official rules, 2h persistence       876              463            568   249     0.538         1.301         176      38          143                270      0.438      0.592
+             published prognosis (main >= 0.5)       876              463            529   296     0.639         1.706         163       4           70                343      0.560      0.729
+                    persistence (never change)       876              463              0     0     0.000           NaN           0     463            0                413      0.000      0.471
+
+P(change within 48 h): walk-forward Brier 0.0460 vs climatology 0.2492; final coef a=-0.436 b=1.260
+likely window (enter +-0.15, +-1 h): covers 64% of actual changes when a change is predicted, mean width 2.9 h
+
+PARAMS = {'smooth': 5, 'enter': 0.55, 'leave': 0.55, 'k': 1}
+P48_COEF = (-0.436, 1.260)
+wrote /home/jonas/.t3/projects/fraalliance-hackmeck/data/eval_long_changetime_legacy.csv
+
+real	0m21,444s
+user	0m20,758s
+sys	0m0,621s
+ALLDONE

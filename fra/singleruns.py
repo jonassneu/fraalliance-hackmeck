@@ -7,6 +7,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import time
 import random
+import sys
+import threading
 
 import numpy as np
 import pandas as pd
@@ -28,13 +30,15 @@ NAMES = dict(zip(['wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m',
                   'precipitation', 'pressure_msl', 'cloud_cover']))
 
 
-def _request(url, **extra):
+def _request(url, timeout=90, session=None, **extra):
+    """`timeout`/`session` are optional (defaults = original behaviour); backfills pass (connect, read) timeouts
+    and a keep-alive session because the single-runs API intermittently drops new connections (seen 2026-10-31)."""
     params = dict(latitude=50.0333, longitude=8.5706, models='ecmwf_ifs',
                   wind_speed_unit='kn', timezone='GMT', hourly=','.join(NAMES))
     params.update(extra)
     for attempt in range(8):
         try:
-            r = requests.get(url, params=params, timeout=90)
+            r = (session or requests).get(url, params=params, timeout=timeout)
             if r.status_code == 429 or r.status_code >= 500:
                 if attempt == 7:
                     r.raise_for_status()
@@ -169,6 +173,105 @@ def download_upper_runs(workers=4):
     return out
 
 
+BACKFILL = DATA / 'ifs_runs_backfill.parquet'              # 2024-03-14 .. 2025-04-30, same frame as ARCHIVE
+UPPER_BACKFILL = DATA / 'ifs_runs_upper_backfill.parquet'  # same frame as UPPER_ARCHIVE
+BACKFILL_UNAVAILABLE = DATA / 'ifs_runs_backfill_unavailable.json'
+# Probed 2026-10-31: the single-runs archive starts 2024-03-14 00 UTC with 00/12 UTC cycles only; 06/18 UTC cycles
+# answer from 2024-08-09 18 UTC on (binary search). Earlier 06/18 inits are not requested at all.
+SIX_HOURLY_FROM = pd.Timestamp('2024-08-09 18:00', tz='UTC')
+_tls = threading.local()
+
+
+def download_backfill(start='2024-03-14', end='2025-04-30', workers=2, pace=1.0):
+    """Backfill surface + upper runs into NEW files (never touches ifs_runs*.parquet). Resumable.
+
+    One request per run asks for the surface and upper variables together (10 variables, 168 h = 1 Open-Meteo call
+    instead of 2; per-variable values do not depend on the other requested variables) and is split into the exact
+    download_runs / download_upper_runs frames with the same completeness checks (72 valid hours, lead 0..71).
+    Runs the API reports as "not available" are remembered in BACKFILL_UNAVAILABLE and not requested again.
+    """
+    import json
+    import os
+    inits = pd.date_range(pd.Timestamp(start, tz='UTC'), pd.Timestamp(end, tz='UTC') + pd.Timedelta(hours=18), freq='6h')
+    inits = inits[(inits.hour.isin([0, 12])) | (inits >= SIX_HOURLY_FROM)]
+    unavailable = set(json.loads(BACKFILL_UNAVAILABLE.read_text())) if BACKFILL_UNAVAILABLE.exists() else set()
+
+    def complete(path):
+        if not path.exists():
+            return pd.DataFrame(), set()
+        old = pd.read_parquet(path)
+        counts = old.loc[old.lead_h.between(0, 71)].groupby('init').valid.nunique()
+        return old, set(counts[counts == 72].index)
+
+    old_s, done_s = complete(BACKFILL)
+    old_u, done_u = complete(UPPER_BACKFILL)
+    pending = [i for i in inits if not (i in done_s and i in done_u) and i.isoformat() not in unavailable]
+    parts_s = [old_s] if not old_s.empty else []
+    parts_u = [old_u] if not old_u.empty else []
+    failures = []
+    names = {**NAMES, **UPPER_NAMES}
+
+    def fetch(init):
+        time.sleep(pace)  # bound the request rate as well as concurrency
+        if not hasattr(_tls, 's'):
+            _tls.s = requests.Session()
+        try:
+            payload = _request(SINGLE, timeout=(10, 60), session=_tls.s,
+                               run=init.strftime('%Y-%m-%dT%H:%M'), hourly=','.join(names))
+        except requests.HTTPError as exc:
+            reason = ''
+            try:
+                reason = exc.response.json().get('reason', '')
+            except Exception:
+                pass
+            if 'not available' in reason:
+                return init, None, None
+            raise
+        d = _frame(payload, init, names)
+        d = d[d.lead_h.between(0, 71)].copy()
+        s = d[['init', 'valid', 'lead_h', *NAMES.values()]]
+        u = d[['init', 'valid', 'lead_h', *UPPER_NAMES.values()]]
+        if len(s) != 72 or s.wind_speed.isna().all():   # download_runs check
+            raise ValueError('incomplete/unavailable run')
+        if u.valid.nunique() != 72:                      # download_upper_runs check
+            raise ValueError('incomplete upper-air run')
+        return init, s.copy(), u.copy()
+
+    def save():
+        for parts, path in [(parts_s, BACKFILL), (parts_u, UPPER_BACKFILL)]:
+            if not parts:
+                continue
+            d = pd.concat(parts, ignore_index=True).drop_duplicates(['init', 'valid'], keep='last').sort_values(['init', 'valid'])
+            tmp = path.with_suffix('.tmp.parquet')
+            d.to_parquet(tmp, index=False)
+            tmp.replace(path)
+            parts[:] = [d]
+        tmp = BACKFILL_UNAVAILABLE.with_suffix('.tmp.json')
+        tmp.write_text(json.dumps(sorted(unavailable)))
+        os.replace(tmp, BACKFILL_UNAVAILABLE)
+
+    print(f'IFS backfill: {len(pending)} runs to fetch; {len(done_s)} cached; {len(unavailable)} known unavailable', flush=True)
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, 4))) as pool:
+        futures = {pool.submit(fetch, i): i for i in pending}
+        for n, f in enumerate(as_completed(futures), 1):
+            try:
+                init, s, u = f.result()
+                if s is None:
+                    unavailable.add(init.isoformat())
+                    print(f'Not available {init}', flush=True)
+                else:
+                    parts_s.append(s)
+                    parts_u.append(u)
+            except Exception as exc:
+                failures.append(futures[f])
+                print(f'Failed {futures[f]}: {exc}', flush=True)
+            if n % 50 == 0:
+                save()
+                print(f'{n}/{len(pending)}', flush=True)
+    save()
+    print(f'IFS backfill done; failed {len(failures)} (retried on next invocation), unavailable {len(unavailable)}', flush=True)
+
+
 def _merge_upper(runs):
     if not UPPER_ARCHIVE.exists():
         return runs
@@ -239,7 +342,9 @@ def live_features(issue, leads):
     return _features(live_run(), pd.DatetimeIndex([issue]), leads)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and sys.argv[1:2] == ['--backfill']:  # 2024-03-14 .. 2025-04-30 -> *_backfill.parquet
+    download_backfill(*sys.argv[2:4])
+elif __name__ == '__main__':
     runs = download_runs()
     print('Archive', runs.shape, 'init', runs.init.min(), '..', runs.init.max(), 'hours', sorted(runs.init.dt.hour.unique()))
     ref = runs.dropna(subset=['wind_speed']).sort_values('lead_h').drop_duplicates('valid').set_index('valid').wind_speed

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FRA Runway Operations, issued 2026-10-30 12:00 UTC</title><link rel="icon" href="data:,">
+<title>FRA Runway Operations, issued 2026-11-03 05:00 UTC</title><link rel="icon" href="data:,">
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--ink2:#6e6e73;--ink3:#86868b;--line:rgba(0,0,0,.08);--fill:#f0f0f3;
   --accent:#0071e3;--west:#2a78d6;--east:#eda100;--red:#e0352b;--green:#2aa44f;--ok:#cbe9d3;--good:#248a3d;
@@ -94,6 +94,25 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 2
 .alert b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px}
 .quiet{font-size:12.5px;color:var(--ink2);line-height:1.4}
 
+/* live operation strip: alerts banner (fra.alerts) + live record (fra.scoring); same columns as the row below */
+.strip{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;flex:none}
+.alerts{display:flex;align-items:center;gap:26px;min-width:0;min-height:48px;padding:8px 24px;overflow:hidden}
+.alerts.on{background:#fff5f4;box-shadow:inset 0 0 0 1px rgba(224,53,43,.2)}
+.al{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.al span{overflow:hidden;text-overflow:ellipsis}
+.al b{color:var(--ink);font-weight:600}
+.al i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--red)}
+.al.watch i{background:none;box-shadow:inset 0 0 0 2px var(--red)}
+.al.ok i{background:var(--green)}
+.al.stale i{background:var(--ink3)}
+.lrec{display:flex;align-items:center;gap:14px;min-width:0;min-height:48px;padding:8px 20px}
+.lrec .lh{display:flex;flex-direction:column;flex:none;font-size:13px;font-weight:600;line-height:1.25}
+.lrec .lh small{font-size:11.5px;font-weight:400;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrec dl{display:flex;gap:14px;margin:0 0 0 auto}
+.lrec dt{font-size:11px;color:var(--ink3)}
+.lrec dd{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.lrec .lq{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink2);line-height:1.3}
+
 /* the timeline + the 3D view: take whatever height is left */
 .row2{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px}
 .tlc{display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 24px 16px}
@@ -182,6 +201,11 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 2
     </section>
   </div>
 
+  <div class="strip">
+    <section class="card alerts" id="alerts" aria-label="Alerts" aria-live="polite"></section>
+    <section class="card lrec" id="lrec" aria-label="Live record"></section>
+  </div>
+
   <div class="row2">
     <section class="card tlc" aria-label="Next 48 hours">
       <div class="hd">
@@ -218,7 +242,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 2
   </div>
 </main>
 <div class="toast" id="toast" role="status"></div>
-<script type="application/json" id="data">{"run":"forecast_20261030T12.csv","issue":"2026-10-30T12:00:00+00:00","wind_init":"2026-10-30T00:00:00+00:00","generated":"2026-10-30T14:20:15.579833+00:00","od_now":7,"since":"2026-10-29T09:00:00+00:00","conf6":0.998,"change":null,"p_change":0.003,"hours":[{"t":"2026-10-30T13:00:00+00:00","p25":0.001,"p18":0.996,"od":7,"rule":7,"wd":75,"ws":5.6,"wg":14.2,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T14:00:00+00:00","p25":0.0,"p18":0.997,"od":7,"rule":7,"wd":69,"ws":5.5,"wg":14.2,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T15:00:00+00:00","p25":0.0,"p18":0.997,"od":7,"rule":7,"wd":54,"ws":3.6,"wg":11.3,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T16:00:00+00:00","p25":0.003,"p18":0.993,"od":7,"rule":7,"wd":55,"ws":3.7,"wg":7.2,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T17:00:00+00:00","p25":0.004,"p18":0.992,"od":7,"rule":7,"wd":47,"ws":4.9,"wg":8.4,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T18:00:00+00:00","p25":0.006,"p18":0.994,"od":7,"rule":7,"wd":39,"ws":6.2,"wg":11.5,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T19:00:00+00:00","p25":0.005,"p18":0.993,"od":7,"rule":7,"wd":41,"ws":6.3,"wg":12.1,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T20:00:00+00:00","p25":0.004,"p18":0.99,"od":7,"rule":7,"wd":44,"ws":5.6,"wg":11.7,"pg":0.0,"pgp":0.96},{"t":"2026-10-30T21:00:00+00:00","p25":0.004,"p18":0.986,"od":7,"rule":7,"wd":46,"ws":5.4,"wg":10.3,"pg":0.0,"pgp":0.95},{"t":"2026-10-30T22:00:00+00:00","p25":0.005,"p18":0.987,"od":7,"rule":7,"wd":46,"ws":5.2,"wg":9.7,"pg":0.0,"pgp":0.95},{"t":"2026-10-30T23:00:00+00:00","p25":0.005,"p18":0.989,"od":7,"rule":7,"wd":46,"ws":5.3,"wg":9.7,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T00:00:00+00:00","p25":0.005,"p18":0.99,"od":7,"rule":7,"wd":46,"ws":5.4,"wg":9.7,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T01:00:00+00:00","p25":0.003,"p18":0.99,"od":7,"rule":7,"wd":49,"ws":5.2,"wg":9.5,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T02:00:00+00:00","p25":0.003,"p18":0.99,"od":7,"rule":7,"wd":49,"ws":5.0,"wg":9.1,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T03:00:00+00:00","p25":0.003,"p18":0.991,"od":7,"rule":7,"wd":49,"ws":5.0,"wg":9.1,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T04:00:00+00:00","p25":0.002,"p18":0.992,"od":7,"rule":7,"wd":49,"ws":4.8,"wg":9.1,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T05:00:00+00:00","p25":0.002,"p18":0.991,"od":7,"rule":7,"wd":51,"ws":4.8,"wg":8.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T06:00:00+00:00","p25":0.002,"p18":0.99,"od":7,"rule":7,"wd":52,"ws":4.8,"wg":8.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T07:00:00+00:00","p25":0.002,"p18":0.993,"od":7,"rule":7,"wd":46,"ws":5.6,"wg":10.5,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T08:00:00+00:00","p25":0.002,"p18":0.995,"od":7,"rule":7,"wd":38,"ws":4.9,"wg":11.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T09:00:00+00:00","p25":0.004,"p18":0.994,"od":7,"rule":7,"wd":42,"ws":4.8,"wg":12.1,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T10:00:00+00:00","p25":0.003,"p18":0.992,"od":7,"rule":7,"wd":48,"ws":5.0,"wg":12.4,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T11:00:00+00:00","p25":0.004,"p18":0.992,"od":7,"rule":7,"wd":45,"ws":5.2,"wg":13.0,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T12:00:00+00:00","p25":0.004,"p18":0.992,"od":7,"rule":7,"wd":39,"ws":5.4,"wg":13.2,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T13:00:00+00:00","p25":0.004,"p18":0.994,"od":7,"rule":7,"wd":38,"ws":6.2,"wg":14.4,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T14:00:00+00:00","p25":0.004,"p18":0.994,"od":7,"rule":7,"wd":37,"ws":6.5,"wg":14.6,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T15:00:00+00:00","p25":0.003,"p18":0.995,"od":7,"rule":7,"wd":31,"ws":4.0,"wg":15.2,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T16:00:00+00:00","p25":0.003,"p18":0.984,"od":7,"rule":7,"wd":12,"ws":3.3,"wg":7.8,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T17:00:00+00:00","p25":0.003,"p18":0.988,"od":7,"rule":7,"wd":19,"ws":5.0,"wg":8.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T18:00:00+00:00","p25":0.011,"p18":0.99,"od":7,"rule":7,"wd":32,"ws":5.4,"wg":9.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T19:00:00+00:00","p25":0.018,"p18":0.989,"od":7,"rule":7,"wd":37,"ws":5.2,"wg":9.9,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T20:00:00+00:00","p25":0.013,"p18":0.988,"od":7,"rule":7,"wd":37,"ws":5.0,"wg":9.5,"pg":0.0,"pgp":0.95},{"t":"2026-10-31T21:00:00+00:00","p25":0.011,"p18":0.991,"od":7,"rule":7,"wd":34,"ws":4.2,"wg":8.9,"pg":0.0,"pgp":0.94},{"t":"2026-10-31T22:00:00+00:00","p25":0.018,"p18":0.992,"od":7,"rule":7,"wd":35,"ws":3.6,"wg":7.4,"pg":0.06,"pgp":0.94},{"t":"2026-10-31T23:00:00+00:00","p25":0.018,"p18":0.991,"od":7,"rule":7,"wd":43,"ws":3.4,"wg":6.4,"pg":0.12,"pgp":0.94},{"t":"2026-11-01T00:00:00+00:00","p25":0.029,"p18":0.991,"od":7,"rule":7,"wd":45,"ws":3.6,"wg":6.0,"pg":0.19,"pgp":0.94},{"t":"2026-11-01T01:00:00+00:00","p25":0.036,"p18":0.991,"od":7,"rule":7,"wd":44,"ws":3.8,"wg":6.6,"pg":0.25,"pgp":0.94},{"t":"2026-11-01T02:00:00+00:00","p25":0.037,"p18":0.993,"od":7,"rule":7,"wd":30,"ws":4.1,"wg":7.4,"pg":0.31,"pgp":0.94},{"t":"2026-11-01T03:00:00+00:00","p25":0.037,"p18":0.992,"od":7,"rule":7,"wd":25,"ws":4.2,"wg":7.8,"pg":0.38,"pgp":0.94},{"t":"2026-11-01T04:00:00+00:00","p25":0.029,"p18":0.992,"od":7,"rule":7,"wd":19,"ws":4.2,"wg":7.8,"pg":0.44,"pgp":0.94},{"t":"2026-11-01T05:00:00+00:00","p25":0.032,"p18":0.99,"od":7,"rule":7,"wd":21,"ws":4.1,"wg":7.8,"pg":0.5,"pgp":0.94},{"t":"2026-11-01T06:00:00+00:00","p25":0.026,"p18":0.982,"od":7,"rule":7,"wd":34,"ws":3.9,"wg":7.4,"pg":0.44,"pgp":0.94},{"t":"2026-11-01T07:00:00+00:00","p25":0.017,"p18":0.984,"od":7,"rule":7,"wd":30,"ws":4.8,"wg":8.9,"pg":0.38,"pgp":0.94},{"t":"2026-11-01T08:00:00+00:00","p25":0.012,"p18":0.993,"od":7,"rule":7,"wd":26,"ws":6.6,"wg":13.6,"pg":0.31,"pgp":0.94},{"t":"2026-11-01T09:00:00+00:00","p25":0.007,"p18":0.991,"od":7,"rule":7,"wd":29,"ws":5.7,"wg":13.6,"pg":0.25,"pgp":0.94},{"t":"2026-11-01T10:00:00+00:00","p25":0.005,"p18":0.988,"od":7,"rule":7,"wd":37,"ws":6.0,"wg":14.0,"pg":0.19,"pgp":0.94},{"t":"2026-11-01T11:00:00+00:00","p25":0.002,"p18":0.987,"od":7,"rule":7,"wd":43,"ws":6.6,"wg":15.4,"pg":0.12,"pgp":0.94},{"t":"2026-11-01T12:00:00+00:00","p25":0.003,"p18":0.991,"od":7,"rule":7,"wd":43,"ws":6.3,"wg":15.4,"pg":0.06,"pgp":0.94}],"quality":{"od25":[{"lead":1,"acc":0.9688,"rule":0.9294,"prog":0.9514,"pers":0.9633,"n":1090,"changed":40},{"lead":6,"acc":0.9613,"rule":0.8968,"prog":0.9373,"pers":0.8885,"n":1085,"changed":121},{"lead":24,"acc":0.9541,"rule":0.9044,"prog":0.9203,"pers":0.7254,"n":1067,"changed":293},{"lead":48,"acc":0.931,"rule":0.8897,"prog":0.8984,"pers":0.6702,"n":1043,"changed":344}],"rwy18":[{"lead":1,"acc":0.9987,"rule":0.9948,"prog":null,"pers":0.9974,"n":769,"changed":2},{"lead":6,"acc":0.9987,"rule":0.9961,"prog":null,"pers":0.9987,"n":767,"changed":1},{"lead":24,"acc":0.9987,"rule":0.992,"prog":null,"pers":0.9973,"n":752,"changed":2},{"lead":48,"acc":0.9986,"rule":0.9823,"prog":null,"pers":0.9986,"n":735,"changed":1}],"test":"real, walk-forward weekly evaluation from 2026-09-15 (7 weeks)","switch":{"model":{"hit":0.7265,"mae":1.0783,"fa":47,"acc":0.8034},"rule":{"hit":0.6061,"mae":1.2274,"fa":170,"acc":0.6},"prog":{"hit":0.6346,"mae":1.7759,"fa":72,"acc":0.7269},"n":875,"changes":457}},"prog_asof":"2026-10-30T11:00:00+00:00","traffic":{"perHour":[0,0,0,0,1,27,31,63,67,65,61,73,71,49,54,66,63,53,50,57,68,35,24,2],"share18":0.6}}</script>
+<script type="application/json" id="data">{"run":"forecast_20261103T05.csv","issue":"2026-11-03T05:00:00+00:00","wind_init":"2026-11-02T18:00:00+00:00","generated":"2026-11-03T05:31:14.532047+00:00","od_now":7,"since":"2026-10-29T09:00:00+00:00","conf6":1.0,"change":null,"p_change":0.0,"hours":[{"t":"2026-11-03T06:00:00+00:00","p25":0.0,"p18":0.985,"od":7,"rule":7,"wd":37,"ws":5.2,"wg":9.3,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T07:00:00+00:00","p25":0.0,"p18":0.987,"od":7,"rule":7,"wd":39,"ws":5.9,"wg":10.7,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T08:00:00+00:00","p25":0.0,"p18":0.987,"od":7,"rule":7,"wd":38,"ws":5.8,"wg":11.5,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T09:00:00+00:00","p25":0.001,"p18":0.985,"od":7,"rule":7,"wd":43,"ws":5.8,"wg":13.0,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T10:00:00+00:00","p25":0.0,"p18":0.988,"od":7,"rule":7,"wd":47,"ws":7.0,"wg":15.7,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T11:00:00+00:00","p25":0.0,"p18":0.989,"od":7,"rule":7,"wd":59,"ws":9.2,"wg":20.0,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T12:00:00+00:00","p25":0.0,"p18":0.986,"od":7,"rule":7,"wd":68,"ws":10.3,"wg":22.5,"pg":0.0,"pgp":0.97},{"t":"2026-11-03T13:00:00+00:00","p25":0.0,"p18":0.985,"od":7,"rule":7,"wd":68,"ws":10.2,"wg":22.5,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T14:00:00+00:00","p25":0.0,"p18":0.991,"od":7,"rule":7,"wd":62,"ws":8.6,"wg":25.1,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T15:00:00+00:00","p25":0.0,"p18":0.988,"od":7,"rule":7,"wd":56,"ws":8.2,"wg":17.7,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T16:00:00+00:00","p25":0.0,"p18":0.986,"od":7,"rule":7,"wd":54,"ws":7.9,"wg":17.3,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T17:00:00+00:00","p25":0.0,"p18":0.982,"od":7,"rule":7,"wd":51,"ws":7.7,"wg":16.3,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T18:00:00+00:00","p25":0.0,"p18":0.979,"od":7,"rule":7,"wd":49,"ws":7.9,"wg":16.1,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T19:00:00+00:00","p25":0.0,"p18":0.98,"od":7,"rule":7,"wd":46,"ws":8.0,"wg":16.3,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T20:00:00+00:00","p25":0.0,"p18":0.979,"od":7,"rule":7,"wd":47,"ws":8.0,"wg":16.5,"pg":0.0,"pgp":0.96},{"t":"2026-11-03T21:00:00+00:00","p25":0.0,"p18":0.979,"od":7,"rule":7,"wd":49,"ws":7.8,"wg":16.3,"pg":0.0,"pgp":0.95},{"t":"2026-11-03T22:00:00+00:00","p25":0.0,"p18":0.977,"od":7,"rule":7,"wd":52,"ws":7.6,"wg":15.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-03T23:00:00+00:00","p25":0.0,"p18":0.978,"od":7,"rule":7,"wd":53,"ws":7.4,"wg":15.6,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T00:00:00+00:00","p25":0.0,"p18":0.981,"od":7,"rule":7,"wd":49,"ws":7.4,"wg":15.2,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T01:00:00+00:00","p25":0.001,"p18":0.979,"od":7,"rule":7,"wd":50,"ws":7.5,"wg":15.2,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T02:00:00+00:00","p25":0.001,"p18":0.979,"od":7,"rule":7,"wd":46,"ws":7.5,"wg":15.6,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T03:00:00+00:00","p25":0.001,"p18":0.979,"od":7,"rule":7,"wd":41,"ws":7.4,"wg":15.6,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T04:00:00+00:00","p25":0.001,"p18":0.977,"od":7,"rule":7,"wd":41,"ws":7.6,"wg":15.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T05:00:00+00:00","p25":0.001,"p18":0.968,"od":7,"rule":7,"wd":46,"ws":7.6,"wg":15.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T06:00:00+00:00","p25":0.001,"p18":0.968,"od":7,"rule":7,"wd":44,"ws":7.8,"wg":15.6,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T07:00:00+00:00","p25":0.001,"p18":0.968,"od":7,"rule":7,"wd":42,"ws":8.1,"wg":16.1,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T08:00:00+00:00","p25":0.0,"p18":0.972,"od":7,"rule":7,"wd":39,"ws":7.1,"wg":16.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T09:00:00+00:00","p25":0.0,"p18":0.977,"od":7,"rule":7,"wd":36,"ws":7.8,"wg":16.9,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T10:00:00+00:00","p25":0.0,"p18":0.982,"od":7,"rule":7,"wd":50,"ws":9.0,"wg":19.4,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T11:00:00+00:00","p25":0.0,"p18":0.988,"od":7,"rule":7,"wd":63,"ws":10.6,"wg":25.1,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T12:00:00+00:00","p25":0.0,"p18":0.982,"od":7,"rule":7,"wd":77,"ws":11.7,"wg":25.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T13:00:00+00:00","p25":0.0,"p18":0.983,"od":7,"rule":7,"wd":79,"ws":11.2,"wg":25.3,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T14:00:00+00:00","p25":0.0,"p18":0.988,"od":7,"rule":7,"wd":74,"ws":10.5,"wg":24.9,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T15:00:00+00:00","p25":0.0,"p18":0.996,"od":7,"rule":7,"wd":54,"ws":8.3,"wg":24.5,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T16:00:00+00:00","p25":0.0,"p18":0.99,"od":7,"rule":7,"wd":45,"ws":8.0,"wg":17.5,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T17:00:00+00:00","p25":0.0,"p18":0.983,"od":7,"rule":7,"wd":46,"ws":8.4,"wg":16.7,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T18:00:00+00:00","p25":0.0,"p18":0.979,"od":7,"rule":7,"wd":49,"ws":8.6,"wg":17.5,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T19:00:00+00:00","p25":0.0,"p18":0.979,"od":7,"rule":7,"wd":50,"ws":7.7,"wg":17.3,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T20:00:00+00:00","p25":0.0,"p18":0.977,"od":7,"rule":7,"wd":53,"ws":7.2,"wg":15.4,"pg":0.0,"pgp":0.95},{"t":"2026-11-04T21:00:00+00:00","p25":0.0,"p18":0.98,"od":7,"rule":7,"wd":49,"ws":6.7,"wg":14.0,"pg":0.0,"pgp":0.94},{"t":"2026-11-04T22:00:00+00:00","p25":0.0,"p18":0.982,"od":7,"rule":7,"wd":46,"ws":6.6,"wg":12.8,"pg":0.0,"pgp":0.94},{"t":"2026-11-04T23:00:00+00:00","p25":0.001,"p18":0.982,"od":7,"rule":7,"wd":46,"ws":6.6,"wg":12.6,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T00:00:00+00:00","p25":0.001,"p18":0.981,"od":7,"rule":7,"wd":45,"ws":6.6,"wg":12.6,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T01:00:00+00:00","p25":0.001,"p18":0.98,"od":7,"rule":7,"wd":45,"ws":6.7,"wg":12.8,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T02:00:00+00:00","p25":0.001,"p18":0.981,"od":7,"rule":7,"wd":45,"ws":6.9,"wg":13.2,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T03:00:00+00:00","p25":0.001,"p18":0.981,"od":7,"rule":7,"wd":45,"ws":7.0,"wg":13.6,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T04:00:00+00:00","p25":0.001,"p18":0.98,"od":7,"rule":7,"wd":47,"ws":7.0,"wg":13.6,"pg":0.0,"pgp":0.94},{"t":"2026-11-05T05:00:00+00:00","p25":0.001,"p18":0.98,"od":7,"rule":7,"wd":48,"ws":6.9,"wg":13.6,"pg":0.0,"pgp":0.94}],"quality":{"od25":[{"lead":1,"acc":0.9675,"rule":0.9098,"prog":0.9373,"pers":0.9436,"n":3635,"changed":205},{"lead":6,"acc":0.949,"rule":0.9017,"prog":0.9292,"pers":0.8771,"n":3630,"changed":446},{"lead":24,"acc":0.9466,"rule":0.8854,"prog":0.912,"pers":0.753,"n":3612,"changed":892},{"lead":48,"acc":0.93,"rule":0.8701,"prog":0.8919,"pers":0.6575,"n":3588,"changed":1229}],"rwy18":[{"lead":1,"acc":0.9992,"rule":0.9685,"prog":null,"pers":0.9984,"n":2572,"changed":4},{"lead":6,"acc":0.9992,"rule":0.965,"prog":null,"pers":0.9992,"n":2570,"changed":2},{"lead":24,"acc":0.9992,"rule":0.9703,"prog":null,"pers":0.9984,"n":2555,"changed":4},{"lead":48,"acc":0.9992,"rule":0.9622,"prog":null,"pers":0.9988,"n":2538,"changed":3}],"test":"real, walk-forward weekly evaluation from 2026-06-01 (22 weeks), holdout from 2026-11-01 excluded","kind":"blend","test_info":{"kind":"blend","start":"2026-06-01","selection":"2026-09-15","holdout":"2026-11-01","verdict":"2026-12-01","verdict_weeks":4,"days":152,"n":3635,"brier":[0.0389,0.0296,0.0481],"brier_logit":[0.0429,0.0328,0.0531],"brier_prog":[0.0823,0.0634,0.1019],"brier_diff":[-0.0041,-0.0067,-0.0018],"pre":{"days":106,"acc24":0.9417,"acc24_logit":0.9345,"acc24_prog":0.9075,"brier":[0.0424,0.0314,0.0551],"brier_logit":[0.0467,0.0345,0.0602]}},"switch":{"model":{"hit":0.6472,"mae":1.2416,"fa":49,"acc":0.8003},"rule":{"hit":0.5687,"mae":1.4501,"fa":516,"acc":0.6225},"prog":{"hit":0.4969,"mae":1.5062,"fa":132,"acc":0.6971},"n":3420,"changes":1797}},"prog_asof":"2026-11-03T05:00:00+00:00","traffic":{"perHour":[0,0,0,0,1,26,30,63,67,63,61,73,68,49,53,65,62,52,49,57,67,33,25,2],"share18":0.6},"alerts":[],"alerts_stale":false,"alerts_msg":null,"alerts_issue":"2026-11-03T05:00:00+00:00","live":{"status":"scoring","start":"2026-10-31T13:00:00+00:00","labels_until":"2026-11-03T01:00:00+00:00","n_forecasts":62,"generated":"2026-11-03T04:31:08.466054+00:00","rolling_days":30,"holdout_from":"2026-11-01T00:00:00+00:00","windows":{"30d":{"name":"last 30 days","n_issues":62,"n_scored_issues":58,"first_issue":"2026-10-31T13:00:00+00:00","last_issue":"2026-11-03T04:00:00+00:00","od":{"1":{"n":58,"acc":1.0,"brier":0.0008,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8276,"n_changed":0,"acc_changed":null,"rule_changed":null},"6":{"n":53,"acc":1.0,"brier":0.0012,"rule":1.0,"prog":0.9811,"pers":1.0,"prog_coverage":0.8113,"n_changed":0,"acc_changed":null,"rule_changed":null},"24":{"n":37,"acc":1.0,"brier":0.0015,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8108,"n_changed":0,"acc_changed":null,"rule_changed":null},"48":{"n":13,"acc":1.0,"brier":0.0036,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8462,"n_changed":0,"acc_changed":null,"rule_changed":null},"all":{"n":1731,"acc":1.0,"brier":0.0014,"rule":1.0,"prog":0.9936,"pers":1.0,"prog_coverage":0.7984,"n_changed":0,"acc_changed":null,"rule_changed":null}},"switch":{"n_issues":13,"n_actual_change":0,"n_pred_change":0,"hits":0,"hit_rate":null,"timing_mae_h":null,"false_alarm":0,"missed":0,"correct_no_change":13,"event_acc":1.0},"coverage":{"expected":64,"issued":62,"missing":2,"missing_hours":["2026-11-02T14:00:00+00:00","2026-11-02T15:00:00+00:00"]}},"since_start":{"name":"since start","n_issues":62,"n_scored_issues":58,"first_issue":"2026-10-31T13:00:00+00:00","last_issue":"2026-11-03T04:00:00+00:00","od":{"1":{"n":58,"acc":1.0,"brier":0.0008,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8276,"n_changed":0,"acc_changed":null,"rule_changed":null},"6":{"n":53,"acc":1.0,"brier":0.0012,"rule":1.0,"prog":0.9811,"pers":1.0,"prog_coverage":0.8113,"n_changed":0,"acc_changed":null,"rule_changed":null},"24":{"n":37,"acc":1.0,"brier":0.0015,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8108,"n_changed":0,"acc_changed":null,"rule_changed":null},"48":{"n":13,"acc":1.0,"brier":0.0036,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.8462,"n_changed":0,"acc_changed":null,"rule_changed":null},"all":{"n":1731,"acc":1.0,"brier":0.0014,"rule":1.0,"prog":0.9936,"pers":1.0,"prog_coverage":0.7984,"n_changed":0,"acc_changed":null,"rule_changed":null}},"switch":{"n_issues":13,"n_actual_change":0,"n_pred_change":0,"hits":0,"hit_rate":null,"timing_mae_h":null,"false_alarm":0,"missed":0,"correct_no_change":13,"event_acc":1.0},"coverage":{"expected":64,"issued":62,"missing":2,"missing_hours":["2026-11-02T14:00:00+00:00","2026-11-02T15:00:00+00:00"]}},"holdout":{"name":"holdout (issued from 2026-11-01)","n_issues":51,"n_scored_issues":47,"first_issue":"2026-11-01T00:00:00+00:00","last_issue":"2026-11-03T04:00:00+00:00","od":{"1":{"n":47,"acc":1.0,"brier":0.001,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.7872,"n_changed":0,"acc_changed":null,"rule_changed":null},"6":{"n":42,"acc":1.0,"brier":0.0015,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.7619,"n_changed":0,"acc_changed":null,"rule_changed":null},"24":{"n":26,"acc":1.0,"brier":0.0013,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.7308,"n_changed":0,"acc_changed":null,"rule_changed":null},"48":{"n":2,"acc":1.0,"brier":0.0046,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.0,"n_changed":0,"acc_changed":null,"rule_changed":null},"all":{"n":1203,"acc":1.0,"brier":0.0015,"rule":1.0,"prog":1.0,"pers":1.0,"prog_coverage":0.7099,"n_changed":0,"acc_changed":null,"rule_changed":null}},"switch":{"n_issues":2,"n_actual_change":0,"n_pred_change":0,"hits":0,"hit_rate":null,"timing_mae_h":null,"false_alarm":0,"missed":0,"correct_no_change":2,"event_acc":1.0},"coverage":{"expected":53,"issued":51,"missing":2,"missing_hours":["2026-11-02T14:00:00+00:00","2026-11-02T15:00:00+00:00"]}}}}}</script>
 <script>const ICON = {"up": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20V5M6 11l6-6 6 6\"/></svg>", "play": "<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M7 4.6v14.8a1 1 0 0 0 1.52.85l12.1-7.4a1 1 0 0 0 0-1.7L8.52 3.75A1 1 0 0 0 7 4.6z\"/></svg>", "pause": "<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"5.5\" y=\"4\" width=\"4.6\" height=\"16\" rx=\"1.4\"/><rect x=\"13.9\" y=\"4\" width=\"4.6\" height=\"16\" rx=\"1.4\"/></svg>", "copy": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"8\" y=\"8\" width=\"12\" height=\"12\" rx=\"2\"/><path d=\"M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2\"/></svg>", "expand": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7\"/></svg>"};
 
 const $ = id => document.getElementById(id), D = JSON.parse($('data').textContent), H0 = D.hours;
@@ -332,6 +356,54 @@ function renderChange() {
   }
 }
 
+// ---- live operation: alerts (fra.alerts) and the record of the forecasts issued live each hour (fra.scoring)
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pc1 = p => (p === null || p === undefined ? '–' : `${(p * 100).toFixed(1)}%`);
+function renderAlerts() {
+  const A = D.alerts || [], iss = D.alerts_issue || D.issue, age = (Date.now() - Date.parse(iss)) / 36e5;
+  if (D.alerts_stale || age > 2) { // fra.alerts.STALE_H: no alerts from a forecast that is no longer current
+    $('alerts').classList.remove('on');
+    $('alerts').innerHTML = `<div class="al stale"><i></i><b>Alerts paused</b><span>${esc(D.alerts_stale && D.alerts_msg ? D.alerts_msg
+      : `No current forecast: the newest was issued ${dhm(iss)} (${Math.round(age)} h ago). Alerts resume with the next forecast.`)}</span></div>`;
+    return;
+  }
+  $('alerts').classList.toggle('on', A.length > 0);
+  $('alerts').innerHTML = A.length ? A.map(a => {
+    const [title, when] = a.kind === 'od_switch'
+      ? [`Direction change ${two(a.od_from)} → ${two(a.od_to)} ${a.lead_h ? `in ${a.lead_h} h` : 'this hour'}`,
+        `around ${dhm(a.t)}${a.start && a.end ? `, window ${hm(a.start)}–${hm(plus1h(a.end))}` : ''} · ${pct(a.p)} at that hour`]
+      : ['Runway 18 West closure risk', `${dhm(a.start)}–${hm(plus1h(a.end))} · lowest ${pct(a.p_min)} usable`];
+    return `<div class="al ${a.level}" title="${esc(a.text)}"><i></i><b>${title}</b><span>${when}</span></div>`;
+  }).join('') : '<div class="al ok"><i></i><b>No alerts</b><span>No direction change expected within 12 h · Runway 18 usable over the next 24 h</span></div>';
+}
+function renderLiveRecord() {
+  const L = D.live || {}, w = (L.windows || {})['30d'], od = (w && w.od) || {};
+  const leads = ['1', '6', '24', '48'].filter(k => od[k] && od[k].n);
+  const since = L.start ? `${dayf(L.start)}, ${hm(L.start)}` : null;
+  // the live record is the independent test: forecasts issued before the outcome exists; issue times from
+  // holdout_from (1 Nov 2026 00 UTC) form the locked holdout that decides between the model variants
+  const ho = (L.windows || {}).holdout, hoN = (ho && ho.n_scored_issues) || 0;
+  const tipL = esc('Each hourly forecast is archived before the outcome is known and scored against the direction flown (radar, ~3 h delay).'
+    + (L.holdout_from ? ` Forecasts issued from ${dayf(L.holdout_from)} ${hm(L.holdout_from)} (${tz === 'UTC' ? 'UTC' : 'local'}) form the locked holdout: the independent test of the model.` : ''));
+  if (!leads.length) {
+    $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${since ? `Collecting since ${since}` : 'Collecting from the first live forecast'}</small></div>`
+      + `<div class="lq" title="${tipL}">First scores ~3 h after<br>each forecast hour is flown</div>`;
+    return;
+  }
+  const old = Date.now() - Date.parse(L.start) > (L.rolling_days || 30) * 864e5;
+  const miss = (w.coverage || {}).missing || 0;
+  $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${w.n_scored_issues} forecasts · ${old ? `last ${L.rolling_days || 30} days` : `since ${dayf(L.start)}`}${hoN ? ` · ${hoN} in the holdout` : ''}${miss ? ` · ${miss} h not issued` : ''}</small></div>`
+    + `<dl>${leads.map(k => `<div title="${od[k].n} hours scored, ${k} h ahead · official rules ${pc1(od[k].rule)} · published prognosis ${pc1(od[k].prog)} · no change ${pc1(od[k].pers)}"><dt>${k} h</dt><dd>${pc1(od[k].acc)}</dd></div>`).join('')}</dl>`;
+}
+async function pollOps() { // alerts.json (fra.alerts) and live_record.json (fra.scoring) are refreshed every hour
+  const get = async f => { try { const r = await fetch(f, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; } };
+  const [a, l] = await Promise.all([get('alerts.json'), get('live_record.json')]);
+  if (a && Date.parse(a.issue) >= Date.parse(D.issue)) {
+    D.alerts = a.alerts; D.alerts_stale = !!a.stale; D.alerts_msg = a.message; D.alerts_issue = a.issue; renderAlerts();
+  }
+  if (l && l.start) { D.live = l; renderLiveRecord(); }
+}
+
 // ---- timeline
 const lanes = $('lanes');
 const geom = () => { const W = $('lod').clientWidth, g = span >= 48 ? 2 : 3, cw = (W - (span - 1) * g) / span; return { W, g, cw }; };
@@ -346,9 +418,10 @@ function renderTimeline() {
   const every = span === 48 ? 6 : span === 24 ? 3 : 2, num = span === 48 ? 3 : span === 24 ? 2 : 1;
   lanes.style.setProperty('--g', `${g}px`);
   let ru = '';
+  const mid = hs.findIndex((h, i) => i > 0 && hourOf(h.t) === 0); // first midnight: no first-day label right before it
   hs.forEach((h, i) => {
     const hr = hourOf(h.t), c = x(i) + cw / 2;
-    if (i === 0) ru += `<span class="d" data-x="34" style="left:0">${dayf(h.t)}</span>`;
+    if (i === 0 && (mid < 0 || x(mid) > 84)) ru += `<span class="d" data-x="34" style="left:0">${dayf(h.t)}</span>`;
     else if (hr === 0) ru += `<i class="t dd" style="left:${x(i) - g / 2}px"></i><span class="d" data-x="${x(i) + 39}" style="left:${x(i) + 5}px">${dayf(h.t)}</span>`;
     if (hr % every === 0 && hr !== 0) {
       ru += `<i class="t" style="left:${c}px"></i>`;
@@ -492,7 +565,9 @@ async function pollLive() {
   try {
     const r = await fetch('live.json', { cache: 'no-store' });
     if (!r.ok) throw new Error(r.status);
-    const d = await r.json(), fresh = !live || live.issue !== d.issue;
+    const d = await r.json();
+    if (d.issue && Date.parse(d.issue) < Date.parse(D.issue)) throw new Error('stale'); // old fra.live feed: keep this forecast
+    const fresh = !live || live.issue !== d.issue;
     live = d;
     if (fresh && d.forecast?.length) {
       const keep = sel >= 0 ? Date.parse(H[sel].t) : null, held = pin >= 0 ? Date.parse(H[pin].t) : null;
@@ -520,9 +595,13 @@ function briefing() {
   const W = r18Windows();
   L.push(W.length ? `Runway 18 West: NOT usable ${W.map(([a, b]) => `${dhm(H[a].t)}-${hm(plus1h(H[b].t))}`).join(', ')}; departures via Centre runway.`
     : `Runway 18 West: usable all 48 h (min ${pct(Math.min(...H.map(h => h.p18)))}).`);
+  if (!D.alerts_stale && (D.alerts || []).length) L.push(`Alerts: ${D.alerts.map(a => a.title).join('; ')}.`);
+  const lw = D.live?.windows?.['30d']?.od?.['24'];
+  if (lw?.n) L.push(`Live record (forecasts issued live since ${dayf(D.live.start)}): direction right ${pc1(lw.acc)} at 24 h ahead, n = ${lw.n} h (official rules ${pc1(lw.rule)}).`);
   const Q = D.quality, q24 = Q?.od25.find(x => x.lead === 24), S = Q?.switch;
-  if (q24) L.push(`Track record (out of sample): direction right ${(q24.acc * 100).toFixed(1)}% at 24 h ahead (official rules ${(q24.rule * 100).toFixed(1)}%)`
-    + (S ? `; changes called within ±3 h ${Math.round(S.model.hit * 100)}%, ${S.model.fa} false alarms (rules ${S.rule.fa}).` : '.'));
+  if (q24) L.push(`Backtest (walk-forward, 1 Jun-30 Oct 2026; settings chosen on the same period, so optimistic): direction right ${(q24.acc * 100).toFixed(1)}% at 24 h ahead (official rules ${(q24.rule * 100).toFixed(1)}%)`
+    + (S ? `; changes called within ±3 h ${Math.round(S.model.hit * 100)}%, ${S.model.fa} false alarms (rules ${S.rule.fa}).` : '.')
+    + (D.live?.holdout_from ? ` The independent test is the live record from ${dayf(D.live.holdout_from)}.` : ''));
   return L.join('\n');
 }
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1800); }
@@ -559,7 +638,7 @@ document.addEventListener('webkitfullscreenchange', onFs);
 
 function renderAll() {
   press($('tz'), $('tz').querySelector(`[data-v=${tz === 'UTC' ? 'utc' : 'local'}]`));
-  renderUpdated(); renderChange(); renderTimeline(); renderOD(); renderR18();
+  renderUpdated(); renderChange(); renderTimeline(); renderOD(); renderR18(); renderAlerts(); renderLiveRecord();
 }
 function zoom() { return parseFloat(document.body.style.zoom) || 1; }
 function fit() { // one screen, never a scrollbar: lay out at >= 1280 px wide, scale to the window, the timeline row takes the rest
@@ -578,6 +657,6 @@ setPlaying(0);
 renderAll();
 fit();
 requestAnimationFrame(() => document.querySelectorAll('.seg').forEach(s => s.classList.add('on')));
-if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 30000); }
+if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 30000); pollOps(); setInterval(pollOps, 60000); }
 </script>
 </body></html>

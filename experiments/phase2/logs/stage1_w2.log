@@ -1,0 +1,5 @@
+wall_clean   173352 rows  Brier(1,6,24,48) 0.04274  150 s
+hl120        173352 rows  Brier(1,6,24,48) 0.04269  318 s
+w240         173352 rows  Brier(1,6,24,48) 0.04319  172 s
+C0.1         173352 rows  Brier(1,6,24,48) 0.04277  106 s
+buckets6     173352 rows  Brier(1,6,24,48) 0.04310  65 s

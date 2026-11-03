@@ -1,0 +1,2 @@
+# large walk-forward prediction tables (regenerate with run_wf.py / analyze.py / final_eval.py)
+*.parquet

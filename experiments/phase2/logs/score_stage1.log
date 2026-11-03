@@ -1,0 +1,45 @@
+                 n    brier  d_brier  d_brier_lo  d_brier_hi  d_brier_all     acc1     acc6    acc24    acc48  d_acc24  d_acc24_lo  d_acc24_hi
+variant                                                                                                                                       
+w180         14465  0.04298 -0.00002    -0.00099     0.00102      0.00025  0.95763  0.94408  0.94103  0.92977  0.00000    -0.00386     0.00394
+w240         14465  0.04319  0.00020    -0.00133     0.00178      0.00081  0.95901  0.94435  0.93743  0.92921 -0.00360    -0.00935     0.00140
+wall         14465  0.04374  0.00075    -0.00145     0.00317      0.00169  0.95928  0.94270  0.93660  0.92921 -0.00443    -0.01139     0.00220
+w120_clean   14465  0.04293 -0.00006    -0.00015    -0.00000     -0.00006  0.95461  0.94601  0.94103  0.92893  0.00000    -0.00083     0.00083
+w180_clean   14465  0.04308  0.00008    -0.00079     0.00104      0.00039  0.95681  0.94435  0.93992  0.92949 -0.00111    -0.00469     0.00224
+w240_clean   14465  0.04290 -0.00009    -0.00130     0.00121      0.00054  0.95983  0.94463  0.93605  0.93060 -0.00498    -0.01042    -0.00028
+wall_clean   14465  0.04274 -0.00026    -0.00159     0.00113      0.00050  0.95956  0.94518  0.93522  0.93032 -0.00581    -0.01115    -0.00111
+hl60         14465  0.04284 -0.00015    -0.00114     0.00087      0.00011  0.95928  0.94628  0.93937  0.93004 -0.00166    -0.00446     0.00084
+hl120        14465  0.04269 -0.00030    -0.00169     0.00112      0.00025  0.96011  0.94711  0.93798  0.92837 -0.00305    -0.00836     0.00169
+hl240        14465  0.04301  0.00001    -0.00179     0.00188      0.00077  0.96011  0.94601  0.93605  0.92893 -0.00498    -0.01159     0.00110
+hl60_clean   14465  0.04316  0.00017    -0.00059     0.00098      0.00030  0.95763  0.94463  0.93937  0.92949 -0.00166    -0.00440     0.00083
+hl120_clean  14465  0.04274 -0.00026    -0.00116     0.00070      0.00015  0.95956  0.94628  0.93826  0.92949 -0.00277    -0.00688     0.00085
+hl240_clean  14465  0.04271 -0.00028    -0.00136     0.00086      0.00029  0.96066  0.94518  0.93522  0.93032 -0.00581    -0.01096    -0.00140
+C0.01        14465  0.04385  0.00085     0.00019     0.00154      0.00026  0.94911  0.94215  0.94075  0.93060 -0.00028    -0.00220     0.00139
+C0.1         14465  0.04277 -0.00022    -0.00062     0.00017      0.00003  0.95818  0.94380  0.94158  0.92809  0.00055    -0.00112     0.00247
+C0.3         14465  0.04276 -0.00024    -0.00078     0.00029      0.00007  0.95818  0.94435  0.94214  0.92809  0.00111    -0.00083     0.00303
+notemp       14465  0.04281 -0.00018    -0.00088     0.00054     -0.00029  0.95461  0.94628  0.94103  0.92893  0.00000     0.00000     0.00000
+buckets6     14465  0.04310  0.00010    -0.00026     0.00048      0.00014  0.95296  0.94242  0.94075  0.92921 -0.00028    -0.00222     0.00166
+lgbm_mono    14465  0.04436  0.00136    -0.00084     0.00358      0.00079  0.95131  0.94601  0.93798  0.92447 -0.00305    -0.00911     0.00251
+blend_lgbm   14465  0.04251 -0.00048    -0.00155     0.00055     -0.00071  0.95461  0.94766  0.94075  0.93004 -0.00028    -0.00446     0.00333
+pw4          14465  0.04236 -0.00064    -0.00153     0.00027     -0.00042  0.95653  0.94545  0.93992  0.93116 -0.00111    -0.00475     0.00221
+                   group ci_excludes_0 both_halves_better acc24_ok passes  d_brier                                                            needs_live_inputs
+w180              window         False              False     True  False -0.00002                                                                         None
+w240              window         False              False     True  False   0.0002                                                                         None
+wall              window         False              False     True  False  0.00075                                                                         None
+w120_clean        window          True               True     True   True -0.00006                                                                         None
+w180_clean        window         False              False     True  False  0.00008                                                                         None
+w240_clean        window         False              False    False  False -0.00009                                                                         None
+wall_clean        window         False              False    False  False -0.00026                                                                         None
+hl60             recency         False              False     True  False -0.00015                                                                         None
+hl120            recency         False              False     True  False  -0.0003                                                                         None
+hl240            recency         False              False     True  False  0.00001                                                                         None
+hl60_clean       recency         False              False     True  False  0.00017                                                                         None
+hl120_clean      recency         False              False     True  False -0.00026                                                                         None
+hl240_clean      recency         False              False    False  False -0.00028                                                                         None
+C0.01                  C         False              False     True  False  0.00085                                                                         None
+C0.1                   C         False              False     True  False -0.00022                                                                         None
+C0.3                   C         False              False     True  False -0.00024                                                                         None
+notemp       temperature         False              False     True  False -0.00018                                                                         None
+buckets6         buckets         False              False     True  False   0.0001                                                                         None
+lgbm_mono           lgbm         False              False     True  False  0.00136  fra.train has no LightGBM production path (would need code, not a constant)
+blend_lgbm          lgbm         False              False     True  False -0.00048  fra.train has no LightGBM production path (would need code, not a constant)
+pw4                partB         False               True     True  False -0.00064  Part B path features are not computed by the live forecast (fra/predict.py)

@@ -1,0 +1,5 @@
+hl120_clean  173352 rows  Brier(1,6,24,48) 0.04274  154 s
+hl240_clean  173352 rows  Brier(1,6,24,48) 0.04271  160 s
+w240_clean   173352 rows  Brier(1,6,24,48) 0.04290  133 s
+w120_clean   173352 rows  Brier(1,6,24,48) 0.04293  87 s
+lgbm_mono    173352 rows  Brier(1,6,24,48) 0.04436  53 s

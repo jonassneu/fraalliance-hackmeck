@@ -1,0 +1,1080 @@
+{
+ "title": "Locked holdout of the live FRA operating-direction forecast: pre-registered comparison",
+ "first_written_utc": "2026-10-31T18:13:14+00:00",
+ "written_utc": "2026-10-31T19:30:58+00:00",
+ "holdout_start_utc": "2026-11-01T00:00:00+00:00",
+ "written_before_holdout": true,
+ "registry_file": "data/archive/variants.json",
+ "registry_updated_utc": "2026-10-31T18:58:34+00:00",
+ "current_runtime": "2026-10-31-wave2-r4",
+ "rollback_runtime": "2026-10-31-wave1-r2 (previous official system; registry champion logit-v1)",
+ "variants": [
+  {
+   "name": "blend-v2",
+   "role": "champion",
+   "entry": "fra.blend:forecast",
+   "runtime": {
+    "tag": "2026-10-31-wave2-r4",
+    "created_utc": "2026-10-31T18:58:08+00:00",
+    "git_head": "1eb027b9a74214d073d360756cd41106e4654b76",
+    "dirty": true,
+    "fra_code_version": "62c20d4b7c3d6607b629d7cfdb78995c5835fd91fc77b3aa7ffb13bd687363d7",
+    "forecast_modules_sha256": {
+     "fra/blend.py": "f8ba8efd89b6f3c749ed7ded151bd1287e0375f6092ccc5bcff9145d295cd1e1",
+     "fra/decision.py": "08e64f69fea2dbfe7bd25fb24c6444dcad738e89d6ee41deca8597e41a7663be",
+     "fra/fcerror.py": "38ce421abf39101e2f319c82441269db1ac82267983c9e2ecc28b64d53780e39",
+     "fra/predict.py": "02f2eedd2fd39560d3326a104e8ccc3363a4cd521c0d1c19d243e112b32397a9",
+     "fra/dataset.py": "f9e9d8ad2729eb2da815c2f29ba92ad78810d1c2b7b44baadaab84388aae0b45",
+     "fra/train.py": "8b85b11b28323a5e833313be0dc15994161311eccb0d8bec9f880e1cae304da4",
+     "fra/changetime.py": "000d2bd586defffb0f1023512bba1206a3f02acb31b2b3324d525113117f1961",
+     "fra/labels.py": "b9b64a971f61e90999ced257af11b4a7edf90c3d00b958bae42ee1614a8319e1",
+     "fra/rules.py": "daee6373a8fd43cd13196b67869322603d345394fc94a2871ef9f10d9dac7048",
+     "fra/prognosis.py": "d43a3e3272acdfa18e673af7346e82075a23a487067c75957f0806f97b7600d1",
+     "fra/weather.py": "8fe92c72ce085552708f6c9698b07d0b8493e46e4a94837253f44fbe85257109",
+     "fra/singleruns.py": "eebb4ec0d8d29ad743aecbc780866f0b56f3300ce3613485944711d5ec6057eb",
+     "fra/singleruns_icon.py": "2711be49ac169a766e2a9e5b45d3677a062e4112aa2e155b809297a22a985de8",
+     "fra/singleruns_iconeu.py": "15fec1cf3a6485dfea8a6995951a8bb6dfe424c565d6b361432ffe8f194975b9",
+     "fra/archive.py": "bd50a7f27b016871a774441c67475f145dfd60771786cda64836c45549c18935"
+    }
+   },
+   "models": {
+    "model": {
+     "path": "data/archive/models/blend-v2/model.pkl",
+     "sha256": "e67b55b9c6a71b17b1cff5da473abb34e90ebba2a50fc03b141ad5358695198b"
+    },
+    "decision": {
+     "path": "data/archive/models/blend-v2/decision_model.pkl",
+     "sha256": "a9e3f00f42096caf62681a051cdb9e3d8d505b198dacef69e1cfdd0f97d331e7"
+    },
+    "library": {
+     "path": "data/archive/models/blend-v2/library/MANIFEST.json",
+     "sha256": "d38e3f72b6135d79da4ebae1b8ebaab0a9725b7121d08952c8e34e9ee17fb606"
+    }
+   },
+   "registry_pins": {
+    "sha256": "e67b55b9c6a7",
+    "models_sha256": {
+     "decision": "a9e3f00f4209",
+     "library": "d38e3f72b613"
+    }
+   },
+   "description": "0.5 x production logit (lag-2 data layer, ICON-EU fill, 48 leads, clean labels) + 0.5 x hourly decision model rolled out on 200 simulated wind paths; next change from the hysteresis rule on the blend; RWY 18 from the logit. Long test Brier(1,6,24,48) 0.0389 vs 0.0429 for the logit alone; Part B library read from its frozen copy (models.library, since 31 Oct 2026 evening)"
+  },
+  {
+   "name": "logit-v2",
+   "role": "challenger",
+   "entry": "fra.predict:forecast",
+   "runtime": {
+    "tag": "2026-10-31-wave2-r4",
+    "created_utc": "2026-10-31T18:58:08+00:00",
+    "git_head": "1eb027b9a74214d073d360756cd41106e4654b76",
+    "dirty": true,
+    "fra_code_version": "62c20d4b7c3d6607b629d7cfdb78995c5835fd91fc77b3aa7ffb13bd687363d7",
+    "forecast_modules_sha256": {
+     "fra/blend.py": "f8ba8efd89b6f3c749ed7ded151bd1287e0375f6092ccc5bcff9145d295cd1e1",
+     "fra/decision.py": "08e64f69fea2dbfe7bd25fb24c6444dcad738e89d6ee41deca8597e41a7663be",
+     "fra/fcerror.py": "38ce421abf39101e2f319c82441269db1ac82267983c9e2ecc28b64d53780e39",
+     "fra/predict.py": "02f2eedd2fd39560d3326a104e8ccc3363a4cd521c0d1c19d243e112b32397a9",
+     "fra/dataset.py": "f9e9d8ad2729eb2da815c2f29ba92ad78810d1c2b7b44baadaab84388aae0b45",
+     "fra/train.py": "8b85b11b28323a5e833313be0dc15994161311eccb0d8bec9f880e1cae304da4",
+     "fra/changetime.py": "000d2bd586defffb0f1023512bba1206a3f02acb31b2b3324d525113117f1961",
+     "fra/labels.py": "b9b64a971f61e90999ced257af11b4a7edf90c3d00b958bae42ee1614a8319e1",
+     "fra/rules.py": "daee6373a8fd43cd13196b67869322603d345394fc94a2871ef9f10d9dac7048",
+     "fra/prognosis.py": "d43a3e3272acdfa18e673af7346e82075a23a487067c75957f0806f97b7600d1",
+     "fra/weather.py": "8fe92c72ce085552708f6c9698b07d0b8493e46e4a94837253f44fbe85257109",
+     "fra/singleruns.py": "eebb4ec0d8d29ad743aecbc780866f0b56f3300ce3613485944711d5ec6057eb",
+     "fra/singleruns_icon.py": "2711be49ac169a766e2a9e5b45d3677a062e4112aa2e155b809297a22a985de8",
+     "fra/singleruns_iconeu.py": "15fec1cf3a6485dfea8a6995951a8bb6dfe424c565d6b361432ffe8f194975b9",
+     "fra/archive.py": "bd50a7f27b016871a774441c67475f145dfd60771786cda64836c45549c18935"
+    }
+   },
+   "models": {
+    "model": {
+     "path": "data/archive/models/logit-v2/model.pkl",
+     "sha256": "e67b55b9c6a71b17b1cff5da473abb34e90ebba2a50fc03b141ad5358695198b"
+    }
+   },
+   "registry_pins": {
+    "sha256": "e67b55b9c6a7",
+    "models_sha256": null
+   },
+   "description": "the new production logit alone (same file as the logit part of blend-v2), code of 31 Oct 2026 evening"
+  },
+  {
+   "name": "logit-v1",
+   "role": "challenger",
+   "entry": "fra.predict:forecast",
+   "runtime": {
+    "tag": "2026-10-31-wave1-r2",
+    "created_utc": "2026-10-31T15:40:31+00:00",
+    "git_head": "1eb027b9a74214d073d360756cd41106e4654b76",
+    "dirty": true,
+    "fra_code_version": "1ee0e2f1db778a062f9e658b10eeda9edbc5c052d7d1e34e3dac617c5f2392e0",
+    "forecast_modules_sha256": {
+     "fra/decision.py": "b16ea9f8328f9026245ce503241c25cd08a501a7e5a92d0ae8028f1936192248",
+     "fra/fcerror.py": "a9e438ada345cc1f7dab793c3b7dd0050f419efd5efcd00984bb4c635c12d122",
+     "fra/predict.py": "377ea8175c49e3836035ad1b8c3fef40465966ed0c3e58560d8f99f2a0604924",
+     "fra/dataset.py": "1a63726c87f705e710dd83bc5275513a6aaaa236d141bbc6942e96de686fe063",
+     "fra/train.py": "2f9c79c95b60e162a07274e8fa18ee37a8161cf45dae8978b9854b7e9a52db1b",
+     "fra/changetime.py": "8a3d9fb274e76ef94004ca74c6524bd5ee081c677b76d70953770d1504020732",
+     "fra/labels.py": "eb09b0ad251e20a8e4dd744d486527281bcfd82bbc77b19f5b60de1959fe6884",
+     "fra/rules.py": "daee6373a8fd43cd13196b67869322603d345394fc94a2871ef9f10d9dac7048",
+     "fra/prognosis.py": "d43a3e3272acdfa18e673af7346e82075a23a487067c75957f0806f97b7600d1",
+     "fra/weather.py": "0e1f5a3650c9b0026b897a31d96e3b1038a61f631f84643e7d374abe781237d9",
+     "fra/singleruns.py": "eebb4ec0d8d29ad743aecbc780866f0b56f3300ce3613485944711d5ec6057eb",
+     "fra/singleruns_icon.py": "2711be49ac169a766e2a9e5b45d3677a062e4112aa2e155b809297a22a985de8",
+     "fra/singleruns_iconeu.py": "15fec1cf3a6485dfea8a6995951a8bb6dfe424c565d6b361432ffe8f194975b9",
+     "fra/archive.py": "945720699bba682cb8abd7c794fd4a81b885f12ad8e3fc130dfb2733a8fe2d02"
+    }
+   },
+   "models": {
+    "model": {
+     "path": "data/archive/models/logit-v1/model.pkl",
+     "sha256": "d152a9b32edb952bb708cf91dc1df1fdba256c4ce72be67af549a76a35c056f8"
+    }
+   },
+   "registry_pins": {
+    "sha256": "d152a9b32edb",
+    "models_sha256": null
+   },
+   "description": "the previous official system unchanged: pinned production logit d152a9b32edb (promoted 2026-10-31 14:39 UTC) with the code of runtime 2026-10-31-wave1-r2 (od_now from the newest, partly published radar hour; stitched live ECMWF forecast)"
+  },
+  {
+   "name": "hackathon",
+   "role": "challenger",
+   "entry": "fra.predict:forecast",
+   "runtime": {
+    "tag": "2026-10-31-wave1",
+    "created_utc": "2026-10-31T15:38:29+00:00",
+    "git_head": "1eb027b9a74214d073d360756cd41106e4654b76",
+    "dirty": true,
+    "fra_code_version": "5b35ea0a4c45830c6845fd2ac3930af6895f7e6ebeb76645c8bef3bc4e78bd5e",
+    "forecast_modules_sha256": {
+     "fra/decision.py": "b16ea9f8328f9026245ce503241c25cd08a501a7e5a92d0ae8028f1936192248",
+     "fra/fcerror.py": "a9e438ada345cc1f7dab793c3b7dd0050f419efd5efcd00984bb4c635c12d122",
+     "fra/predict.py": "377ea8175c49e3836035ad1b8c3fef40465966ed0c3e58560d8f99f2a0604924",
+     "fra/dataset.py": "1a63726c87f705e710dd83bc5275513a6aaaa236d141bbc6942e96de686fe063",
+     "fra/train.py": "2f9c79c95b60e162a07274e8fa18ee37a8161cf45dae8978b9854b7e9a52db1b",
+     "fra/changetime.py": "8a3d9fb274e76ef94004ca74c6524bd5ee081c677b76d70953770d1504020732",
+     "fra/labels.py": "eb09b0ad251e20a8e4dd744d486527281bcfd82bbc77b19f5b60de1959fe6884",
+     "fra/rules.py": "daee6373a8fd43cd13196b67869322603d345394fc94a2871ef9f10d9dac7048",
+     "fra/prognosis.py": "d43a3e3272acdfa18e673af7346e82075a23a487067c75957f0806f97b7600d1",
+     "fra/weather.py": "0e1f5a3650c9b0026b897a31d96e3b1038a61f631f84643e7d374abe781237d9",
+     "fra/singleruns.py": "eebb4ec0d8d29ad743aecbc780866f0b56f3300ce3613485944711d5ec6057eb",
+     "fra/singleruns_icon.py": "2711be49ac169a766e2a9e5b45d3677a062e4112aa2e155b809297a22a985de8",
+     "fra/singleruns_iconeu.py": "15fec1cf3a6485dfea8a6995951a8bb6dfe424c565d6b361432ffe8f194975b9",
+     "fra/archive.py": "3bddf062063dbba139cb8c9f6f3345ba550dba694541491bdb63a0c9cd877322"
+    }
+   },
+   "models": {
+    "model": {
+     "path": "data/archive/models/hackathon/model.pkl",
+     "sha256": "863661b237f8a8b3c78bb9ef1b4538f03f42758936b06a1e6a55afe2e503930a"
+    }
+   },
+   "registry_pins": {
+    "sha256": "863661b237f8",
+    "models_sha256": null
+   },
+   "description": "frozen hackathon model of 30 Oct 2026 (copy of data/baseline_hackathon/model.pkl, git 1eb027b; no feature spec: the default feature list of fra.train.predict) applied with the code of runtime 2026-10-31-wave1"
+  }
+ ],
+ "champion_choice": {
+  "rule": "blend-v2 (fra.blend:forecast) is the champion if it beat the production logit on the long walk-forward test, else logit-v1 stays champion",
+  "decided": "decided and promoted at 2026-10-31 17:35 UTC on the long test (runtime/history.jsonl), written down here afterwards (18:13 UTC): the rule is post hoc, not pre-registered",
+  "outcome": "blend-v2 is champion: long test (issues 2026-06-01 .. 2026-10-30, 152 days) paired Brier(1,6,24,48) blend - logit -0.0041 [-0.0067, -0.0018] (1-day blocks; 3-day blocks [-0.0071, -0.0014]); Brier over all 48 leads -0.0042 [-0.0069, -0.0019]; part before 15 Sep (valid < 2026-09-15) -0.0043 [-0.0073, -0.0016]",
+  "in_sample": "All of Jun-Oct 2026 was used to select the blend design (waves 1 and 2: Part A specification, Part B DEFAULT, anticipate='mean', the 50/50 weight, BLEND_CHANGE_PARAMS / BLEND_P48_COEF, the data layer, CLEAN_LABELS; ~38 integration and 21 phase-2 variants were compared on these rows); no part of the long test is selection-free for the blend, and its long-test gain is an in-sample upper bound. Only the holdout decides."
+ },
+ "streams": {
+  "official": "data/archive/issued/forecast_YYYYMMDDTHH.csv (+ .json, .features.parquet): the champion, issued once per hour by fra-archive.timer (:30 local time since 2026-10-31 18:57 UTC; :12 before, see amendment A6) from the runtime data/archive/runtime/current; the .json records variant, runtime, model sha256 and, for the blend, the decision part's status",
+  "shadow": "data/archive/issued_shadow/<variant>/forecast_YYYYMMDDTHH.*: every challenger, the same issue hour, in its own frozen runtime and process right after the champion, with the same prognosis snapshot and the radar hours the champion fetched (run_cache/); weather inputs are fetched by each variant itself seconds to a minute later",
+  "never_backfilled": "a missing hour stays missing; shadows are not issued if the official forecast of the hour is older than 20 min",
+  "embedded_logit": "the official blend-v2 file also holds p_od25_logit = the logit-v2 model on exactly the champion's inputs; used as a consistency check of the logit-v2 shadow stream, not for the decision"
+ },
+ "truth": {
+  "od": "flown operating direction of the radar hour starting at the valid time: fra.labels.to_labels(fra.labels.load_counts(), bridge=\"night\") on data/inaa_counts.csv (INAA FANOMOS radar, appended hourly by the live job, re-checked once >= 6 h later): majority of west/east movements if >= 4 movements, carried (<= 8 h) only through the night ban and fetched quiet hours, never across a daytime hour that was not fetched; hours without a label are not scored; fra.scoring reports per window the valid hours observed / bridged / unlabelled",
+  "rwy18": "rwy18_open of the same labels: judged only in busy hours (>= 15 movements, from 06 local), closed = no RWY 18 departure",
+  "computed_by": "fra.scoring (python -m fra.scoring, every hour): data/archive/live_record_variants.json"
+ },
+ "analysis": {
+  "rows": "identical rows only: issue hours that BOTH compared variants issued (official or shadow), leads 1, 6, 24 and 48, valid hour labelled; pooled = all these rows with equal weight",
+  "ci": "95 % percentile CI of a block bootstrap: blocks = 3 consecutive UTC days of the valid time (fixed calendar blocks, fra.evalkit.day_blocks(block_days=3)), 2000 draws, seed 20261031 (fra.evalkit.bootstrap, block_days=3; fra.scoring.BLOCK_DAYS); paired differences are computed on the same resampled blocks. Sensitivity (reported, not decisive): the pooled Brier difference with 1- and 7-day blocks (live_record_variants.json -> brier_pooled_by_block_days). Reason (amendment A3): the daily paired Brier differences are autocorrelated (long test: lag-1 0.21, lag-2 0.07), so 1-day blocks give CIs ~15-25 % too narrow (long test blend - logit: width 0.0048 with 1-day, 0.0057 with 3-day, 0.0065 with 7-day blocks)",
+  "primary_window": {
+   "name": "holdout_4w",
+   "issue_from_utc": "2026-11-01T00:00:00+00:00",
+   "issue_to_utc": "2026-11-28T23:00:00+00:00",
+   "evaluate_after_utc": "2026-12-01T08:00:00+00:00",
+   "where": "data/archive/live_record_variants.json -> windows.holdout_4w.pairs['logit-v2'].od.pooled['blend-v2 - logit-v2'].brier",
+   "note": "the last valid hour of the window is 2026-11-30 23:00 UTC; its radar hour is stored >= 100 min after its end and re-checked >= 6 h later, so the evaluation waits until 08:00 UTC"
+  },
+  "extension_window": {
+   "name": "holdout_8w",
+   "issue_from_utc": "2026-11-01T00:00:00+00:00",
+   "issue_to_utc": "2026-12-26T23:00:00+00:00",
+   "evaluate_after_utc": "2026-12-29T08:00:00+00:00",
+   "used_only_if": "the primary decision is inconclusive (rule D3)"
+  },
+  "primary_metric": "Brier score of P(OD 25) pooled over leads 1, 6, 24 and 48",
+  "primary_comparison": "blend-v2 (champion) minus logit-v2 (the same logit alone, same code and data layer): negative = blend better",
+  "secondary": [
+   "S1 accuracy at 24 h (P(OD 25) >= 0.5 vs flown OD), paired blend-v2 - logit-v2 with the same bootstrap",
+   "S2 event accuracy of the next change (fra.changetime definitions as in fra.scoring.switch_events: issue hours whose whole 48 h horizon is labelled; an actual change lasts >= 2 flown hours; a predicted change is a hit within +-3 h; 'no change' predicted and observed counts as correct), per variant on the common issue hours; paired difference with a day-block bootstrap over issue days (fra.evalkit.bootstrap_means)",
+   "S3 RWY 18 warnings: P(RWY 18 open) < 0.8 at any lead: closed hours flagged and false alarms (per 1,000 forecast hours), plus RWY 18 Brier pooled over leads 1/6/24/48; blend-v2 and logit-v2 use the same RWY 18 logit (fra.blend.RWY18_MODE = 'logit'), so this compares the new logit with logit-v1 and hackathon; closures are rare (34 closure hours in 14 months), so S3 is descriptive unless >= 10 closure hours occur",
+   "S4 Brier over all 48 leads and accuracy at 1, 6 and 48 h (paired, same bootstrap)",
+   "S5 accuracy on changed hours (flown OD at the valid hour differs from the issued od_now) at 1 h and 6 h: the long test showed the blend worse at 6 h (-5.8 pp [-10.4, -2.2]); watched, not a decision criterion"
+  ],
+  "descriptive": [
+   "blend-v2 and logit-v2 vs logit-v1 (the previous official system: old code, od_now from the newest partly published radar hour, stitched live ECMWF forecast) and vs hackathon (the frozen hackathon model); their long-test numbers are not comparable (logit-v1's backtest used the complete hour [t-1h, t), which is not available live)",
+   "all variants vs the published INAA prognosis, the official rules on the forecast wind and persistence (fra.scoring baselines on the champion's issue hours)",
+   "coverage: expected vs issued hours per variant; blend fallback rate (share of champion issues with blend_ok = false)",
+   "od_now checks: od_now_vs_source_hour (should be ~1.0 for the new code) and od_now_vs_full_hour (staleness)"
+  ]
+ },
+ "decision_rule": {
+  "D1_confirm": "at holdout_4w: if the upper CI bound of Brier(blend-v2) - Brier(logit-v2) is < 0, blend-v2 is confirmed as champion",
+  "D2_demote": "at holdout_4w: if the lower CI bound is > 0, blend-v2 is demoted: logit-v2 becomes champion (registry roles swapped, its runtime promoted), blend-v2 stays as a challenger",
+  "D3_inconclusive": "otherwise (CI includes 0) blend-v2 stays champion and the comparison is extended to holdout_8w; there: confirm if the upper bound < 0; demote if the lower bound > 0 OR the point estimate is > 0; else (point estimate <= 0, CI includes 0) blend-v2 stays champion",
+  "secondary_role": "secondary metrics never override the primary rule; they are reported together with the decision and can motivate a NEW pre-registered variant, never a silent change",
+  "other_variants": "logit-v1 and hackathon are references; no decision is taken on them in this plan",
+  "power_note": "on the long test the CI half-width of the paired difference was ~0.0025 over 152 days; over 28 days it is expected to be ~0.006 and over 56 days ~0.004, so a true gain of the size seen on the long test (-0.004) will often be inconclusive at 4 weeks; D3 handles that by default to the long-test choice"
+ },
+ "fixed_during_holdout": [
+  "model files of every variant (sha256 above; read-only copies under data/archive/models/<variant>/); no retraining: the weekly retrain timer stays disabled (data/archive/RETRAIN_PAUSED); the decision bundle is not refitted",
+  "forecast code of every variant (runtime tags and module sha256 above); fra.blend weights (0.5 / 0.5), N_PATHS 200, Part B DEFAULT parameters, BLEND_CHANGE_PARAMS / BLEND_P48_COEF, fra.changetime PARAMS / P48_COEF, RWY18_MODE; the Part B analogue library inputs (frozen read-only copy data/archive/models/blend-v2/library/, registry models.library, sha256 per file in its MANIFEST.json)",
+  "the data layer: od_now from the last complete radar hour (fra.dataset.KNOWN_LAG_H = 2, read by the job at :30 local time, ~90 min after that hour ended), ICON-EU fill, the as-of rules for the ECMWF / ICON runs (a served run is used only if complete for the hours the forecast needs, else the run one cycle earlier; every fallback is recorded in the issued .json live_inputs)",
+  "this analysis plan: metric, rows, windows, bootstrap, decision rule"
+ ],
+ "allowed_changes": [
+  "scoring, report and site code that does not change any issued forecast (new runtime snapshots are logged in data/archive/runtime/history.jsonl; the forecast-module sha256 must stay as registered)",
+  "operations fixes needed to keep the hourly job running; if a fix changes the forecast code or a model of a variant, that variant gets a new name (e.g. blend-v2.1), its record restarts at the change and the primary comparison is done separately before and after it",
+  "data files the live forecast reads at run time keep growing as in normal operation (radar counts); the Part B library of blend-v2 is read from its frozen copy, so refreshes of data/ifs_runs*.parquet, icon_runs.parquet or metar_full.parquet do not reach it",
+  "snapshots during the holdout are made with `ops.runtime snapshot --base <current tag> --files <scoring/site files>`; ops.runtime promote refuses a runtime whose forecast modules differ from this registration (unless explicitly overridden for a NEW variant name); every run records the check in runs.jsonl (prereg)"
+ ],
+ "handling": {
+  "missing_hours": "not imputed; only issue hours both variants issued are compared; coverage is reported",
+  "blend_fallback": "an hour in which the decision part failed and blend-v2 issued the logit (blend_ok = false) still counts as blend-v2 (intention to treat)",
+  "shadow_failures": "a challenger hour that failed or timed out is missing for that pair",
+  "label_corrections": "late or corrected radar hours are picked up automatically; the analysis uses the labels as of the evaluation time"
+ },
+ "leakage": "every variant uses only information available at issue time: the logit models (blend-v2 / logit-v2) were refit on 2026-10-31 on labels up to 2026-10-30 11:00 UTC, the decision bundle on rows known before 2026-10-31 16:00 UTC (labels up to 2026-10-30 11:00 UTC); live inputs are fetched at issue time with the as-of rules of training; no issue time >= 2026-11-01 was used for any choice in this plan",
+ "amendments": [
+  {
+   "id": "A1",
+   "time_utc": "2026-10-31T18:46:32+00:00",
+   "topic": "next-change evidence: strict nesting",
+   "change": "Nested walk-forward choices for test week w (change-rule parameters, path threshold, walk-forward P(change within 48 h) maps) now use only issues whose whole 48 h outcome was known at the start of week w (fra.changetime.known_before: issue + 48 h + KNOWN_LAG_H <= week start); the blend's walk-forward P48 map uses the features of week w's nested parameters, not the all-weeks choice. fra/changetime.py main, experiments/integration/nextchange.py, final_eval.py; data/changetime_eval.csv, nextchange_results.json, final_eval.json regenerated.",
+   "effect": "out-of-sample next-change event accuracy restated: blend nested 0.802 -> 0.800, logit nested 0.779 -> 0.778; walk-forward P48 Brier logit 0.0586 -> 0.0646, blend 0.0629 -> 0.0686 (mostly less training data in the early weeks). Deployed parameters (BLEND_CHANGE_PARAMS, PARAMS, P48 coefficients) and every forecast unchanged.",
+   "why": "independent review: the earlier nested masks let outcomes up to 50 h inside week w inform week w's parameters (small look-ahead)"
+  },
+  {
+   "id": "A2",
+   "time_utc": "2026-10-31T18:56:17+00:00",
+   "topic": "truth definition implemented as registered",
+   "change": "fra.scoring computes the truth with fra.labels.to_labels(load_counts(), bridge=\"night\") (the code used the default bridge \"ffill\", which also carries the OD across unfetched daytime hours); per window it reports valid hours observed / bridged / unlabelled.",
+   "effect": "before the holdout, 1 hour since 1 Jun (2026-08-06 16 UTC) was labelled only by a daytime carry-over; no live hour affected so far",
+   "why": "the registered text already said 'carried through the night ban and quiet hours'; the code now matches it"
+  },
+  {
+   "id": "A3",
+   "time_utc": "2026-10-31T18:56:17+00:00",
+   "topic": "bootstrap blocks",
+   "change": "analysis.ci: 3-day blocks of the valid time (fra.evalkit.day_blocks(block_days=3); fra.scoring.BLOCK_DAYS) instead of 1-day blocks for every CI of the variant comparison incl. the decision rules D1-D3; the pooled Brier difference is also reported with 1- and 7-day blocks (sensitivity, not decisive).",
+   "effect": "CIs ~18 % wider (long test blend - logit Brier(1,6,24,48) -0.0041: 1-day [-0.0067, -0.0018], 3-day [-0.0071, -0.0014], 7-day [-0.0075, -0.0010])",
+   "why": "daily paired Brier differences are autocorrelated (long test lag-1 0.21, lag-2 0.07, lag-3 0.09); with 1-day blocks D1/D2 would fire more often than nominal"
+  },
+  {
+   "id": "A4",
+   "time_utc": "2026-10-31T18:56:17+00:00",
+   "topic": "claims: no selection-free part for the blend",
+   "change": "'selection_free' renamed 'pre_sep15_part' in the integration outputs and here; champion_choice marked as decided at 17:35 UTC on the long test (in-sample) and documented afterwards; statement added that all of Jun-Oct 2026 was used to select the blend design and that only the holdout decides.",
+   "effect": "no number changed; the blend's long-test gain is an in-sample upper bound",
+   "why": "independent review: Part A / Part B defaults, anticipate='mean', the 50/50 weight and the change parameters were chosen on the whole long test"
+  },
+  {
+   "id": "A5",
+   "time_utc": "2026-10-31T18:56:17+00:00",
+   "topic": "new runtime 2026-10-31-wave2-r3 for blend-v2 and logit-v2 (before the holdout)",
+   "change": "Forecast-module changes that do not change any forecast under normal operation: (a) a champion entry that cannot be resolved (import / attribute / signature error) is a model error -> next candidate at once; first fallback candidate = the champion's own logit with fra.predict (intention to treat: still blend-v2); (b) a served ECMWF / ICON single run is used only if it covers every hour the forecast needs, else the run one cycle earlier; every run used and every fallback is recorded in the issued .json (live_inputs) and runs.jsonl; (c) live METAR and second-NWP requests with (5, 30) s timeouts, the second NWP (not a feature of the production logit) NaN instead of failing the hour; (d) the Part B analogue library is read from a frozen read-only copy (data/archive/models/blend-v2/library/, MANIFEST.json sha256 d38e3f72b613, registry models.library + models_sha256 pin) instead of the live data/ files; (e) run records: package versions, registry sha256, a check of the forecast-module hashes against this registration; (f) corrected comments. logit-v1 and hackathon keep their runtimes.",
+   "effect": "verified identical: the working-tree champion reproduced the official 18 UTC forecast exactly (p_od25, p_rwy18_open, logit and decision parts max |diff| 0.0) with the frozen library; smoke PASS for all four variants",
+   "why": "independent review: silent fallbacks, unfrozen library inputs, an entry failure losing the hour"
+  },
+  {
+   "id": "A6",
+   "time_utc": "2026-10-31T18:56:56+00:00",
+   "topic": "job time :12 -> :30 local time; unit hardening; backup",
+   "change": "fra-archive.timer OnCalendar *:30 (was *:12); the unit calls <repo>/.venv/bin/python directly (no `uv run`, which re-locks / re-syncs the shared environment at each start); a backup step copies data/archive, data/inaa_counts.csv and this file to ~/fra-archive-backup every hour (+ a daily sha256 manifest of the issued files).",
+   "effect": "the od_now source hour [t-2h, t-1h) is read ~90 min after its end instead of ~72 min (it was complete in every measured hour after 75-79 min; at 72 min 2 of 3 measured hours still lacked 1-2 movements); ECMWF run init <= t-6h is read 6.5 h after init instead of 6.2 h. Issue hours and leads are unchanged (valid = issue + lead); logit-v1 / hackathon read their newest, partly published radar hour 18 min later than at :12.",
+   "why": "independent review: residual train/serve skew of od_now / rwy18_now / west_frac_now and an IFS publication buffer on the edge"
+  },
+  {
+   "id": "A7",
+   "time_utc": "2026-10-31T18:58:34+00:00",
+   "topic": "runtime 2026-10-31-wave2-r4 (operations only)",
+   "change": "r4 = r3 with only fra/alerts.py replaced (ops.runtime snapshot --base 2026-10-31-wave2-r3 --files fra/alerts.py): a notification for official hours that were never issued (coverage gaps). blend-v2 and logit-v2 moved to r4; their forecast modules are byte-identical to r3.",
+   "effect": "none on any forecast",
+   "why": "missing hours are permanent holes in the holdout; systemd lingering is still off (owner decision)"
+  }
+ ],
+ "long_test_evidence": {
+  "source": "experiments/integration/final_eval.py -> final_eval.json, final_eval_od.csv (recomputed from scratch on 31 Oct 2026; identical to the integration predictions, max |diff| 0.0)",
+  "test": "weekly walk-forward, issues 2026-06-01 00:00:00+00:00 .. 2026-10-30 10:00:00+00:00, 152 days, 173352 (issue, lead) rows over 48 leads",
+  "periods": {
+   "long": {
+    "blend": {
+     "acc_1_6_24_48": [
+      0.968,
+      0.949,
+      0.947,
+      0.93
+     ],
+     "brier_1_6_24_48": [
+      0.0389,
+      0.0296,
+      0.0481
+     ]
+    },
+    "logit": {
+     "acc_1_6_24_48": [
+      0.955,
+      0.946,
+      0.941,
+      0.929
+     ],
+     "brier_1_6_24_48": [
+      0.0429,
+      0.0328,
+      0.0531
+     ]
+    },
+    "prognosis": {
+     "acc_1_6_24_48": [
+      0.937,
+      0.929,
+      0.912,
+      0.892
+     ],
+     "brier_1_6_24_48": [
+      0.0823,
+      0.0634,
+      0.1019
+     ]
+    },
+    "rules": {
+     "acc_1_6_24_48": [
+      0.91,
+      0.902,
+      0.885,
+      0.87
+     ],
+     "brier_1_6_24_48": [
+      0.1082,
+      0.0868,
+      0.1294
+     ]
+    },
+    "persistence": {
+     "acc_1_6_24_48": [
+      0.944,
+      0.877,
+      0.753,
+      0.657
+     ],
+     "brier_1_6_24_48": [
+      0.1916,
+      0.1605,
+      0.222
+     ]
+    },
+    "blend - logit": {
+     "acc_1_6_24_48": [
+      [
+       0.013,
+       0.007,
+       0.019
+      ],
+      [
+       0.003,
+       -0.003,
+       0.009
+      ],
+      [
+       0.006,
+       0.0,
+       0.011
+      ],
+      [
+       0.001,
+       -0.007,
+       0.009
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0041,
+      -0.0067,
+      -0.0018
+     ],
+     "brier_all_leads": [
+      -0.0042,
+      -0.0069,
+      -0.0019
+     ]
+    },
+    "blend - prognosis": {
+     "acc_1_6_24_48": [
+      [
+       0.03,
+       0.018,
+       0.044
+      ],
+      [
+       0.02,
+       0.006,
+       0.035
+      ],
+      [
+       0.035,
+       0.018,
+       0.056
+      ],
+      [
+       0.038,
+       0.022,
+       0.056
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0435,
+      -0.0571,
+      -0.0311
+     ],
+     "brier_all_leads": [
+      -0.0472,
+      -0.0626,
+      -0.0334
+     ]
+    },
+    "blend - rules": {
+     "acc_1_6_24_48": [
+      [
+       0.058,
+       0.042,
+       0.074
+      ],
+      [
+       0.047,
+       0.032,
+       0.063
+      ],
+      [
+       0.061,
+       0.045,
+       0.078
+      ],
+      [
+       0.06,
+       0.04,
+       0.081
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0693,
+      -0.085,
+      -0.0544
+     ],
+     "brier_all_leads": [
+      -0.0739,
+      -0.0905,
+      -0.0578
+     ]
+    },
+    "blend - persistence": {
+     "acc_1_6_24_48": [
+      [
+       0.024,
+       0.016,
+       0.032
+      ],
+      [
+       0.072,
+       0.052,
+       0.093
+      ],
+      [
+       0.194,
+       0.151,
+       0.24
+      ],
+      [
+       0.273,
+       0.216,
+       0.33
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.1528,
+      -0.1788,
+      -0.1261
+     ],
+     "brier_all_leads": [
+      -0.1932,
+      -0.2298,
+      -0.1579
+     ]
+    }
+   },
+   "pre_sep15_part": {
+    "blend": {
+     "acc_1_6_24_48": [
+      0.966,
+      0.943,
+      0.942,
+      0.919
+     ],
+     "brier_1_6_24_48": [
+      0.0424,
+      0.0314,
+      0.0551
+     ]
+    },
+    "logit": {
+     "acc_1_6_24_48": [
+      0.949,
+      0.94,
+      0.935,
+      0.925
+     ],
+     "brier_1_6_24_48": [
+      0.0467,
+      0.0345,
+      0.0602
+     ]
+    },
+    "prognosis": {
+     "acc_1_6_24_48": [
+      0.931,
+      0.926,
+      0.908,
+      0.887
+     ],
+     "brier_1_6_24_48": [
+      0.0871,
+      0.0633,
+      0.1114
+     ]
+    },
+    "rules": {
+     "acc_1_6_24_48": [
+      0.903,
+      0.905,
+      0.877,
+      0.861
+     ],
+     "brier_1_6_24_48": [
+      0.1131,
+      0.0878,
+      0.1391
+     ]
+    },
+    "persistence": {
+     "acc_1_6_24_48": [
+      0.941,
+      0.878,
+      0.765,
+      0.647
+     ],
+     "brier_1_6_24_48": [
+      0.1913,
+      0.1564,
+      0.227
+     ]
+    },
+    "blend - logit": {
+     "acc_1_6_24_48": [
+      [
+       0.017,
+       0.009,
+       0.025
+      ],
+      [
+       0.003,
+       -0.004,
+       0.009
+      ],
+      [
+       0.007,
+       0.0,
+       0.014
+      ],
+      [
+       -0.005,
+       -0.016,
+       0.006
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0043,
+      -0.0073,
+      -0.0016
+     ],
+     "brier_all_leads": [
+      -0.0045,
+      -0.0073,
+      -0.002
+     ]
+    },
+    "blend - prognosis": {
+     "acc_1_6_24_48": [
+      [
+       0.035,
+       0.02,
+       0.051
+      ],
+      [
+       0.017,
+       0.001,
+       0.037
+      ],
+      [
+       0.034,
+       0.011,
+       0.062
+      ],
+      [
+       0.032,
+       0.011,
+       0.054
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0446,
+      -0.0615,
+      -0.029
+     ],
+     "brier_all_leads": [
+      -0.0487,
+      -0.0687,
+      -0.0313
+     ]
+    },
+    "blend - rules": {
+     "acc_1_6_24_48": [
+      [
+       0.063,
+       0.043,
+       0.083
+      ],
+      [
+       0.037,
+       0.02,
+       0.055
+      ],
+      [
+       0.064,
+       0.044,
+       0.087
+      ],
+      [
+       0.058,
+       0.033,
+       0.084
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0707,
+      -0.0898,
+      -0.0523
+     ],
+     "brier_all_leads": [
+      -0.0763,
+      -0.097,
+      -0.057
+     ]
+    },
+    "blend - persistence": {
+     "acc_1_6_24_48": [
+      [
+       0.025,
+       0.015,
+       0.035
+      ],
+      [
+       0.065,
+       0.042,
+       0.088
+      ],
+      [
+       0.177,
+       0.128,
+       0.228
+      ],
+      [
+       0.272,
+       0.202,
+       0.343
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.1489,
+      -0.1793,
+      -0.1194
+     ],
+     "brier_all_leads": [
+      -0.1873,
+      -0.2292,
+      -0.1472
+     ]
+    }
+   },
+   "legacy_part": {
+    "blend": {
+     "acc_1_6_24_48": [
+      0.972,
+      0.963,
+      0.957,
+      0.952
+     ],
+     "brier_1_6_24_48": [
+      0.031,
+      0.0184,
+      0.0445
+     ]
+    },
+    "logit": {
+     "acc_1_6_24_48": [
+      0.967,
+      0.959,
+      0.955,
+      0.936
+     ],
+     "brier_1_6_24_48": [
+      0.0347,
+      0.0197,
+      0.0506
+     ]
+    },
+    "prognosis": {
+     "acc_1_6_24_48": [
+      0.951,
+      0.937,
+      0.92,
+      0.898
+     ],
+     "brier_1_6_24_48": [
+      0.0727,
+      0.0429,
+      0.1053
+     ]
+    },
+    "rules": {
+     "acc_1_6_24_48": [
+      0.926,
+      0.894,
+      0.905,
+      0.889
+     ],
+     "brier_1_6_24_48": [
+      0.0963,
+      0.0614,
+      0.1327
+     ]
+    },
+    "persistence": {
+     "acc_1_6_24_48": [
+      0.95,
+      0.875,
+      0.719,
+      0.666
+     ],
+     "brier_1_6_24_48": [
+      0.1958,
+      0.1389,
+      0.2545
+     ]
+    },
+    "blend - logit": {
+     "acc_1_6_24_48": [
+      [
+       0.005,
+       -0.005,
+       0.014
+      ],
+      [
+       0.004,
+       -0.011,
+       0.016
+      ],
+      [
+       0.002,
+       -0.005,
+       0.009
+      ],
+      [
+       0.016,
+       0.006,
+       0.028
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0036,
+      -0.0096,
+      0.0005
+     ],
+     "brier_all_leads": [
+      -0.0037,
+      -0.0105,
+      0.0009
+     ]
+    },
+    "blend - prognosis": {
+     "acc_1_6_24_48": [
+      [
+       0.02,
+       0.002,
+       0.049
+      ],
+      [
+       0.026,
+       0.0,
+       0.059
+      ],
+      [
+       0.037,
+       0.008,
+       0.07
+      ],
+      [
+       0.054,
+       0.027,
+       0.084
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0417,
+      -0.0651,
+      -0.0214
+     ],
+     "brier_all_leads": [
+      -0.0449,
+      -0.0709,
+      -0.0223
+     ]
+    },
+    "blend - rules": {
+     "acc_1_6_24_48": [
+      [
+       0.046,
+       0.02,
+       0.071
+      ],
+      [
+       0.069,
+       0.04,
+       0.103
+      ],
+      [
+       0.051,
+       0.028,
+       0.078
+      ],
+      [
+       0.063,
+       0.029,
+       0.099
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.0652,
+      -0.0923,
+      -0.0397
+     ],
+     "brier_all_leads": [
+      -0.0682,
+      -0.0953,
+      -0.043
+     ]
+    },
+    "blend - persistence": {
+     "acc_1_6_24_48": [
+      [
+       0.022,
+       0.008,
+       0.037
+      ],
+      [
+       0.088,
+       0.048,
+       0.133
+      ],
+      [
+       0.238,
+       0.156,
+       0.318
+      ],
+      [
+       0.286,
+       0.191,
+       0.387
+      ]
+     ],
+     "brier_1_6_24_48": [
+      -0.1648,
+      -0.2167,
+      -0.1153
+     ],
+     "brier_all_leads": [
+      -0.2119,
+      -0.2802,
+      -0.1443
+     ]
+    }
+   }
+  },
+  "periods_note": "long = issues 2026-06-01 .. 2026-10-30; pre_sep15_part = valid < 2026-09-15 (selection-free only for the logit specification, NOT for the blend: all of Jun-Oct was used to select the blend design); legacy_part = issues >= 2026-09-15. No part of the long test is selection-free for the blend; only the holdout is.",
+  "next_change_event_accuracy": {
+   "blend: deployed BLEND_CHANGE_PARAMS (tuned on all weeks)": 0.813,
+   "blend: hysteresis rule, nested walk-forward": 0.8,
+   "logit: deployed PARAMS": 0.791,
+   "logit: hysteresis rule, nested walk-forward": 0.778,
+   "published prognosis": 0.697,
+   "official rules": 0.623,
+   "persistence": 0.475
+  },
+  "changed_hours": {
+   "lead_1": {
+    "blend": [
+     0.541,
+     0.455,
+     0.624
+    ],
+    "logit": [
+     0.551,
+     0.454,
+     0.641
+    ],
+    "decision": [
+     0.454,
+     0.361,
+     0.539
+    ],
+    "prognosis": [
+     0.537,
+     0.465,
+     0.606
+    ],
+    "rules": [
+     0.585,
+     0.5,
+     0.667
+    ],
+    "blend - logit": [
+     -0.01,
+     -0.048,
+     0.03
+    ],
+    "blend - prognosis": [
+     0.005,
+     -0.064,
+     0.068
+    ],
+    "logit - prognosis": [
+     0.015,
+     -0.061,
+     0.085
+    ],
+    "n": 205
+   },
+   "lead_6": {
+    "blend": [
+     0.688,
+     0.605,
+     0.77
+    ],
+    "logit": [
+     0.747,
+     0.671,
+     0.813
+    ],
+    "decision": [
+     0.652,
+     0.566,
+     0.736
+    ],
+    "prognosis": [
+     0.684,
+     0.61,
+     0.757
+    ],
+    "rules": [
+     0.648,
+     0.579,
+     0.713
+    ],
+    "blend - logit": [
+     -0.058,
+     -0.104,
+     -0.022
+    ],
+    "blend - prognosis": [
+     0.004,
+     -0.062,
+     0.067
+    ],
+    "logit - prognosis": [
+     0.063,
+     0.0,
+     0.131
+    ],
+    "n": 446
+   }
+  },
+  "rwy18_walk_forward_from_2025_09": {
+   "logit_pooled_brier_ci": [
+    0.0049493615971453265,
+    0.0017436213021787728,
+    0.00887308225878297
+   ],
+   "closure_days": [
+    "2025-12-24",
+    "2026-02-14",
+    "2026-04-13",
+    "2026-04-14",
+    "2026-04-15",
+    "2026-05-10",
+    "2026-05-29",
+    "2026-07-30",
+    "2026-10-28"
+   ],
+   "decision": "p_r1"
+  }
+ },
+ "live_runs_before_holdout": [
+  {
+   "issue_utc": "2026-10-31T18:00:00+00:00",
+   "run_utc": "2026-10-31T18:12:02.402626+00:00",
+   "runtime": "2026-10-31-wave2-r2",
+   "failed": [],
+   "champion": "blend-v2",
+   "model_role": "champion blend-v2",
+   "blend_ok": true,
+   "shadows": {
+    "logit-v2": true,
+    "logit-v1": true,
+    "hackathon": true
+   }
+  },
+  {
+   "issue_utc": "2026-10-31T19:00:00+00:00",
+   "run_utc": "2026-10-31T19:30:16.454193+00:00",
+   "runtime": "2026-10-31-wave2-r4",
+   "failed": [],
+   "champion": "blend-v2",
+   "model_role": "champion blend-v2",
+   "blend_ok": true,
+   "shadows": {
+    "logit-v2": true,
+    "logit-v1": true,
+    "hackathon": true
+   }
+  }
+ ]
+}

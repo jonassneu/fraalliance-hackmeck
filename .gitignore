@@ -21,3 +21,11 @@ site/live.json.tmp
 .idea/
 .vscode/
 .DS_Store
+
+# generated outputs outside data/ (rebuilt by the scripts that write them; not committed)
+experiments/**/*.parquet
+experiments/**/*.pkl
+experiments/parta/log_OLD_*.txt
+site/alerts.json
+site/live_record.json
+site/.*.tmp

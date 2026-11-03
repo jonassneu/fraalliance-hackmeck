@@ -1,0 +1,328 @@
+{
+ "built_at": "2026-11-03T02:24:05.806027+00:00",
+ "statuses": {
+  "confirmed": 1216,
+  "recovered": 26
+ },
+ "confirmed": 1216,
+ "reproducible_counts": {
+  "n1_eq_n2": 1216,
+  "placemarks_equal_where_both_known": 1030,
+  "placemarks_both_known": 1030
+ },
+ "classes": {
+  "readmitted": 1014,
+  "gap": 112,
+  "no_label": 90
+ },
+ "old_reason": {
+  "rel<40%": 774,
+  "abs<10": 442
+ },
+ "readmitted_local06": 767,
+ "readmitted_covid": 401,
+ "covid_window": {
+  "confirmed": 447,
+  "readmitted": 401,
+  "readmitted_lt10_moves": 316,
+  "gap": 23,
+  "no_label": 23
+ },
+ "forward_file_old_rule": {
+  "daytime_hours": 5477,
+  "flagged": 33,
+  "flagged_local06": 29,
+  "flagged_still_low_same_hour": 2,
+  "flagged_hours": [
+   {
+    "time": "2025-11-22T18:00:00+00:00",
+    "n": 27,
+    "ref": 75.5,
+    "ref_same_hour": 64.5
+   },
+   {
+    "time": "2026-01-05T18:00:00+00:00",
+    "n": 58,
+    "ref": 148.0,
+    "ref_same_hour": 50.5
+   },
+   {
+    "time": "2026-02-03T15:00:00+00:00",
+    "n": 5,
+    "ref": 53.5,
+    "ref_same_hour": 66.5
+   },
+   {
+    "time": "2026-02-16T05:00:00+00:00",
+    "n": 26,
+    "ref": 66.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-02-17T05:00:00+00:00",
+    "n": 25,
+    "ref": 66.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-02-19T05:00:00+00:00",
+    "n": 19,
+    "ref": 58.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-02-27T05:00:00+00:00",
+    "n": 28,
+    "ref": 77.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-03-03T05:00:00+00:00",
+    "n": 25,
+    "ref": 70.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-03-12T05:00:00+00:00",
+    "n": 18,
+    "ref": 54.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-03-17T05:00:00+00:00",
+    "n": 28,
+    "ref": 73.0,
+    "ref_same_hour": 30.0
+   },
+   {
+    "time": "2026-03-18T05:00:00+00:00",
+    "n": 30,
+    "ref": 77.0,
+    "ref_same_hour": 30.0
+   },
+   {
+    "time": "2026-03-22T05:00:00+00:00",
+    "n": 28,
+    "ref": 81.0,
+    "ref_same_hour": 31.0
+   },
+   {
+    "time": "2026-03-24T05:00:00+00:00",
+    "n": 29,
+    "ref": 74.0,
+    "ref_same_hour": 31.0
+   },
+   {
+    "time": "2026-03-27T05:00:00+00:00",
+    "n": 27,
+    "ref": 89.0,
+    "ref_same_hour": 34.0
+   },
+   {
+    "time": "2026-03-28T05:00:00+00:00",
+    "n": 29,
+    "ref": 74.0,
+    "ref_same_hour": 35.5
+   },
+   {
+    "time": "2026-04-16T04:00:00+00:00",
+    "n": 15,
+    "ref": 48.0,
+    "ref_same_hour": 35.0
+   },
+   {
+    "time": "2026-04-20T04:00:00+00:00",
+    "n": 35,
+    "ref": 88.0,
+    "ref_same_hour": 35.0
+   },
+   {
+    "time": "2026-04-29T04:00:00+00:00",
+    "n": 28,
+    "ref": 91.0,
+    "ref_same_hour": 39.0
+   },
+   {
+    "time": "2026-04-30T04:00:00+00:00",
+    "n": 34,
+    "ref": 93.0,
+    "ref_same_hour": 40.0
+   },
+   {
+    "time": "2026-05-20T04:00:00+00:00",
+    "n": 37,
+    "ref": 95.0,
+    "ref_same_hour": 42.5
+   },
+   {
+    "time": "2026-05-29T04:00:00+00:00",
+    "n": 37,
+    "ref": 94.0,
+    "ref_same_hour": 43.0
+   },
+   {
+    "time": "2026-07-26T04:00:00+00:00",
+    "n": 37,
+    "ref": 94.0,
+    "ref_same_hour": 43.0
+   },
+   {
+    "time": "2026-08-21T04:00:00+00:00",
+    "n": 37,
+    "ref": 93.0,
+    "ref_same_hour": 42.0
+   },
+   {
+    "time": "2026-09-01T04:00:00+00:00",
+    "n": 34,
+    "ref": 87.0,
+    "ref_same_hour": 41.5
+   },
+   {
+    "time": "2026-09-17T04:00:00+00:00",
+    "n": 36,
+    "ref": 91.0,
+    "ref_same_hour": 43.0
+   },
+   {
+    "time": "2026-09-18T04:00:00+00:00",
+    "n": 35,
+    "ref": 91.0,
+    "ref_same_hour": 43.5
+   },
+   {
+    "time": "2026-10-02T04:00:00+00:00",
+    "n": 39,
+    "ref": 99.0,
+    "ref_same_hour": 42.0
+   },
+   {
+    "time": "2026-10-20T04:00:00+00:00",
+    "n": 34,
+    "ref": 88.0,
+    "ref_same_hour": 40.0
+   },
+   {
+    "time": "2026-10-27T05:00:00+00:00",
+    "n": 27,
+    "ref": 71.0,
+    "ref_same_hour": 34.0
+   },
+   {
+    "time": "2026-10-29T05:00:00+00:00",
+    "n": 28,
+    "ref": 75.0,
+    "ref_same_hour": 33.0
+   },
+   {
+    "time": "2026-10-30T05:00:00+00:00",
+    "n": 28,
+    "ref": 76.0,
+    "ref_same_hour": 32.5
+   },
+   {
+    "time": "2026-10-30T10:00:00+00:00",
+    "n": 1,
+    "ref": 76.0,
+    "ref_same_hour": 97.5
+   },
+   {
+    "time": "2026-10-31T05:00:00+00:00",
+    "n": 28,
+    "ref": 76.0,
+    "ref_same_hour": 32.0
+   }
+  ],
+  "median_moves_by_local_hour": {
+   "6": 40.0,
+   "7": 78.0,
+   "8": 89.0,
+   "9": 89.0,
+   "10": 87.0,
+   "11": 99.0,
+   "12": 102.0,
+   "13": 80.0,
+   "14": 78.0,
+   "15": 90.0,
+   "16": 84.0,
+   "17": 79.0,
+   "18": 63.0,
+   "19": 69.0,
+   "20": 90.0,
+   "21": 67.0
+  }
+ },
+ "local06_od_selectivity_old_rule": [
+  {
+   "confirmed": false,
+   "hours": 3642,
+   "od25_share": 0.6732564524986271,
+   "median_moves": 30.0
+  },
+  {
+   "confirmed": true,
+   "hours": 771,
+   "od25_share": 0.6186770428015564,
+   "median_moves": 21.0
+  }
+ ],
+ "readmitted_od_selectivity": {
+  "readmitted_od25_share": 0.5828402366863905,
+  "kept_history_od25_share_same_local_hours": 0.6732564524986271
+ },
+ "rwy18_readmitted_vs_kept_od25": [
+  {
+   "local_hour": "6",
+   "group": "kept (never suspect)",
+   "judged_od25": 2277,
+   "no_rwy18_dep": 13,
+   "rate": 0.005709266578831796,
+   "median_moves": 31.0
+  },
+  {
+   "local_hour": "6",
+   "group": "readmitted",
+   "judged_od25": 353,
+   "no_rwy18_dep": 14,
+   "rate": 0.039660056657223795,
+   "median_moves": 23.0
+  },
+  {
+   "local_hour": "other",
+   "group": "kept (never suspect)",
+   "judged_od25": 42463,
+   "no_rwy18_dep": 46,
+   "rate": 0.0010832960459694321,
+   "median_moves": 52.0
+  },
+  {
+   "local_hour": "other",
+   "group": "readmitted",
+   "judged_od25": 6,
+   "no_rwy18_dep": 0,
+   "rate": 0.0,
+   "median_moves": 21.0
+  }
+ ],
+ "rows_total": {
+  "year": "all",
+  "observed_hours_confirmed": 83648,
+  "rows_confirmed": 81937,
+  "switches_confirmed": 2089,
+  "rows_prev07_confirmed": 27147,
+  "switches_prev07_confirmed": 1060,
+  "morning_rows_confirmed": 4656,
+  "observed_hours_traffic": 84662,
+  "rows_traffic": 83886,
+  "switches_traffic": 2148,
+  "rows_prev07_traffic": 27937,
+  "switches_prev07_traffic": 1075,
+  "morning_rows_traffic": 4665,
+  "observed_hours_diff": 1014,
+  "rows_diff": 1949,
+  "switches_diff": 59,
+  "rows_prev07_diff": 790,
+  "switches_prev07_diff": 15,
+  "morning_rows_diff": 9
+ }
+}

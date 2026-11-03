@@ -111,6 +111,9 @@ h2{margin:0;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.03em
 .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:22px}
 .rules div{padding-top:14px;border-top:1px solid var(--line)}
 .rules b{color:var(--ink);font-weight:600;font-size:18px}
+.rules p{margin:8px 0 0;font-size:15px;line-height:1.45;color:var(--ink2)}
+.rules p em{font-style:normal;color:var(--ink);font-weight:600}
+.fine{margin:14px 0 0;font-size:12.5px;line-height:1.4;color:var(--ink3)}
 .notes{position:absolute;left:28px;right:28px;bottom:48px;z-index:3;padding:16px 20px;border-radius:14px;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:var(--lift);font-size:16px;line-height:1.5}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 /* deck controls: counter + arrows in the top bar, dots at the bottom */
@@ -130,30 +133,35 @@ h2{margin:0;font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.03em
       <div class="legend" id="legend"></div>
       <div class="chart" id="chart"></div>
       <table class="sr" id="table"></table>
+      <p class="fine">Walk-forward test 1 Jun – 30 Oct 2026: 3,635 forecasts per lead time, each made from earlier data only. The settings were chosen on the same weeks; the independent test runs live from 1 Nov 2026.</p>
     </div>
   </section>
-  <section class="slide" data-title="Switches" data-notes="We also catch more switches: 73% vs 63%, with fewer false alarms.">
+  <section class="slide" data-title="Switches" data-notes="We also catch more switches: 65% vs 50%, with fewer false alarms.">
     <div class="card"><div class="trio" id="trio"></div></div>
   </section>
-  <section class="slide" data-title="How it works" data-notes="Public weather forecasts plus radar tracks of what was flown. Logistic regression, retrained on the last 120 days.">
+  <section class="slide" data-title="How it works" data-notes="Public weather forecasts plus radar tracks of what was flown. Half a logistic regression (retrained on the last 120 days), half an hour-by-hour decision model rolled out on 200 simulated wind paths.">
     <h2>How it works</h2>
     <p class="lede">Public data in, 48 h forecast out</p>
     <div class="flow">
       <div class="step"><h3>Public data</h3><ul><li>Weather forecasts (ECMWF, DWD)</li><li>INAA direction prognosis</li><li>Airport weather (METAR)</li><li>Radar tracks: what was flown</li></ul></div>
       <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div>
-      <div class="step m"><h3>Logistic regression</h3><ul>
-        <li>Wind + prognosis → direction</li><li>Refit on the last 120 days</li><li>Calibrated probabilities</li></ul></div>
+      <div class="step m"><h3>Two models, 50 / 50</h3><ul><li>Logistic regression: wind + prognosis</li><li>Hourly decisions on 200 simulated wind paths</li><li>Calibrated probabilities</li></ul></div>
       <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></div>
       <div class="step"><h3>Every hour, 48 h ahead</h3><ul>
         <li>07 or 25, with probability</li><li>Next switch</li><li>Runway 18 open?</li></ul></div>
     </div>
+  </section>
+  <section class="slide" data-title="How it was tested" data-notes="Walk-forward over 152 days: each week forecast only from earlier data. The settings were chosen on the same weeks, so these numbers are optimistic. The referee is the live record: forecasts from 1 Nov 2026 are a locked holdout, first verdict on 1 Dec 2026.">
+    <h2>How it was tested</h2>
+    <p class="lede">152 days walk-forward, then a locked live test</p>
+    <div class="rules"><div><b>Walk-forward, 1 Jun – 30 Oct</b><p>Each week is forecast by models trained only on the weeks before it, with only what was known at the time: weather runs already published, the prognosis as published, the last complete radar hour.</p></div><div><b>Chosen on the same weeks</b><p>The blend and its settings were picked on these 152 days, so the numbers flatter it. Brier score <em>0.039</em> vs 0.043 for the logistic model alone and 0.082 for the prognosis (lower is better).</p></div><div><b>The referee: live from 1 Nov</b><p>Every hour a forecast is issued and archived before the outcome exists. Forecasts from 1 Nov 2026 form the locked holdout; first verdict after 4 weeks (1 Dec). So far <em>62</em> forecasts issued live.</p></div></div>
   </section>
   <nav class="dots" id="dots" aria-label="Slides"></nav>
   <div class="hint"><kbd>←</kbd><kbd>→</kbd> slides · <kbd>N</kbd> notes</div>
   <aside class="notes" id="notes" hidden></aside>
 </main>
 <div class="tip" id="tip" hidden></div>
-<script type="application/json" id="data">{"od": [{"lead": 1, "acc": 0.9688, "rule": 0.9294, "prog": 0.9514, "pers": 0.9633, "n": 1090, "changed": 40}, {"lead": 6, "acc": 0.9613, "rule": 0.8968, "prog": 0.9373, "pers": 0.8885, "n": 1085, "changed": 121}, {"lead": 24, "acc": 0.9541, "rule": 0.9044, "prog": 0.9203, "pers": 0.7254, "n": 1067, "changed": 293}, {"lead": 48, "acc": 0.931, "rule": 0.8897, "prog": 0.8984, "pers": 0.6702, "n": 1043, "changed": 344}], "series": [["acc", "Our model", "var(--ink)"], ["prog", "Published INAA prognosis", "var(--b1)"], ["rule", "Official rules on the weather forecast", "var(--b2)"]], "switch": {"model": {"hit": 0.7265, "mae": 1.0783, "fa": 47, "acc": 0.8034}, "rule": {"hit": 0.6061, "mae": 1.2274, "fa": 170, "acc": 0.6}, "prog": {"hit": 0.6346, "mae": 1.7759, "fa": 72, "acc": 0.7269}, "n": 875, "changes": 457}}</script>
+<script type="application/json" id="data">{"od": [{"lead": 1, "acc": 0.9675, "rule": 0.9098, "prog": 0.9373, "pers": 0.9436, "n": 3635, "changed": 205}, {"lead": 6, "acc": 0.949, "rule": 0.9017, "prog": 0.9292, "pers": 0.8771, "n": 3630, "changed": 446}, {"lead": 24, "acc": 0.9466, "rule": 0.8854, "prog": 0.912, "pers": 0.753, "n": 3612, "changed": 892}, {"lead": 48, "acc": 0.93, "rule": 0.8701, "prog": 0.8919, "pers": 0.6575, "n": 3588, "changed": 1229}], "series": [["acc", "Our model", "var(--ink)"], ["prog", "Published INAA prognosis", "var(--b1)"], ["rule", "Official rules on the weather forecast", "var(--b2)"]], "switch": {"model": {"hit": 0.6472, "mae": 1.2416, "fa": 49, "acc": 0.8003}, "rule": {"hit": 0.5687, "mae": 1.4501, "fa": 516, "acc": 0.6225}, "prog": {"hit": 0.4969, "mae": 1.5062, "fa": 132, "acc": 0.6971}, "n": 3420, "changes": 1797}}</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const pct = v => v == null ? '–' : (v * 100).toFixed(1) + '%';
@@ -193,7 +201,7 @@ const chart = document.getElementById('chart');
 chart.innerHTML = s + '</svg>';
 chart.querySelectorAll('.row').forEach(g => {
   const r = rows[+g.dataset.i];
-  hover(g, `<b>${r.lead} h ahead</b> · ${r.n.toLocaleString('en')} hours, ${r.changed} with a change<br>`
+  hover(g, `<b>${r.lead} h ahead</b> · ${r.n.toLocaleString('en')} hours${r.changed != null ? `, ${r.changed} with a change` : ''}<br>`
     + D.series.map(([k, lab]) => `${lab}: wrong <b>${pct(err(r[k]))}</b> of hours`).join('<br>'));
 });
 document.getElementById('table').innerHTML = '<tr><th>Ahead</th>' + D.series.map(([, lab]) => `<th>${lab}: right</th>`).join('')

@@ -1,0 +1,15 @@
+[Unit]
+Description=FRA runway forecast: hourly forward archive at :30 (local time)
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/README.md
+
+[Timer]
+# :30 since 31 Oct 2026 (was :12): the od_now source hour [t-2h, t-1h) is completely published ~75-80 min after its
+# end (FANOMOS batches; experiments/eval_long/fanomos_lag.csv), so at :12 (72 min) it sometimes still lacked the last
+# movements; :30 = 90 min. Also more margin for the ECMWF run with init <= t-6h (served ~6.2 h after init).
+OnCalendar=*-*-* *:30:00
+Persistent=true
+AccuracySec=1min
+Unit=fra-archive.service
+
+[Install]
+WantedBy=timers.target
