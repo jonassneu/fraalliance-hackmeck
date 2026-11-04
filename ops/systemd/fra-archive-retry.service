@@ -1,0 +1,20 @@
+[Unit]
+Description=FRA runway forecast: second attempt at :50 for an hour whose official forecast is still missing
+Documentation=file:///home/jonas/.t3/projects/fraalliance-hackmeck/ops/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Runs only if the official forecast of the current hour does not exist yet (Open-Meteo or network down at :30).
+# Same frozen runtime and steps as fra-archive.service; every step skips what is already done.
+ExecCondition=/bin/sh -c '! test -e /home/jonas/.t3/projects/fraalliance-hackmeck/data/archive/issued/forecast_$(date -u +%%Y%%m%%dT%%H).csv'
+WorkingDirectory=/home/jonas/.t3/projects/fraalliance-hackmeck/data/archive/runtime/current
+Environment=OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUNBUFFERED=1
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.archive
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.scoring
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m fra.alerts
+ExecStart=-/home/jonas/.t3/projects/fraalliance-hackmeck/.venv/bin/python -m ops.backup
+TimeoutStartSec=9min
+Nice=10
+IOSchedulingClass=idle

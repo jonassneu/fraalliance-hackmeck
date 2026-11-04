@@ -1,0 +1,10 @@
+[Unit]
+Description=FRA runway forecast: retry at :50 if the hour's official forecast is missing
+
+[Timer]
+OnCalendar=*-*-* *:50:00
+AccuracySec=1min
+Unit=fra-archive-retry.service
+
+[Install]
+WantedBy=timers.target
