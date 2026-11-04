@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
-/* README hero: accuracy by lead time, long test 1 Jun - 30 Oct 2026 (experiments/integration/final_eval_od.csv).
+/* README hero: now vs the hackathon version on the hackathon's own test weeks, 15 Sep - 30 Oct 2026.
+   Now and prognosis: experiments/integration/final_eval_od.csv (legacy_part); hackathon: experiments/eval_long/REPORT.md.
    Rendered to accuracy.png (light) and accuracy-dark.png (open with #dark) at 960 x 408, device scale 2. */
 *{box-sizing:border-box;margin:0}
 html,body{background:transparent}
@@ -13,21 +14,22 @@ svg{display:block;margin-top:12px;overflow:visible}
 .tick{font:400 15px "Noto Sans Mono",ui-monospace,monospace;fill:var(--ink3)}
 .lead{font:400 15px "Noto Sans",system-ui,sans-serif;fill:var(--ink3)}
 .val{font:500 24px "Noto Sans",system-ui,sans-serif;fill:var(--accent)}
+.hv{font:400 16px "Noto Sans",system-ui,sans-serif;fill:var(--ink2)}
 .name{font:400 17px "Noto Sans",system-ui,sans-serif;fill:var(--ink2)}
 .name.us{fill:var(--ink);font-weight:500}
 </style></head><body>
-<h1>Share of hours with the right operating direction</h1>
-<p>152 days, 1 Jun – 30 Oct 2026, about 3,600 forecasts per lead time</p>
+<h1>Now vs the hackathon version</h1>
+<p>Share of hours with the right operating direction, on the hackathon's test weeks, 15 Sep – 30 Oct 2026</p>
 <svg id="c" width="912" height="300"></svg>
 <script>
 if (location.hash == '#dark') document.documentElement.classList.add('dark');
 const leads = ['1 h ahead', '6 h', '24 h', '48 h'];
 const series = [
-  {name: 'Official rules', cls: 'rules', v: [91.0, 90.2, 88.5, 87.0]},
-  {name: 'Published prognosis', cls: 'prog', v: [93.7, 92.9, 91.2, 89.2]},
-  {name: 'This forecast', cls: 'us', v: [96.8, 94.9, 94.7, 93.0]},
+  {name: 'Published prognosis', cls: 'rules', v: [95.1, 93.7, 92.0, 89.8]},
+  {name: 'Hackathon (v1.0)', cls: 'prog', v: [96.9, 96.1, 95.4, 93.1]},
+  {name: 'Now', cls: 'us', v: [97.2, 96.3, 95.7, 95.2]},
 ];
-const X0 = 48, X1 = 660, Y0 = 36, Y1 = 284, LO = 86, HI = 98;
+const X0 = 48, X1 = 660, Y0 = 36, Y1 = 284, LO = 88, HI = 98;
 const x = i => X0 + 40 + i * (X1 - X0 - 40) / 3, y = v => Y1 - (v - LO) / (HI - LO) * (Y1 - Y0);
 const color = {rules: 'var(--rules)', prog: 'var(--prog)', us: 'var(--accent)'};
 let s = '';
@@ -41,6 +43,7 @@ for (const se of series) {
         points="${se.v.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>`;
   se.v.forEach((v, i) => s += `<circle cx="${x(i)}" cy="${y(v)}" r="${us ? 5 : 3.5}" fill="${c}"/>`);
   if (us) se.v.forEach((v, i) => s += `<text class="val" x="${x(i)}" y="${y(v) - 16}" text-anchor="middle">${v.toFixed(1)} %</text>`);
+  if (se.cls == 'prog') se.v.forEach((v, i) => s += `<text class="hv" x="${x(i)}" y="${y(v) + 28}" text-anchor="middle">${v.toFixed(1)} %</text>`);
   const ly = y(se.v[3]);
   s += `<text class="name${us ? ' us' : ''}" x="${X1 + 20}" y="${ly + 5}">${se.name}</text>`;
 }
