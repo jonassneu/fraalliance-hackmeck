@@ -1,4 +1,4 @@
-"""Shared look of the site pages (fra.dashboard -> index.html, fra.modelpage -> model.html).
+"""Shared look of the site pages (fra.dashboard -> index.html).
 
 Apple-style and quiet on purpose: the system font, one neutral palette, white cards on #f5f5f7 without shadows,
 hairlines instead of boxes. Colour is reserved for data (25 blue, 07 amber, Runway 18 status) plus one accent for
@@ -57,7 +57,7 @@ a{color:inherit;text-decoration:none}
 @media (prefers-contrast:more){:root{--line:rgba(0,0,0,.3);--ink2:#3a3a3c;--ink3:#555}.card{box-shadow:0 0 0 1px rgba(0,0,0,.3)}}
 """
 
-PAGES = [("forecast", "index.html", "Forecast"), ("model", "model.html", "Model")]
+PAGES = [("forecast", "index.html", "Forecast")]
 
 
 def bar(current, right=""):
@@ -65,4 +65,5 @@ def bar(current, right=""):
     nav = "".join(f'<a href="#" aria-current="page">{t}</a>' if k == current else f'<a href="{h}">{t}</a>' for k, h, t in PAGES)
     brand = "Runway Operations<span>Frankfurt Airport</span>"
     brand = f'<div class="brand">{brand}</div>' if current == "forecast" else f'<a class="brand" href="index.html">{brand}</a>'
-    return f'<header class="topbar">{brand}<nav class="nav" aria-label="Pages">{nav}</nav><div class="topbar-r">{right}</div></header>'
+    nav = f'<nav class="nav" aria-label="Pages">{nav}</nav>' if len(PAGES) > 1 else ""
+    return f'<header class="topbar">{brand}{nav}<div class="topbar-r">{right}</div></header>'

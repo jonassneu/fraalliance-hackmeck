@@ -110,7 +110,7 @@ run has taken 25 min (the unit's `TimeoutStartSec` is 45 min for the chain).
 | 4. forecasts | Open-Meteo live API: `ecmwf_ifs`, `icon_d2`, `icon_eu` (10 m wind + gusts, 80/100/120 m wind) and the ECMWF ensemble (`ensemble-api`, 50 members + control), 4 days | `data/archive/forecasts/<model>/YYYYMMDDTHH.json.gz` = raw response + retrieval time + the model run metadata (init, availability, modification time). The ensemble is saved only when its run changed |
 | 4b. shadow | every enabled challenger, in its own frozen runtime and process, same issue hour (not issued if the official forecast of the hour is older than 20 min) | `data/archive/issued_shadow/<variant>/forecast_YYYYMMDDTHH.*` |
 | 5. radar | INAA FANOMOS radar tracks (`fra.labels.classify`; one INAA slot per request, slot wait <= 120 s), hours from 2026-10-30 12 UTC within the last 36 h whose window ended >= 100 min ago and that are not yet in the counts; at most 6 requests and 8 min per run, stop after 2 consecutive failures. **Re-check**: every stored hour is fetched once more when its window ended >= 6 h ago (3 per run) | counts **appended** to `data/inaa_counts.csv` (forward hours only), raw KML `data/archive/radar/YYYY/MM/<hour start>.kml.gz`. A re-check that finds MORE movements appends a corrected row (`fra.labels.load_counts` keeps the last row of an hour) and replaces the KML; fewer movements are only logged (`data/archive/radar_recheck.json`, `runs.jsonl`) |
-| 6. site | `python -m fra.dashboard <new forecast>` when a new forecast was issued | `site/index.html`, `site/model.html`, `site/airport3d.html` (the 3D view embeds the hackathon runs plus the newest 24 issued runs) |
+| 6. site | `python -m fra.dashboard <new forecast>` when a new forecast was issued | `site/index.html`, `site/airport3d.html` (the 3D view embeds the hackathon runs plus the newest 24 issued runs) |
 
 Rules that keep the record honest:
 
@@ -250,5 +250,5 @@ rm ~/.config/systemd/user/fra-{archive,retrain}.{service,timer} && systemctl --u
 - `fra.live` (the 20 s OpenSky feed for the 3D view) is independent and not needed for the forecast; the dashboard
   ignores an older `site/live.json` than the forecast it shows.
 - The site is rebuilt by the frozen runtime's `fra.dashboard` every hour, so text changes to `fra/dashboard.py` or
-  `fra/modelpage.py` in the working tree reach the live site only after a snapshot with `--base <current tag>
-  --files fra/dashboard.py,fra/modelpage.py` and a promote.
+  `fra/siteui.py` in the working tree reach the live site only after a snapshot with `--base <current tag>
+  --files fra/dashboard.py,fra/siteui.py` and a promote.

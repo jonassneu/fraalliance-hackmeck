@@ -3,6 +3,8 @@
 import shutil
 import sys
 
+import pandas as pd
+
 from fra import dashboard, predict, report
 from fra.dataset import DATA
 
@@ -21,9 +23,6 @@ def main(issue=None):
     for f in [csv, DATA / f"forecast_{tag}.png", DATA / "eval.csv", DATA / "changetime_eval.csv"]:
         shutil.copy(f, OUT / f.name)
     shutil.copy(DATA.parent / "site" / "index.html", OUT / "dashboard.html")
-    if (DATA.parent / "site" / "model.html").exists():  # "Model" page: training data + accuracy
-        page = (DATA.parent / "site" / "model.html").read_text(encoding="utf-8")
-        (OUT / "model.html").write_text(page.replace('href="index.html"', 'href="dashboard.html"'), encoding="utf-8")
     if (DATA.parent / "site" / "airport3d.html").exists():  # the dashboard's live 3D view
         shutil.copy(DATA.parent / "site" / "airport3d.html", OUT / "airport3d.html")
     shutil.copy(DATA.parent / "MODEL_CARD.md", OUT / "MODEL_CARD.md")
@@ -36,7 +35,6 @@ def main(issue=None):
 - `forecast_{tag}.png`, `dashboard.html`: the same forecast as a chart and dashboard (open the HTML offline; it
   includes the published-prognosis comparison, the alerts and the live record of the hourly forecasts).
   `airport3d.html`: 3D view, embedded next to the timeline.
-  `model.html`: the pitch page: how much better than the published prognosis, direction switches, how it works, how it was tested.
 - `MODEL_CARD.md`: data sources, model, quality (walk-forward test 1 Jun - 30 Oct 2026), key drivers, limitations.
 - `eval.csv`, `changetime_eval.csv`: raw evaluation tables of the logistic model (the official blended forecast:
   `experiments/integration/final_eval_od.csv` in the repository).

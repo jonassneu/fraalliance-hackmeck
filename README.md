@@ -118,7 +118,7 @@ uv run python -m fra.changetime                # next-change evaluation -> data/
 # 3. Forecast and web pages
 uv run python -m fra.blend [ISSUE_UTC]         # official 48 h forecast (blend), printed, nothing written
 uv run python -m fra.predict [ISSUE_UTC]       # logistic model alone: 48 h forecast CSV + PNG
-uv run python -m fra.dashboard                 # site/index.html, site/model.html, site/airport3d.html
+uv run python -m fra.dashboard                 # site/index.html, site/airport3d.html
 uv run python -m fra.live &                    # optional: live aircraft + hourly forecast for the 3D view -> site/live.json
 uv run python -m http.server 8000 --directory site    # open http://localhost:8000/
 uv run python -m fra.submit [ISSUE_UTC]        # submission/: forecast, dashboard, model card, evaluation tables
@@ -146,7 +146,7 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 | [`experiments/`](experiments) | Walk-forward research harness, the four hackathon studies, and the studies since: long test (`eval_long`), decision model (`parta`), wind futures (`partb`), retests (`phase2`), the blend and holdout plan (`integration`), 12-year history (`history12`) |
 | [`research/`](research) | Background research from the start of the day and the decision log |
 | [`submission/`](submission) | The package handed to the jury on 30 Oct 2026: 48 h forecast, dashboard, model card, evaluation tables |
-| [`site/`](site) | Generated web pages: dashboard (`index.html`), model page (`model.html`), 3D view (`airport3d.html`) |
+| [`site/`](site) | Generated web pages: dashboard (`index.html`), 3D view (`airport3d.html`) |
 | [`web/`](web) | Source of the 3D airport view (three.js) |
 | [`docs/`](docs) | The challenge brief ([FraAlliance_Case.pdf](docs/FraAlliance_Case.pdf)) |
 | [`assets/`](assets) | Icon and README images |

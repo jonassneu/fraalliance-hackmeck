@@ -1,4 +1,4 @@
-"""Jury dashboard "Runway Operations" -> site/index.html (plus site/model.html via fra.modelpage and the 3D view site/airport3d.html via fra.scene3d).
+"""Jury dashboard "Runway Operations" -> site/index.html (plus the 3D view site/airport3d.html via fra.scene3d).
 
     uv run python -m fra.dashboard [forecast_csv]      (default: newest data/forecast_*.csv)
 
@@ -23,7 +23,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from fra import modelpage, prognosis, scene3d, siteui
+from fra import prognosis, scene3d, siteui
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -1021,11 +1021,6 @@ def render(path):
     SITE.mkdir(exist_ok=True)
     out = SITE / "index.html"
     write_atomic(out, page(d))
-    if d.get("quality"):
-        try:
-            modelpage.render(d["quality"], SITE / "model.html")
-        except Exception as e:  # the hourly rebuild (fra.archive) must not stop at the model page
-            print(f"model page not rebuilt: {type(e).__name__}: {e}")
     try:
         render_3d(path)
     except (SystemExit, Exception) as e:  # the 3D view needs the data/osm cache + web bundle
