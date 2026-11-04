@@ -92,7 +92,7 @@ Hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 % at 1 / 6 / 24 / 48 h) and today's
 
 ## The live record and the locked test
 
-Since 31 Oct 2026 the forecast runs on its own, every hour. Each forecast is archived with its inputs before the outcome exists, and scored against the radar about 3 hours after the hour is flown. Forecasts issued from **1 Nov 2026 00:00 UTC** form a locked holdout: the models, the code and the comparison are frozen and written down in advance ([experiments/integration/preregistration.json](experiments/integration/preregistration.json)). Next to the official forecast, three variants run in the same hour for comparison: the logistic model alone, the previous official system and the hackathon model. The first verdict comes after 4 weeks, on 1 Dec 2026.
+Since 31 Oct 2026 the forecast runs on its own, every hour. Each forecast is archived with its inputs before the outcome exists, and scored against the radar about 3 hours after the hour is flown. Forecasts issued from **1 Nov 2026 00:00 UTC** form a locked holdout: the models, the code and the comparison are frozen and written down in advance ([experiments/integration/preregistration.json](experiments/integration/preregistration.json)). Next to the official forecast, four variants run in the same hour for comparison: the logistic model alone, the previous official system, the hackathon model and, since 3 Nov 2026, the blend with a decision model trained on 12 years of radar history ([its own pre-registration](experiments/integration/preregistration_hist12.json)). The first verdict comes after 4 weeks, on 1 Dec 2026.
 
 ## How it works
 
@@ -135,7 +135,7 @@ All public and self-sourced, as the challenge required. The downloaded archives 
 | Observed weather | [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu/request/download.phtml) METAR EDDF | 2014 – Oct 2026 |
 | Reanalysis weather (research only, never a forecast input) | Open-Meteo Historical Weather: ERA5 | 2014 – Oct 2026 |
 | Airport geometry (3D view only) | © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, ODbL | – |
-| Live aircraft (3D view only) | [The OpenSky Network](https://opensky-network.org/) REST API | live |
+| Live aircraft (3D view; archived every 5 minutes since 3 Nov 2026 for research) | [The OpenSky Network](https://opensky-network.org/) REST API | live |
 
 Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0). The radar labels match all 16 officially published west/east figures for 2014–2025 within 3 points (full-year shares within 0.2 points); see [experiments/history12/](experiments/history12/REPORT.md). The 12-year history is not used by the official forecast yet: adding it to the decision model gave a gain too small to tell from noise on the test period.
 
@@ -219,9 +219,9 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 
 ## Next steps
 
-- Judge the blend against the logistic model and the hackathon model on the locked holdout (first verdict 1 Dec 2026).
-- Register the 12-year decision model without year terms as a new pre-registered shadow variant; it was the best candidate in the 12-year study.
-- Use the 12-year Runway 18 closure model in the forecast once it has been tested on live hours.
+- Judge the blend against the logistic model and the hackathon model on the locked holdout (first verdict 1 Dec 2026), and the 12-year shadow variant against the blend (first look 1 Dec, decision by 31 Dec 2026).
+- Use the live aircraft positions as a real-time "current direction" input, the main lever for short-notice switches, once a few weeks of snapshots exist; tested first as a pre-registered shadow.
+- Use the ECMWF ensemble spread in the simulated wind futures, and the 12-year Runway 18 closure model, once both have been tested on live hours.
 
 ---
 
