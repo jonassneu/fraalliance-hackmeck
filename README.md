@@ -5,6 +5,9 @@
 **Frankfurt Airport's operating direction, forecast 48 hours ahead.**
 Built for the FraAlliance challenge at AI Week Frankfurt, 30 Oct 2026, in about 6 hours. Improved since, and issued live every hour since 31 Oct 2026.
 
+> [!NOTE]
+> **This is the improved version, not the hackathon submission.** The version handed in at the hackathon on 30 Oct 2026 is the [**v1.0-hackathon** release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon); its jury package is also kept unchanged in [`submission/`](submission/). Everything else on this page describes the work done since. What changed is listed in [What changed since the hackathon](#what-changed-since-the-hackathon).
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/accuracy-dark.png">
@@ -51,7 +54,7 @@ For every hour up to 48 h ahead, the model gives the probability of each operati
 
 **Forecast dashboard.** It shows the current direction with its confidence, the next likely change, Runway 18 availability, and each of the next 48 hours next to the published prognosis and the wind. Since 31 Oct 2026 it is rebuilt every hour from the newest live forecast, with alerts (direction change within 12 h, Runway 18 closure risk within 24 h) and the live record. A second page, **Model**, explains how good the forecast is, how it works and how it was tested.
 
-To try the hackathon version without installing anything, download the repository and open [`submission/dashboard.html`](submission/dashboard.html) in a browser. It works offline, with no server needed; the 3D view next to the timeline is [`submission/airport3d.html`](submission/airport3d.html).
+To try the hackathon version without installing anything, download the [v1.0-hackathon release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon) (or this repository) and open [`submission/dashboard.html`](submission/dashboard.html) in a browser. It works offline, with no server needed; the 3D view next to the timeline is [`submission/airport3d.html`](submission/airport3d.html).
 
 ## Results
 
@@ -71,6 +74,21 @@ Accuracy of the operating direction, scored against the direction actually flown
 - **Honest about the test.** The hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 %) were measured on the easier autumn weeks only, with the last flown hour known earlier than it is in reality. The design was also chosen on these 152 days, so they flatter it. That is why the live record decides.
 
 Full tables, key drivers and limitations are in the [model card](MODEL_CARD.md).
+
+## What changed since the hackathon
+
+The hackathon version is the [v1.0-hackathon release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon). Since then:
+
+| | Hackathon (v1.0) | Now |
+| --- | --- | --- |
+| **Forecast** | Logistic regression | 50/50 blend: logistic regression + an hour-by-hour decision model run along 200 simulated wind futures |
+| **Test** | 7 autumn weeks (15 Sep – 30 Oct 2026), no error bars | 152 days (1 Jun – 30 Oct 2026) with confidence intervals, plus a locked live holdout from 1 Nov 2026 |
+| **Current direction** | Radar hour that had just ended, which is not yet fully published at forecast time | Last radar hour that is completely published at forecast time, as it is live |
+| **Training labels** | Hourly only in the test period, 3–6 sampled hours per day before it | Every hour since Feb 2026; every daytime hour 2014 – 2026 collected for research |
+| **Weather inputs** | ECMWF + ICON-D2 (missing at the longest lead times) | ECMWF + ICON-D2, filled with ICON-EU; trained on all 48 lead times |
+| **Operation** | Forecast run by hand | Issued every hour from a frozen, tested code snapshot; old models run alongside as shadows; live record, alerts, backups, a second attempt at :50 when a data source is down |
+
+Hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 % at 1 / 6 / 24 / 48 h) and today's (96.8 / 94.9 / 94.7 / 93.0 %) come from different tests. On the same test and the same honest inputs, today's forecast is about 10 % better in Brier score than the logistic model alone, and +1.3 points more accurate at 1 h. The full record of decisions is in [research/conclusion.md](research/conclusion.md) and the studies in [experiments/](experiments/).
 
 ## The live record and the locked test
 
@@ -197,7 +215,7 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 - **One summer and autumn.** Winter regimes are only in the training data so far.
 - **Short-notice switches stay hard** for every method, including ours.
 - **Runway 18 "closed" is a proxy:** no southbound departures in a busy hour.
-- **External sources can fail.** The Umwelthaus prognosis has been blank for a few hours some nights, and Open-Meteo was unavailable for two hours on 2 Nov 2026; affected hours are logged and every variant sees the same inputs.
+- **External sources can fail.** The Umwelthaus prognosis has been blank for a few hours some nights, and Open-Meteo was unavailable for two hours on 2 Nov 2026. Since 4 Nov 2026 the hourly job tries again at :50 when the hour's forecast is missing; affected hours are logged and every variant sees the same inputs.
 
 ## Next steps
 
