@@ -1,14 +1,48 @@
 <!doctype html><html><head><meta charset="utf-8"><style>
+/* README hero: accuracy by lead time, long test 1 Jun - 30 Oct 2026 (experiments/integration/final_eval_od.csv).
+   Rendered to accuracy.png (light) and accuracy-dark.png (open with #dark) at 960 x 408, device scale 2. */
 *{box-sizing:border-box;margin:0}
 html,body{background:transparent}
-body{font-family:"SF Pro Display",system-ui,"Noto Sans",sans-serif;color:#1d1d1f;width:1440px;padding:24px}
-html.dark body{color:#f5f5f7}
-.grid{display:grid;grid-template-columns:1fr 1fr;row-gap:56px}
-.lead{font-size:30px;font-weight:600;opacity:.5}
-.big{font-size:230px;line-height:.9;font-weight:700;letter-spacing:-.05em;margin-top:8px}
-.big small{font-size:100px;letter-spacing:-.02em;margin-left:4px}
-</style></head><body><div class="grid" id="g"></div><script>
-if(location.hash=='#dark')document.documentElement.classList.add('dark');
-g.innerHTML=[[1,96.8],[6,94.9],[24,94.7],[48,93.0]].map(([h,m])=>
- `<div><div class="lead">${h} h ahead</div><div class="big">${m.toFixed(1)}<small>%</small></div></div>`).join('');
+:root{--ink:#1d1d1f;--ink2:#6e6e73;--ink3:#86868b;--grid:rgba(0,0,0,.08);--accent:#0071e3;--prog:#8e8e93;--rules:#c7c7cc}
+html.dark{--ink:#f0f0f2;--ink2:#a1a1a6;--ink3:#86868b;--grid:rgba(255,255,255,.10);--accent:#4c9dff;--prog:#8e8e93;--rules:#5a5a5f}
+body{width:960px;height:408px;padding:24px 24px 16px;font-family:"Noto Sans",system-ui,sans-serif;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+h1{font-size:20px;font-weight:500;line-height:28px}
+p{font-size:15px;line-height:20px;color:var(--ink2)}
+svg{display:block;margin-top:12px;overflow:visible}
+.tick{font:400 15px "Noto Sans Mono",ui-monospace,monospace;fill:var(--ink3)}
+.lead{font:400 15px "Noto Sans",system-ui,sans-serif;fill:var(--ink3)}
+.val{font:500 24px "Noto Sans",system-ui,sans-serif;fill:var(--accent)}
+.name{font:400 17px "Noto Sans",system-ui,sans-serif;fill:var(--ink2)}
+.name.us{fill:var(--ink);font-weight:500}
+</style></head><body>
+<h1>Share of hours with the right operating direction</h1>
+<p>152 days, 1 Jun – 30 Oct 2026, about 3,600 forecasts per lead time</p>
+<svg id="c" width="912" height="300"></svg>
+<script>
+if (location.hash == '#dark') document.documentElement.classList.add('dark');
+const leads = ['1 h ahead', '6 h', '24 h', '48 h'];
+const series = [
+  {name: 'Official rules', cls: 'rules', v: [91.0, 90.2, 88.5, 87.0]},
+  {name: 'Published prognosis', cls: 'prog', v: [93.7, 92.9, 91.2, 89.2]},
+  {name: 'This forecast', cls: 'us', v: [96.8, 94.9, 94.7, 93.0]},
+];
+const X0 = 48, X1 = 660, Y0 = 36, Y1 = 284, LO = 86, HI = 98;
+const x = i => X0 + 40 + i * (X1 - X0 - 40) / 3, y = v => Y1 - (v - LO) / (HI - LO) * (Y1 - Y0);
+const color = {rules: 'var(--rules)', prog: 'var(--prog)', us: 'var(--accent)'};
+let s = '';
+for (let g = 88; g <= 98; g += 2)
+  s += `<line x1="${X0}" x2="${X1}" y1="${y(g)}" y2="${y(g)}" stroke="var(--grid)"/>` +
+       `<text class="tick" x="${X0 - 12}" y="${y(g) + 4}" text-anchor="end">${g}</text>`;
+leads.forEach((l, i) => s += `<text class="lead" x="${x(i)}" y="${Y1 + 28}" text-anchor="middle">${l}</text>`);
+for (const se of series) {
+  const us = se.cls == 'us', c = color[se.cls];
+  s += `<polyline fill="none" stroke="${c}" stroke-width="${us ? 3 : 2}" stroke-linejoin="round" stroke-linecap="round"
+        points="${se.v.map((v, i) => `${x(i)},${y(v)}`).join(' ')}"/>`;
+  se.v.forEach((v, i) => s += `<circle cx="${x(i)}" cy="${y(v)}" r="${us ? 5 : 3.5}" fill="${c}"/>`);
+  if (us) se.v.forEach((v, i) => s += `<text class="val" x="${x(i)}" y="${y(v) - 16}" text-anchor="middle">${v.toFixed(1)} %</text>`);
+  const ly = y(se.v[3]);
+  s += `<text class="name${us ? ' us' : ''}" x="${X1 + 20}" y="${ly + 5}">${se.name}</text>`;
+}
+c.innerHTML = s;
 </script></body></html>

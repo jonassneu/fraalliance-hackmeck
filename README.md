@@ -2,35 +2,32 @@
 
 # Eastbound or Westbound?
 
-**Frankfurt Airport's operating direction, forecast 48 hours ahead.**
-Built for the FraAlliance challenge at AI Week Frankfurt, 30 Oct 2026, in about 6 hours. Improved since, and issued live every hour since 31 Oct 2026.
+Frankfurt Airport's operating direction, forecast 48 hours ahead and issued every hour.
+
+Built in about 6 hours for the FraAlliance challenge at AI Week Frankfurt on 30 Oct 2026, improved since, and running live since 31 Oct 2026.
 
 > [!NOTE]
-> **This is the improved version, not the hackathon submission.** The version handed in at the hackathon on 30 Oct 2026 is the [**v1.0-hackathon** release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon); its jury package is also kept unchanged in [`submission/`](submission/). Everything else on this page describes the work done since. What changed is listed in [What changed since the hackathon](#what-changed-since-the-hackathon).
+> This is the improved version, not the hackathon submission. The version handed in on 30 Oct 2026 is the [v1.0-hackathon release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon), and its jury package stays unchanged in [`submission/`](submission/). See [what changed since](#what-changed-since-the-hackathon).
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/accuracy-dark.png">
-    <img src="assets/screenshots/accuracy.png" alt="Accuracy: 96.8 % at 1 h, 94.9 % at 6 h, 94.7 % at 24 h, 93.0 % at 48 h ahead" width="640">
+    <img src="assets/screenshots/accuracy.png" alt="Share of hours with the right operating direction, 1 Jun to 30 Oct 2026. This forecast: 96.8 % at 1 h, 94.9 % at 6 h, 94.7 % at 24 h, 93.0 % at 48 h ahead. Published prognosis: 93.7, 92.9, 91.2, 89.2 %. Official rules: 91.0, 90.2, 88.5, 87.0 %" width="720">
   </picture>
 </p>
 
-Share of hours where the forecast direction matched the direction that was actually flown, on 152 days from 1 Jun to 30 Oct 2026. That is more accurate than both the published Umwelthaus prognosis and the official rules at every lead time. The model was also designed on these days, so the real test is the live record from 1 Nov 2026 (see below).
-
----
+The model was also designed on these 152 days, so the clean test is the [live record](#the-live-record-and-the-locked-test) from 1 Nov 2026.
 
 ## Why it matters
 
-Frankfurt runs its whole runway system in one direction: westbound (**OD 25**) or eastbound (**OD 07**). When the wind turns, every runway switches at once. Strong north wind also closes **Runway 18 West**, which handles 6 out of 10 departures.
+Frankfurt runs its whole runway system in one direction: westbound (OD 25) or eastbound (OD 07). When the wind turns, every runway switches at once. Strong north wind also closes Runway 18 West, which handles 6 out of 10 departures.
 
-> **Today:** the wind turns, a limit is reached, and the switch is decided at short notice.
->
-> **With this forecast:** the switch is known up to 48 h ahead, so it can be planned.
+Today the switch is decided at short notice, once the wind has turned and a limit is reached. Known up to 48 h ahead, it can be planned:
 
-- **Lufthansa** can protect connections at its largest hub and plan flights proactively.
-- **Fraport** can pre-position staff and ground handling, and plan around a Runway 18 closure.
+- Lufthansa can protect connections at its largest hub and plan flights ahead.
+- Fraport can pre-position staff and ground handling, and plan around a Runway 18 closure.
 
-For every hour up to 48 h ahead, the model gives the probability of each operating direction and of Runway 18 being available. It also gives the next likely change time and a certainty score.
+For every hour up to 48 h ahead, the model gives the probability of each operating direction and of Runway 18 being available. It also gives the next likely change and a certainty score.
 
 | FRA at a glance | |
 | --- | --- |
@@ -46,80 +43,85 @@ For every hour up to 48 h ahead, the model gives the probability of each operati
   <img src="assets/screenshots/live-3d.png" alt="3D view of Frankfurt Airport showing the forecast operating direction, active runways and the 48-hour timeline" width="100%">
 </p>
 
-**3D view.** You can see which way traffic flows now, which runways handle arrivals and departures, whether Runway 18 West is open, and the 48-hour timeline you can scrub through.
+The 3D view shows which way traffic flows now, which runways handle arrivals and departures, whether Runway 18 West is open, and a 48-hour timeline to scrub through.
 
 <p align="center">
   <img src="assets/screenshots/dashboard.png" alt="Forecast dashboard: current direction, next change, Runway 18 status, the next 48 hours, alerts, the live record and the 3D view" width="100%">
 </p>
 
-**Forecast dashboard.** It shows the current direction with its confidence, the next likely change, Runway 18 availability, and each of the next 48 hours next to the published prognosis and the wind. Since 31 Oct 2026 it is rebuilt every hour from the newest live forecast, with alerts (direction change within 12 h, Runway 18 closure risk within 24 h) and the live record. A second page, **Model**, explains how good the forecast is, how it works and how it was tested.
+The dashboard shows the current direction with its confidence, the next likely change, Runway 18 availability, and each of the next 48 hours next to the published prognosis and the wind. It is rebuilt every hour from the newest forecast, with alerts (direction change within 12 h, Runway 18 closure risk within 24 h) and the live record. A second page, Model, explains how good the forecast is, how it works and how it was tested.
 
-To try the hackathon version without installing anything, download the [v1.0-hackathon release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon) (or this repository) and open [`submission/dashboard.html`](submission/dashboard.html) in a browser. It works offline, with no server needed; the 3D view next to the timeline is [`submission/airport3d.html`](submission/airport3d.html).
+To try the hackathon version without installing anything, open [`submission/dashboard.html`](submission/dashboard.html) in a browser. It works offline, and the 3D view is [`submission/airport3d.html`](submission/airport3d.html).
 
 ## Results
 
 Accuracy of the operating direction, scored against the direction actually flown. Walk-forward test 1 Jun – 30 Oct 2026, 152 days, ~3,600 forecasts per lead time.
 
-| Lead time | **Our forecast** | Published Umwelthaus prognosis | Official rules (case section 3) | Naive "no change" |
-| --- | :---: | :---: | :---: | :---: |
+| Lead time | This forecast | Published Umwelthaus prognosis | Official rules (case section 3) | No change (persistence) |
+| --- | ---: | ---: | ---: | ---: |
 | 1 h | **96.8 %** | 93.7 % | 91.0 % | 94.4 % |
 | 6 h | **94.9 %** | 92.9 % | 90.2 % | 87.7 % |
 | 24 h | **94.7 %** | 91.2 % | 88.5 % | 75.3 % |
 | 48 h | **93.0 %** | 89.2 % | 87.0 % | 65.7 % |
 
-- **Ahead at every lead time.** Against the published prognosis the lead is +2.0 to +3.8 points, and the 95 % confidence interval of every difference excludes zero. The probabilities are sharper too: Brier score 0.039 vs 0.082 for the prognosis (leads 1/6/24/48, lower is better).
-- **Next direction change: 80 % right.** This counts both correct "no change" calls and changes predicted within ±3 h of when they happened. The published prognosis gets 70 % and the official rules 62 %. The model catches 65 % of the changes within ±3 h, with a mean timing error of 1.2 h, and raises 49 false alarms where the rules raise 516 (3,420 forecasts).
-- **Runway 18.** Real closures are rare in the test period, so its edge over "always open" is not yet statistically clear there. On 12 years of radar history (850 closures since 2015) the closure model warns ahead of two thirds of closures with about 9 false alarms per 1,000 h; the official rules warn ahead of 17–20 % (see [experiments/history12/](experiments/history12/REPORT.md)).
-- **Weak spot: short-notice switches.** When the direction changes within the next hour, every method (ours, the prognosis, the rules) is right only 54–59 % of the time.
-- **Honest about the test.** The hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 %) were measured on the easier autumn weeks only, with the last flown hour known earlier than it is in reality. The design was also chosen on these 152 days, so they flatter it. That is why the live record decides.
+- Ahead of the published prognosis at every lead time, by 2.0 to 3.8 points, and the 95 % confidence interval of every difference excludes zero. The probabilities are sharper too: Brier score 0.039 vs 0.082 for the prognosis (1, 6, 24 and 48 h; lower is better).
+- The next direction change is right 80 % of the time, counting correct “no change” calls and changes predicted within ±3 h. The prognosis gets 70 %, the official rules 62 %. The model catches 65 % of changes within ±3 h, with a mean timing error of 1.2 h, and raises 49 false alarms in 3,420 forecasts where the rules raise 516.
+- Runway 18 closures are rare in the test period, so the edge over “always open” is not yet statistically clear there. On 12 years of radar history (850 closures since 2015) the closure model warns ahead of two thirds of closures with about 9 false alarms per 1,000 h; the official rules warn ahead of 17–20 % ([experiments/history12/](experiments/history12/REPORT.md)).
+- Short-notice switches are the weak spot. When the direction changes within the next hour, every method, this one included, is right only 54–59 % of the time.
 
 Full tables, key drivers and limitations are in the [model card](MODEL_CARD.md).
 
 ## What changed since the hackathon
 
-The hackathon version is the [v1.0-hackathon release](https://github.com/jonassneu/fraalliance-hackmeck/releases/tag/v1.0-hackathon). Since then:
 
 | | Hackathon (v1.0) | Now |
 | --- | --- | --- |
-| **Forecast** | Logistic regression | 50/50 blend: logistic regression + an hour-by-hour decision model run along 200 simulated wind futures |
-| **Test** | 7 autumn weeks (15 Sep – 30 Oct 2026), no error bars | 152 days (1 Jun – 30 Oct 2026) with confidence intervals, plus a locked live holdout from 1 Nov 2026 |
-| **Current direction** | Radar hour that had just ended, which is not yet fully published at forecast time | Last radar hour that is completely published at forecast time, as it is live |
-| **Training labels** | Hourly only in the test period, 3–6 sampled hours per day before it | Every hour since Feb 2026; every daytime hour 2014 – 2026 collected for research |
-| **Weather inputs** | ECMWF + ICON-D2 (missing at the longest lead times) | ECMWF + ICON-D2, filled with ICON-EU; trained on all 48 lead times |
-| **Operation** | Forecast run by hand | Issued every hour from a frozen, tested code snapshot; old models run alongside as shadows; live record, alerts, backups, a second attempt at :50 when a data source is down |
+| Forecast | Logistic regression | 50/50 blend: logistic regression + an hour-by-hour decision model run along 200 simulated wind futures |
+| Test | 7 autumn weeks (15 Sep – 30 Oct 2026), no error bars | 152 days (1 Jun – 30 Oct 2026) with confidence intervals, plus a locked live holdout from 1 Nov 2026 |
+| Current direction | Radar hour that had just ended, which is not yet fully published at forecast time | Last radar hour that is completely published at forecast time, as it is live |
+| Training labels | Hourly only in the test period, 3–6 sampled hours per day before it | Every hour since Feb 2026; every daytime hour 2014 – 2026 collected for research |
+| Weather inputs | ECMWF + ICON-D2 (missing at the longest lead times) | ECMWF + ICON-D2, filled with ICON-EU; trained on all 48 lead times |
+| Operation | Forecast run by hand | Issued every hour from a frozen, tested code snapshot; old models run alongside as shadows; live record, alerts, backups, a second attempt at :50 when a data source is down |
 
-Hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 % at 1 / 6 / 24 / 48 h) and today's (96.8 / 94.9 / 94.7 / 93.0 %) come from different tests. On the same test and the same honest inputs, today's forecast is about 10 % better in Brier score than the logistic model alone, and +1.3 points more accurate at 1 h. The full record of decisions is in [research/conclusion.md](research/conclusion.md) and the studies in [experiments/](experiments/).
+The hackathon numbers (96.9 / 96.1 / 95.4 / 93.1 % at 1 / 6 / 24 / 48 h) came from an easier test: autumn weeks only, with the last flown hour known earlier than it really is. Today's (96.8 / 94.9 / 94.7 / 93.0 %) are not comparable with them. On the same test and the same inputs, today's forecast is about 10 % better in Brier score than the logistic model alone, and +1.3 points more accurate at 1 h. The full record of decisions is in [research/conclusion.md](research/conclusion.md) and the studies in [experiments/](experiments/).
 
 ## The live record and the locked test
 
-Since 31 Oct 2026 the forecast runs on its own, every hour. Each forecast is archived with its inputs before the outcome exists, and scored against the radar about 3 hours after the hour is flown. Forecasts issued from **1 Nov 2026 00:00 UTC** form a locked holdout: the models, the code and the comparison are frozen and written down in advance ([experiments/integration/preregistration.json](experiments/integration/preregistration.json)). Next to the official forecast, four variants run in the same hour for comparison: the logistic model alone, the previous official system, the hackathon model and, since 3 Nov 2026, the blend with a decision model trained on 12 years of radar history ([its own pre-registration](experiments/integration/preregistration_hist12.json)). The first verdict comes after 4 weeks, on 1 Dec 2026.
+Since 31 Oct 2026 the forecast runs on its own, every hour. Each forecast is archived with its inputs before the outcome exists, and scored against the radar about 3 hours after the hour is flown. Forecasts issued from 1 Nov 2026 00:00 UTC form a locked holdout: the models, the code and the comparison are frozen and written down in advance ([experiments/integration/preregistration.json](experiments/integration/preregistration.json)). The first verdict comes after 4 weeks, on 1 Dec 2026.
+
+Four variants run next to the official forecast in the same hour, for comparison:
+
+- the logistic model alone
+- the previous official system
+- the hackathon model
+- since 3 Nov 2026, the blend with a decision model trained on 12 years of radar history ([own pre-registration](experiments/integration/preregistration_hist12.json))
 
 ## How it works
 
-1. **Labels: what was actually flown.** The flown direction comes from radar tracks. An aircraft below 3,000 ft within 15 km of the airport heading ~250° means OD 25, and heading ~070° means OD 07. A southbound departure west of the field is a Runway 18 departure.
-2. **Inputs for each forecast hour (1–48 h ahead):**
+1. **Labels.** The flown direction comes from radar tracks. An aircraft below 3,000 ft within 15 km of the airport heading ~250° means OD 25, and heading ~070° means OD 07. A southbound departure west of the field is a Runway 18 departure.
+2. **Inputs** for each forecast hour, 1–48 h ahead:
    - the tailwind on runway 25 from ECMWF and DWD ICON (ICON-D2, filled with ICON-EU at the longest lead times), hourly and smoothed, at 10 m and 100 m;
    - a wind-regime indicator (NE "Bise" or SE pre-frontal easterly);
    - the official rule applied to the forecast;
    - the published Umwelthaus prognosis;
    - the direction flown most recently;
    - the time of day, including the night ban.
-3. **Two models, averaged 50/50:**
-   - a regularised **logistic regression** with separate weights for short and long lead times, retrained on the most recent 120 days, with calibrated probabilities;
-   - an **hour-by-hour decision model**: given the actual wind and the direction in use, how likely is the airport to keep it for the next hour? It is run forward hour by hour along **200 simulated wind futures**. These are today's forecast plus the forecast errors seen in similar past situations, so they show how the wind might really turn out.
-4. **Runway 18 model:** a logistic regression on the official rule, gust and mean tailwind on runway 18, the observed wind, and current use.
-5. **Why this design:** about 60 variants were tried at the hackathon and about 60 more since (boosting, longer training windows, more lead-time groups, extra inputs). Most did not help. The decision model on simulated wind is the one addition with a clear gain on the long test: Brier score 0.039 vs 0.043 for the logistic model alone. See [experiments/](experiments/) and the decision log in [research/conclusion.md](research/conclusion.md).
+3. **Two models**, averaged 50/50:
+   - a regularised logistic regression with separate weights for short and long lead times, retrained on the most recent 120 days, with calibrated probabilities;
+   - an hour-by-hour decision model: given the actual wind and the direction in use, how likely is the airport to keep it for the next hour? It is run forward hour by hour along 200 simulated wind futures. These are today's forecast plus the forecast errors seen in similar past situations, so they show how the wind might really turn out.
+4. **Runway 18 model.** A logistic regression on the official rule, gust and mean tailwind on runway 18, the observed wind, and current use.
+5. **Why this design.** About 60 variants were tried at the hackathon and about 60 more since (boosting, longer training windows, more lead-time groups, extra inputs). Most did not help. The decision model on simulated wind is the one addition with a clear gain on the long test: Brier score 0.039 vs 0.043 for the logistic model alone. See [experiments/](experiments/) and the decision log in [research/conclusion.md](research/conclusion.md).
 
 ### How accuracy was measured
 
-- **Only data available at forecast time.** For a forecast issued at time *t*, the model sees:
+- Only data available at forecast time. For a forecast issued at time *t*, the model sees:
   - weather model runs started at least 6 h (ECMWF), 4 h (ICON-D2) or 5 h (ICON-EU) before *t*;
   - the Umwelthaus prognosis as it was published at *t*;
   - METAR weather reports up to *t*;
   - the direction flown in the last radar hour that is completely published at *t*. The radar data arrive about an hour late, so this is the hour from *t* − 2 h to *t* − 1 h.
-- **Walk-forward testing.** Each test week is predicted by models trained only on outcomes known before it.
-- **Truth is what was actually flown,** taken from radar tracks. Every method is scored on exactly the same hours, with 95 % confidence intervals from resampling whole days.
-- **Independent leakage checks.** Independent reviews searched for look-ahead bugs; everything they found was fixed before these numbers were produced.
+- Walk-forward testing: each test week is predicted by models trained only on outcomes known before it.
+- Truth is what was actually flown, taken from radar tracks. Every method is scored on exactly the same hours, with 95 % confidence intervals from resampling whole days.
+- Separate reviews searched the code for look-ahead bugs; everything they found was fixed before these numbers were produced.
 
 ## Data
 
@@ -127,7 +129,7 @@ All public and self-sourced, as the challenge required. The downloaded archives 
 
 | Data | Source | Coverage |
 | --- | --- | --- |
-| **Flown direction + Runway 18 use** (labels) | Umwelthaus INAA / FANOMOS radar tracks, [inaa.umwelthaus.org](https://inaa.umwelthaus.org/) | every daytime hour 2014 – Oct 2026, plus every live hour since |
+| Flown direction and Runway 18 use (labels) | Umwelthaus INAA / FANOMOS radar tracks, [inaa.umwelthaus.org](https://inaa.umwelthaus.org/) | every daytime hour 2014 – Oct 2026, plus every live hour since |
 | Weather forecasts as issued | [Open-Meteo Single Runs](https://open-meteo.com/en/docs/single-runs-api): ECMWF IFS (10 m and 100 m wind) | Mar 2024 – Oct 2026 |
 | Second weather model | Open-Meteo Single Runs: DWD ICON-D2 and ICON-EU | Apr – Oct 2026 |
 | Earlier forecast vintages | [Open-Meteo Previous Runs](https://open-meteo.com/en/docs/previous-runs-api) (best match ≈ DWD ICON), issued ≥ 1 day before | 2024 – Oct 2026 |
@@ -211,11 +213,11 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 
 ## Limitations
 
-- **The long test was also used for design.** The 1 Jun – 30 Oct 2026 numbers flatter the model somewhat; the locked live holdout from 1 Nov 2026 is the clean test.
-- **One summer and autumn.** Winter regimes are only in the training data so far.
-- **Short-notice switches stay hard** for every method, including ours.
-- **Runway 18 "closed" is a proxy:** no southbound departures in a busy hour.
-- **External sources can fail.** The Umwelthaus prognosis has been blank for a few hours some nights, and Open-Meteo was unavailable for two hours on 2 Nov 2026. Since 4 Nov 2026 the hourly job tries again at :50 when the hour's forecast is missing; affected hours are logged and every variant sees the same inputs.
+- The long test was also used for design. The 1 Jun – 30 Oct 2026 numbers flatter the model somewhat; the locked live holdout from 1 Nov 2026 is the clean test.
+- One summer and autumn. Winter regimes are only in the training data so far.
+- Short-notice switches stay hard for every method.
+- Runway 18 “closed” is a proxy: no southbound departures in a busy hour.
+- External sources can fail. The Umwelthaus prognosis has been blank for a few hours some nights, and Open-Meteo was unavailable for two hours on 2 Nov 2026. Since 4 Nov 2026 the hourly job tries again at :50 when the hour's forecast is missing; affected hours are logged and every variant sees the same inputs.
 
 ## Next steps
 
@@ -223,6 +225,4 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 - Use the live aircraft positions as a real-time "current direction" input, the main lever for short-notice switches, once a few weeks of snapshots exist; tested first as a pre-registered shadow.
 - Use the ECMWF ensemble spread in the simulated wind futures, and the 12-year Runway 18 closure model, once both have been tested on live hours.
 
----
-
-**Model card:** [MODEL_CARD.md](MODEL_CARD.md) · **Design decisions:** [research/conclusion.md](research/conclusion.md) · **Experiments:** [experiments/](experiments/) · **Live operation:** [ops/README.md](ops/README.md) · **Submission package:** [submission/](submission/)
+[Model card](MODEL_CARD.md) · [Design decisions](research/conclusion.md) · [Experiments](experiments/) · [Live operation](ops/README.md) · [Submission package](submission/)

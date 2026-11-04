@@ -1,4 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#9333ea"/>
-  <text x="32" y="32" dy="0.35em" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif" font-size="26" font-weight="600" fill="#ffffff">FH</text>
+  <style>.rwy{fill:#3a3a3c}.mark{fill:#fff}@media (prefers-color-scheme:dark){.rwy{fill:#d2d2d7}.mark{fill:#1d1d1f}}</style>
+  <!-- One runway on its real heading (070 / 250) with both operating directions: westbound blue (OD 25), eastbound amber (OD 07) -->
+  <g transform="rotate(-20 32 32)" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="4">
+    <rect class="rwy" x="4" y="26" width="56" height="12" rx="3" stroke="none"/>
+    <rect class="mark" x="17" y="31" width="7" height="2" rx="1" stroke="none"/>
+    <rect class="mark" x="28.5" y="31" width="7" height="2" rx="1" stroke="none"/>
+    <rect class="mark" x="40" y="31" width="7" height="2" rx="1" stroke="none"/>
+    <path d="M52 14 H12 M19 7 L12 14 L19 21" stroke="#2a78d6"/>
+    <path d="M12 50 H52 M45 43 L52 50 L45 57" stroke="#eda100"/>
+  </g>
 </svg>
