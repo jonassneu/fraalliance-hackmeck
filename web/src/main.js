@@ -25,20 +25,20 @@ const LH = Q.get('palette') === 'lh' || Q.get('theme') === 'lh'; // dashboard pa
 // one validated pair carries meaning (blue = 25 west, amber = 07 east as on the dashboard; dataviz slots 1 + 4, CVD-checked in
 // both modes), status red = closed; everything else is warm neutral grey so colour only appears where it means something
 const MINIMAL = {
-  dark: { east: '#c98500', west: '#3987e5', r18: '#c3c2b7', closed: '#d03b3b', arr: '#199e70', dep: '#f0efec', ground: '#8a8984', air: '#5f5e59' },
-  light: { east: '#eda100', west: '#2a78d6', r18: '#52514e', closed: '#d03b3b', arr: '#1baf7a', dep: '#0b0b0b', ground: '#8a8984', air: '#b4b2ac' },
+  dark: { eastLine: '#a3adc2', westLine: '#5fcab5', east: '#2f4a7a', west: '#4dbfa7', r18: '#c3c2b7', closed: '#d03b3b', arr: '#199e70', dep: '#f0efec', ground: '#8a8984', air: '#c3c2b7' },
+  light: { eastLine: '#2c3e66', westLine: '#1f9e89', east: '#2c3e66', west: '#1f9e89', r18: '#52514e', closed: '#d03b3b', arr: '#1baf7a', dep: '#0b0b0b', ground: '#8a8984', air: '#9a9893' },
 };
 const PALETTES = MINIMAL; // ?palette=lh kept for old links, same colours
 const LOOK = {
   dark: { bg: '#0e0e0d', ground: '#0b0b0a' },
-  light: { bg: '#f4f4f2', ground: '#eeeeeb' },
+  light: { bg: '#eceeef', ground: '#e9ebec' },
 };
-// dark = x-ray (additive glow), light = white architectural model; URL > saved choice > system setting
-const SYS_DARK = matchMedia('(prefers-color-scheme: dark)');
+// dark = x-ray (additive glow), light = white architectural model; URL > saved choice > light (the default)
 const THEME_Q = ['dark', 'light'].includes(Q.get('theme')) ? Q.get('theme') : null;
 let saved = null;
-try { saved = EMBED ? null : localStorage.getItem('fra3d-theme'); } catch { /* storage blocked */ }
-let theme = THEME_Q || saved || (SYS_DARK.matches ? 'dark' : 'light');
+try { saved = EMBED ? null : localStorage.getItem('fra-theme') || null; } catch { /* storage blocked */ }
+let theme = THEME_Q || saved || 'light';
+document.documentElement.dataset.theme = theme;
 let HEX = PALETTES[theme];
 let C = {};
 const NB = THREE.NormalBlending, AB = THREE.AdditiveBlending;
@@ -50,7 +50,11 @@ const V = (x, y, h = 0) => new THREE.Vector3(x, h, -y);
 
 // ------------------------------------------------------------------ renderer
 const style = document.createElement('style');
-style.textContent = css();
+style.textContent = css() + (() => { // the dashboard's header, from the same spec (fra.siteui.HEADER), at the same zoom
+  const hc = (window.FRA_STYLE || {}).header_css; if (!hc) return '';
+  return `@media (min-width:640px){${hc.replace(/([^;{}]+?)(;|})/g, (m, d, e) => (d.includes(':') && !d.includes('!important') ? `${d}!important${e}` : m))}.pbar,.rail,.mapov,.dock,.stack,.rose,.attrib{zoom:var(--hz,1)}}`;
+})();
+{ const hz = () => document.documentElement.style.setProperty('--hz', Math.max(1, Math.min(1.5, innerWidth / 1280, innerHeight / 810)).toFixed(4)); hz(); addEventListener('resize', hz); }
 document.head.appendChild(style);
 const app = document.getElementById('app');
 if (EMBED) document.body.classList.add('embed');
@@ -68,21 +72,22 @@ scene.add(new THREE.HemisphereLight('#ffffff', '#b9b7b2', 2.1));
 const sun = new THREE.DirectionalLight('#ffffff', 1.7);
 sun.position.copy(V(-5000, -7000, 9000));
 scene.add(sun);
-const camera = new THREE.PerspectiveCamera(36, 1, 20, 90000);
+const camera = new THREE.PerspectiveCamera(36, 1, 250, 400000); // far enough for the phone framing (camera ~70 km up)
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI * 0.47;
-controls.minDistance = 300;
-controls.maxDistance = 30000;
+controls.minDistance = 800;
+controls.maxDistance = 200000;
 controls.autoRotateSpeed = 1; // turns per minute (update gets dt): one slow turn a minute
 
 // card: a calm panorama from the south-south-east, runways running across the frame
 const HOMES = {
-  card: { pos: V(-350, -4300, 2600), target: V(-1000, 150, 0) }, // replaced below: orbits around runway 18 West
-  full: { pos: V(-900, -6300, 3700), target: V(-1900, -50, 0) },
+  card: { pos: V(-800, -4800, 12000), target: V(-800, -800, 0) }, // the whole airport from high up, north up, no orbit
+  full: { pos: V(-1000, -3000, 7400), target: V(-1000, 250, 0) }, // north up and steep, so Runway 18 reads as north-south
   bare: { pos: V(-450, -8300, 5000), target: V(-2050, -300, 0) },
 };
 const home = () => (view.card ? HOMES.card : BARE ? HOMES.bare : HOMES.full);
+let homeOd = 7, camTouched = false; // the full view frames the paths of this direction until the user moves the camera
 camera.position.copy(home().pos);
 controls.target.copy(home().target);
 
@@ -91,7 +96,7 @@ composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), 0.55, 0.3, 0.3);
 function tuneBloom() {
   bloom.enabled = theme === 'dark';
-  bloom.strength = view.card ? 0.32 : 0.55;
+  bloom.strength = view.card ? 0.08 : 0.14; // a faint glow: the runways read as lit, they do not bleed
   bloom.threshold = view.card ? 0.42 : 0.3;
 }
 composer.addPass(bloom);
@@ -106,16 +111,143 @@ function resize() {
   // wide cards: keep ~58° horizontal field of view instead of a fish-eye panorama
   camera.fov = view.card ? Math.min(36, Math.max(16, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(29)) / camera.aspect)))) : 36;
   // centre the scene in the area the page's panels leave free (like map padding)
-  const cx = pad.left + (w - pad.left - pad.right) / 2, cy = pad.top + (h - pad.top - pad.bottom) / 2;
-  if (BARE && w && h) camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
+  const heroB = document.querySelector('.hero')?.getBoundingClientRect().bottom - app.getBoundingClientRect().top || 0;
+  const HZ = w < 640 ? 1 : (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1); // the panels are zoomed like the header: CSS px inside them = screen px / HZ
+  const narrow = w < 640, railB = narrow ? (document.querySelector('.rail')?.getBoundingClientRect().bottom ?? 0) - app.getBoundingClientRect().top : 0;
+  const dockH = narrow ? app.getBoundingClientRect().bottom - (document.querySelector('.dock')?.getBoundingClientRect().top ?? app.getBoundingClientRect().bottom) : 0;
+  if (narrow) app.style.setProperty('--dock-h', `${Math.round(dockH)}px`);
+  { const dk = document.querySelector('.dock'), rl = document.querySelector('.rail'); if (dk) app.style.setProperty('--dock-top-h', `${Math.round((app.getBoundingClientRect().bottom - dk.getBoundingClientRect().top) / HZ)}px`); if (rl) app.style.setProperty('--rail-r', `${Math.round((rl.getBoundingClientRect().right - app.getBoundingClientRect().left) / HZ)}px`); { const rb = rl.getBoundingClientRect(), ab = app.getBoundingClientRect(); if (!(typeof state !== 'undefined' && state.run && !isNowHour())) app.style.setProperty('--rail-b', `${Math.round((rb.bottom - ab.top) / HZ)}px`); app.style.setProperty('--rail-l', `${Math.round((rb.left - ab.left) / HZ)}px`); app.style.setProperty('--rail-w', `${Math.round(rb.width / HZ)}px`); }
+    if (rl) rl.classList.toggle('over', rl.scrollHeight > rl.clientHeight + 1); } // the fade only when the panel scrolls // the map-key overlay sits above the timeline
+  const dockD = app.getBoundingClientRect().bottom - (document.querySelector('.dock')?.getBoundingClientRect().top ?? app.getBoundingClientRect().bottom - 200);
+  const railR = (document.querySelector('.rail')?.getBoundingClientRect().right ?? 380) - app.getBoundingClientRect().left;
+  const P = BARE ? pad : view.card ? { top: 0, right: 0, bottom: 0, left: 0 } : narrow ? { top: railB + 16, right: 16, bottom: dockH + 16 + ((document.querySelector('.mapov')?.offsetHeight || 0) + 8), left: 16 }
+    : { top: ((document.querySelector('.pbar')?.getBoundingClientRect().bottom ?? 56) - app.getBoundingClientRect().top) + 32, right: 32, bottom: dockD + 16, left: Math.min(railR, w * 0.4) + 32 }; // 40 px clear of the timeline // phones: the band between header and timeline; desktop: clear of the panel, the header and the timeline
+  { const pb = document.querySelector('.pbar'), rl = document.querySelector('.rail'), st = document.querySelector('.stack'); // 16 px under the header, the same as the left gap (phones: 8)
+    if (pb && rl && !BARE && !view.card) { const t = Math.round(pb.getBoundingClientRect().bottom - app.getBoundingClientRect().top + (narrow ? 8 : 16)); rl.style.top = `${t / HZ}px`; if (st && !narrow) st.style.setProperty('top', `${t / HZ}px`, 'important'); } }
+  BTN = null; if (!narrow && !BARE && !view.card) { const st = document.querySelector('.stack'); if (st && st.offsetWidth) { const r = st.getBoundingClientRect(), ar = app.getBoundingClientRect(); BTN = [r.left - ar.left - 40, r.bottom - ar.top + 40]; } } // the button corner: an exclusion, not a top inset
+  freeArea = P; app.style.setProperty('--free-cx', `${Math.round(P.left + (w - P.left - P.right) / 2)}px`); app.style.setProperty('--free-l', `${Math.round(P.left)}px`); // the key pill centres under the free viewport
+  // (the map key lives in the panel)
+  { const rl = document.querySelector('.rail'), dk = document.querySelector('.dock'); // the panel never runs under the timeline
+    if (rl && dk && !narrow && !(typeof state !== 'undefined' && state.run && !isNowHour())) { app.classList.remove('keyfree'); /* placed from the idle panel only: hovering never moves the key */ const mk = document.getElementById('mapkey'); if (mk && mk.classList.contains('inrail')) { mk.classList.remove('inrail'); mk.classList.add('mapov', 'panel'); hud.appendChild(mk); } rl.style.minHeight = ''; const room = (dk.getBoundingClientRect().top - rl.getBoundingClientRect().top) / HZ - 12; rl.style.maxHeight = ''; /* measured in its under-the-panel layout */ const need = rl.scrollHeight, kh = (document.querySelector('.mapov')?.offsetHeight || 0) + 12;
+      rl.style.maxHeight = `${Math.max(200, room)}px`; const rb = rl.getBoundingClientRect(), ab = app.getBoundingClientRect(); void need; app.style.setProperty('--rail-b', `${Math.round((rb.bottom - ab.top) / HZ)}px`); app.classList.toggle('keyfree', rb.bottom + kh * HZ > dk.getBoundingClientRect().top - 12 * HZ); if (mk && app.classList.contains('keyfree')) { mk.classList.remove('mapov', 'panel'); mk.classList.add('inrail'); (rl.querySelector('.pdetrow') || rl.lastElementChild).after(mk); } /* no room under the panel: the key becomes the panel's last row, never a float in the scene */ { const r2 = rl.getBoundingClientRect(); rl.style.minHeight = `${Math.round(r2.height / HZ)}px`; app.style.setProperty('--rail-b', `${Math.round((r2.bottom - app.getBoundingClientRect().top) / HZ)}px`); } /* hover swaps the panel's content in place: never shorter than idle */ } /* panel first: when the key does not fit under it, the key moves into the free viewport */ }
+  const cx = P.left + (w - P.left - P.right) / 2, cy = P.top + (h - P.top - P.bottom) / 2;
+  if ((BARE || !view.card) && w && h) camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
   else camera.clearViewOffset();
   camera.updateProjectionMatrix();
+  fitHome();
 }
-new ResizeObserver(resize).observe(app);
+function renderIssued() {
+  if (!state.run) return;
+  const age = Math.max(0, Math.round((Date.now() - Date.parse(state.run.issue)) / 6e4)), ageS = age < 60 ? `${age}\u202fmin ago` : age < 48 * 60 ? `${Math.round(age / 60)}\u202fh ago` : `${Math.round(age / 1440)} days ago`;
+  const iss = new Date(state.run.issue), today = fmtDay.format(iss) === fmtDay.format(new Date());
+  const nx = new Date(Math.ceil((Date.now() - 18e5 + 1) / 36e5) * 36e5 + 18e5); // the archive job runs every hour at :30, as on the dashboard
+  $('issued-t').parentElement.querySelector('.frs').innerHTML = `<span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `${fmtDay.format(iss)}, `}${fmtHM(iss)}</b><span class="fw"> · next <b>${fmtHM(nx)}</b>${age < 90 ? ' · live' : ''}</span>`; // one template on both pages // the age in the tooltip, as on the dashboard
+  $('issued-t').parentElement.title = `${T.issued} ${fmtRun.format(iss)}, ${ageS}`;
+  $('livedot').className = age < 90 ? 'ok' : 'old';
+}
+setInterval(() => renderIssued(), 60000);
+const DEP_L = {}, GHOST_L = {}; let lastSegs = []; let VIEW_AZ = 0, LAST_WD = null, FIT_AZ = 0, FIT_PTS = [], FIT_STAT = null; const APP_L = {};
+window.fitStat = () => ({ ...FIT_STAT, ...FIT_STAT2 });
+const TOWNS_07 = [[50.0136, 8.428], [50.0098, 8.4535], [49.9899, 8.4225]].map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]), TOWNS_25 = [[50.0531, 8.6947]].map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]);
+function appLen(rw, od) { // a landing path is drawn to about 1.5 km beyond the farthest town under it (as on the dashboard), at least 5 km
+  const f = flow(rw, od), d = f.dir, s = f.start;
+  const along = (od === 25 ? TOWNS_25 : TOWNS_07).map(t => { const dx = s[0] - t[0], dy = s[1] - t[1], a = dx * d[0] + dy * d[1], c = Math.abs(dx * d[1] - dy * d[0]); return a > 0 && c < 1500 ? a : 0; });
+  return APP_L[`${rw.key}/${od}`] || 16000; // to where it would reach the panel or the timeline (fitHome), faded out over its outer third
+} // the screen-up heading of the home view (0 = north up; phones turn the landing direction up)
+let fitted = false, freeArea = { top: 0, right: 0, bottom: 0, left: 0 }, BTN = null, FIT_STAT2 = null;
+const nar0 = () => app.clientWidth < 640;
+function fitHome() { // full view: all runways fit the area the panels leave free, north up, steep
+  if (BARE || !RW.r18 || !app.clientWidth) { scene.fog.density = 0.00004; farHidden = false; applyThemed(); for (const o of FAR) if (o.visible === undefined) o.visible = true; return; } // the dashboard card gets the same towns-and-paths view
+  // the region people live in under the paths: Mainz in the west to Offenbach in the east
+  // full view: the landing and take-off paths of the direction in use (07: approaches from the west, 25: from the east)
+  // the airport plus about 6 km of approach on the landing side and the start of the climb-outs on the other
+  const P = [...Object.values(RW).flatMap(r => [r.A, r.B]), ...(S.aerodrome || []).flat()], rx0 = Math.min(...P.map(p => p[0])), rx1 = Math.max(...P.map(p => p[0])), ry0 = Math.min(...P.map(p => p[1])), ry1 = Math.max(...P.map(p => p[1]));
+  const ax = 6000 * Math.sin(69 * Math.PI / 180), ay = 6000 * Math.cos(69 * Math.PI / 180), w25 = homeOd === 25;
+  const TW = (w25 ? [[50.0531, 8.6947]] /* Neu-Isenburg: the town within 1.5 km of the 25 approaches (the dashboard's rule) */ : [[50.0136, 8.428], [50.0098, 8.4535], [49.9899, 8.4225]]).map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]); // Offenbach; Flörsheim, Raunheim, Rüsselsheim
+  const DEPS = Object.values(RW).filter(r => r.key === 'centre' || r.key === 'r18').map(r => { const f = flow(r, homeOd), L = r.key === 'r18' ? 1100 : 1500; return [f.start[0] + f.dir[0] * (r.len + L), f.start[1] + f.dir[1] * (r.len + L)]; }); // the take-off arrows
+  const allX = [rx0, rx1, ...TW.map(p => p[0]), ...(nar0() ? DEPS.map(p => p[0]) : [])], allY = [ry0, ry1, ...TW.map(p => p[1]), ...(nar0() ? DEPS.map(p => p[1]) : [])];
+  const B = nar0() ? (m => [m[0] - m[4] * 0.1, m[1] + m[4] * 0.1, m[2] - m[5] * 0.1, m[3] + m[5] * 0.1])((a => [...a, a[1] - a[0], a[3] - a[2]])([Math.min(...allX) - 1800, Math.max(...allX), Math.min(...allY), Math.max(...allY)])) // phones: runways, towns and take-offs plus 10 % (the 1.8 km leaves room for the town names)
+    : [Math.min(...allX) - 1800, Math.max(...allX) + 1200, Math.min(...allY) - 1200, Math.max(...allY) + 1200]; // the airport and the towns under the landing paths (ax, ay unused: the far approach may leave the frame)
+  const nar = app.clientWidth < 640;
+  const cx = view.card ? -6000 : (B[0] + B[1]) / 2, cy = view.card ? 0 : (B[2] + B[3]) / 2;
+  const W = view.card ? 27000 : B[1] - B[0], Hh = view.card ? 20000 : B[3] - B[2];
+  const w = app.clientWidth, h = app.clientHeight, fw = w - freeArea.left - freeArea.right, fh = h - freeArea.top - freeArea.bottom, tv = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const d = Math.max(Hh / (2 * tv * (fh / h)), W / (2 * tv * camera.aspect * (fw / w))), tilt = THREE.MathUtils.degToRad(nar ? 0.5 : 10); // phones: straight down // close to straight down: north up, nothing squeezed by perspective
+  HOMES[view.card ? 'card' : 'full'] = { pos: V(cx, cy - d * Math.sin(tilt), d * Math.cos(tilt)), target: V(cx, cy, 0) };
+  VIEW_AZ = 0;
+  if (!view.card) { // fit bbox(airport + towns) into the free rect (panel, timeline and header as insets), centred, 86 % on the binding side; phones: the runways only
+    const AF = (S.aerodrome || [[]])[0];
+    // the approaches end 2 km beyond the farthest town under them (at least 6 km): that end, where they have faded out, is part of the frame
+    const APPE = [];
+    for (const rw of Object.values(RW)) if (rw.key === 'nw' || rw.key === 'south') {
+      const f = flow(rw, homeOd), along = TW.map(t => { const dx = f.start[0] - t[0], dy = f.start[1] - t[1], a = dx * f.dir[0] + dy * f.dir[1], c = Math.abs(dx * f.dir[1] - dy * f.dir[0]); return a > 0 && c < 2500 ? a : 0; });
+      const L = Math.max(4000, Math.max(...along) + 1000); APPE.push([f.start[0] - f.dir[0] * L, f.start[1] - f.dir[1] * L]); // framed to the outermost town + 1 km; drawn on to the panel edge (below)
+    }
+    const C = FIT_PTS = [...Object.values(RW).flatMap(r => [r.A, r.B]), ...AF.filter((_, i) => i % 10 === 0), ...TW, ...(nar ? [] : [...TW.map(p => [p[0] - 500, p[1]]), ...DEPS])] /* desktop: runways, take-off arrows and the towns' markers (the approaches run on to the panel) */, /* desktop: the approach dashes out to the towns too */ /* the airport, the towns and (desktop) the take-off arrows */ P3 = C.map(p => V(p[0], p[1], 0)), cam = camera.clone(), vv = new THREE.Vector3();
+    const qx0 = (Math.min(...C.map(p => p[0])) + Math.max(...C.map(p => p[0]))) / 2, qy0 = (Math.min(...C.map(p => p[1])) + Math.max(...C.map(p => p[1]))) / 2;
+    const camAt = (tx, ty, D, az, tt) => { const u = [Math.sin(az), Math.cos(az)]; return [V(tx - u[0] * D * Math.sin(tt), ty - u[1] * D * Math.sin(tt), D * Math.cos(tt)), V(tx, ty, 0)]; };
+    const fcx = freeArea.left + fw / 2, fcy = freeArea.top + fh / 2, FILL = nar ? Math.min(0.97, 1 - 48 / Math.max(200, fw)) : 0.97; /* desktop: airport and the outermost town with a thin margin (the take-off arrows are cut 24 px above the timeline) */ /* phones: the town markers keep 24 px from the sides */ // a ~4 % margin on each side // 90 % of the binding side, centred in the free rect
+    let best = null;
+    for (const deg of nar ? [0] : [0, -6, 6, -12, 12]) for (const tdeg of nar ? [0.5] : [16, 20]) { // a small pitch; a small azimuth turn when it lets the airport-to-towns axis run more horizontally (fills the width better)
+      const az = deg * Math.PI / 180, tt = tdeg * Math.PI / 180, u = [Math.sin(az), Math.cos(az)], r = [Math.cos(az), -Math.sin(az)];
+      let tx = qx0, ty = qy0, D = 20000, fx = 0, fy = 0, cx = 0, cy = 0;
+      for (let it = 0; it < 14; it++) {
+        const [cp, ct] = camAt(tx, ty, D, az, tt); cam.position.copy(cp); cam.up.set(0, 1, 0); cam.lookAt(ct); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+        const sp = P3.map(q => { vv.copy(q).project(cam); return [(vv.x + 1) / 2 * w, (1 - vv.y) / 2 * h]; });
+        const sx0 = Math.min(...sp.map(q => q[0])), sx1 = Math.max(...sp.map(q => q[0])), sy0 = Math.min(...sp.map(q => q[1])), sy1 = Math.max(...sp.map(q => q[1]));
+        const push = BTN ? Math.max(0, ...sp.filter(q => q[0] > BTN[0]).map(q => BTN[1] - q[1])) : 0; // points under the button corner push the frame down (and shrink it to fit)
+        const rpj = Object.values(RW).flatMap(r => [r.A, r.B]).map(q => { vv.copy(V(q[0], q[1], 0)).project(cam); return [(vv.x + 1) / 2 * w, (1 - vv.y) / 2 * h]; });
+        const ax = (sx0 + sx1) / 2, ay = (sy0 + sy1) / 2; void rpj; /* runways, approaches and towns centred, even padding */ // desktop: the airport at 55 % across, 45 % down the free area
+        const AXF = nar ? 0.5 : 0.42, AYF = nar ? 0.5 : 0.48, /* the take-off arrows ~60 px above the timeline */ /* desktop: left of centre (toward the panel, as far as the frame allows) */ gx = freeArea.left + AXF * fw, gy = freeArea.top + AYF * fh;
+        fx = Math.max((ax - sx0) / (AXF * fw), (sx1 - ax) / ((1 - AXF) * fw)); fy = Math.max((ay - sy0) / (AYF * fh), (sy1 - ay) / ((1 - AYF) * fh)); cx = (ax - gx) / fw; cy = (ay - gy - push / 2) / fh; // everything stays in frame around that point
+        const FX = nar ? FILL : Math.min(FILL, 1 - 96 / fw), FY = nar ? FILL : Math.min(FILL, 1 - 104 / fh), sc = Math.max(fx / FX, (fy + push / fh) / FY) /* desktop: the take-off arrows keep ~48 px from the sides */, mpp = 2 * D * tv / h, ex = cx * fw * mpp, ey = cy * fh * mpp / Math.max(0.3, Math.cos(tt));
+        tx += ex * r[0] - ey * u[0]; ty += ex * r[1] - ey * u[1];
+        D *= Math.pow(sc, 0.8);
+      }
+      const cover = Math.min(fx, 1) * Math.min(fy, 1);
+      if (!best || cover > best.cover * 1.03) best = { tx, ty, D, az, deg, tt, cover, fx, fy, cx, cy };
+    }
+    
+    const [bp, bt] = camAt(best.tx, best.ty, best.D, best.az, best.tt);
+    HOMES.full = { pos: bp, target: bt }; VIEW_AZ = best.deg;
+    FIT_STAT = { w, h, fillX: +best.fx.toFixed(3), fillY: +best.fy.toFixed(3), offX: +best.cx.toFixed(3), offY: +best.cy.toFixed(3), tilt: Math.round(best.tt * 180 / Math.PI), free: [Math.round(freeArea.left), Math.round(freeArea.top), Math.round(fw), Math.round(fh)] };
+    { // the approaches are drawn on until 40 px before the panel / the edge, fading out over their outer third
+      cam.position.copy(bp); cam.up.set(0, 1, 0); cam.lookAt(bt); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+      const lim = [Math.max(0, freeArea.left - 32 + 8), freeArea.top, w, h - freeArea.bottom]; /* on to the panel's edge */ // to the panel's edge (faded in there), never poking out below it
+      for (const rw of Object.values(RW)) if (rw.key === 'nw' || rw.key === 'south') {
+        const f = flow(rw, homeOd); let L = 2000;
+        for (; L < 16000; L += 50) { vv.copy(V(f.start[0] - f.dir[0] * L, f.start[1] - f.dir[1] * L, 0)).project(cam); const x = (vv.x + 1) / 2 * w, y = (1 - vv.y) / 2 * h; if (x < lim[0] || y < lim[1] || x > lim[2] || y > lim[3]) break; }
+        APP_L[`${rw.key}/${homeOd}`] = L;
+      }
+      for (const k of Object.keys(GHOST_L)) delete GHOST_L[k];
+      if (!nar) for (const rw of Object.values(RW)) if (rw.key === 'nw' || rw.key === 'south') { // the other direction's approaches stop at the free view's edge and before the buttons
+        const o2 = homeOd === 25 ? 7 : 25, f = flow(rw, o2); let L = 1000;
+        for (; L < 16000; L += 100) { vv.copy(V(f.start[0] - f.dir[0] * L, f.start[1] - f.dir[1] * L, 0)).project(cam); const x = (vv.x + 1) / 2 * w, y = (1 - vv.y) / 2 * h; if (x < freeArea.left || x > w - 16 || y < freeArea.top - 24 || y > h - freeArea.bottom || (BTN && x > BTN[0] && y < BTN[1])) break; }
+        GHOST_L[`${rw.key}/${o2}`] = L;
+      }
+      for (const k of Object.keys(DEP_L)) delete DEP_L[k];
+      if (!nar) for (const rw of Object.values(RW)) if (rw.key === 'centre' || rw.key === 'r18') { // take-off arrows end 24 px above the timeline card and inside the window
+        const f = flow(rw, homeOd), e = [f.start[0] + f.dir[0] * rw.len, f.start[1] + f.dir[1] * rw.len]; let L = 0;
+        for (; L < 1500; L += 25) { vv.copy(V(e[0] + f.dir[0] * (L + 25), e[1] + f.dir[1] * (L + 25), 0)).project(cam); const x = (vv.x + 1) / 2 * w, y = (1 - vv.y) / 2 * h; if (y > h - freeArea.bottom || x > w - 24 || y < freeArea.top - 32) break; }
+        DEP_L[`${rw.key}/${homeOd}`] = L;
+      }
+      try { pathKey = ''; if (state.cur) drawPaths(state.cur.od, state.cur.r18); } catch {} // before the HUD exists: drawn by the first setHour
+    }
+  }
+  { const sv = document.querySelector('.sbw svg'); if (sv && LAST_WD !== null) sv.style.setProperty('--a', `${LAST_WD + 180 - VIEW_AZ}deg`); } // the summary's wind arrow turns with the view
+  scene.fog.density = (theme === 'light' ? 0.22 : 0.35) / d; // fog scales with the view, so the towns at the edge stay readable
+  farHidden = true; for (const o of FAR) o.visible = false;
+  if (fitted !== view.card + 1 || (!camTouched && camMode !== 'follow' && !view.card)) { fitted = view.card + 1; camera.position.copy(home().pos); controls.target.copy(home().target); } // re-framed on resize until the user moves the camera
+}
+const RO = new ResizeObserver(() => resize());
+setTimeout(() => { if (!camTouched) resize(); }, 700); // once the panels and the timeline have their final size
+RO.observe(app);
+requestAnimationFrame(() => { for (const q of ['.rail', '.dock']) { const e = document.querySelector(q); if (e) RO.observe(e); } });
 
 // ------------------------------------------------------------------ helpers
 const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
 let order = 0;
+const FAR = []; let farHidden = false; // surroundings mapped only near the airport: hidden when zoomed out, so no cut-out blob
 function add(obj, ro) {
   obj.renderOrder = ro ?? order++;
   obj.frustumCulled = false;
@@ -130,6 +262,7 @@ function geom(pos, col, colorSize = 3) {
 }
 // material props per theme: the dark values are whatever the object was built with, light values are given here
 const themed = [], darkOnly = [], lightOnly = [];
+
 function th(obj, light) {
   const m = obj.material, dark = {};
   for (const k in light) dark[k] = k === 'color' ? m.color.clone() : m[k];
@@ -143,6 +276,7 @@ function applyThemed() {
   }
   for (const o of darkOnly) o.visible = theme === 'dark';
   for (const o of lightOnly) o.visible = theme === 'light';
+  if (farHidden) for (const o of FAR) o.visible = false;
 }
 function fill(rings, h, color, opacity) {
   const pos = [];
@@ -186,30 +320,51 @@ add(ground, -10);
 const grid = new THREE.GridHelper(24000, 96, '#1f1f1d', '#191918');
 grid.position.set(-1500, 0, 0);
 grid.material.transparent = true;
-grid.material.opacity = 0.45;
+grid.material.opacity = 0.22; // the grid recedes behind the airport
 grid.material.depthWrite = false;
 add(th(grid, { vertexColors: false, color: '#e3e2de', opacity: 0.9 }));
-add(th(fill(S.forest, 0, '#121211', 0.9), { color: '#e6e6e2', opacity: 1 }));
-add(th(fill(S.water, 0, '#101318', 0.9), { color: '#dfe3e8', opacity: 1 }));
-add(th(fill(S.aerodrome, 0, '#151514', 0.85), { color: '#eae9e5', opacity: 1 }));
-add(th(lines(S.aerodrome, 0, '#4a4945', 0.35, true), { color: '#cfcdc8', opacity: 0.8, blending: NB }));
-add(th(fill(S.aprons, 0, '#1b1b1a', 0.95), { color: '#e0dfdb', opacity: 1 }));
-add(th(lines(S.aprons, 0, '#45443f', 0.3, true), { color: '#cbc9c4', opacity: 0.7, blending: NB }));
-add(th(ribbon(S.taxiways, 0, '#1f1f1d', 0.95), { color: '#d8d6d1', opacity: 1 }));
-add(th(lines(S.taxiways.map(t => t.p), 0, '#5c5b55', 0.35), { color: '#c4c2bc', opacity: 0.6, blending: NB }));
+const gridVis = () => { grid.visible = app.clientWidth >= 640 && theme !== 'light'; }; // phones and the light theme: no grid banding
+new ResizeObserver(gridVis).observe(app);
+FAR.push(add(th(fill(S.forest, 0, '#121211', 0.9), { color: '#d6dacd', opacity: 1 })));
+FAR.push(add(th(fill(S.water, 0, '#101318', 0.9), { color: '#bccddd', opacity: 1 })));
+// the airport's own surfaces (OSM) stay visible at every zoom: they sit inside the mapped area, so no cut-out edge
+add(th(fill(S.aerodrome, 0, '#1d1d1b', 0.9), { color: '#e3dfd6', opacity: 1 })); // light: one ground tint for the airport
+add(th(lines(S.aerodrome, 0, '#5a5954', 0.5, true), { color: '#b9b8b2', opacity: 1, blending: NB }));
+add(th(fill(S.aprons, 0, '#262624', 0.95), { color: '#c6bfb2', opacity: 1 })); // light: aprons a step darker than before
+add(th(lines(S.aprons, 0, '#45443f', 0.3, true), { color: '#c9c8c2', opacity: 0.35, blending: NB }));
+add(th(ribbon(S.taxiways, 0, '#2c2c2a', 0.95), { color: '#b6b2a8', opacity: 1 }));
+FAR.push(add(th(lines(S.taxiways.map(t => t.p), 0, '#5c5b55', 0.35), { color: '#d8d6d0', opacity: 0.35, blending: NB })));
 for (const c of [0, 1, 2]) {
   const col = ['#6d6c66', '#4a4945', '#33322f'][c];
-  add(th(lines(S.roads.filter(r => r.c === c).map(r => r.p), 0, col, [0.65, 0.5, 0.45][c]),
-    { color: ['#c6c4bf', '#d1cfca', '#dddbd6'][c], opacity: 1, blending: NB }));
+  FAR.push(add(th(lines(S.roads.filter(r => r.c === c).map(r => r.p), 0, col, [0.65, 0.5, 0.45][c]),
+    { color: ['#aeaca6', '#bcbab4', '#cac8c2'][c], opacity: 1, blending: NB })));
 }
-add(th(lines(S.rail, 0.5, '#8a8984', 0.5), { color: '#a3a19b', opacity: 0.85, blending: NB }));
+{ const MAIN = [[50.108, 8.78], [50.104, 8.74], [50.106, 8.69], [50.103, 8.65], [50.1, 8.58], [50.092, 8.545], [50.063, 8.53], [50.04, 8.5], [50.012, 8.47], [50.003, 8.44], [50.008, 8.4], [50.007, 8.33], [50.003, 8.275]].map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]); // the Main, the 2D map's polyline
+  // fading out beyond ~7 km of the airport, so it reads as context, not as a third flight path
+  const SM = new THREE.CatmullRomCurve3(MAIN.map(p => new THREE.Vector3(p[0], p[1], 0)), false, 'centripetal').getSpacedPoints(180).map(v => [v.x, v.y]); // a smooth river, not a polyline
+  for (let k = 0; k < SM.length - 1; k++) { const p0 = SM[k], p1 = SM[k + 1], t = (k + 0.5) / (SM.length - 1), d = Math.hypot((p0[0] + p1[0]) / 2 + 1500, (p0[1] + p1[1]) / 2);
+    const f = Math.max(0, Math.min(1, (11000 - d) / 4000, 1 - (t - 0.6) / 0.4)); // faded by distance from the airport and over the last 40 % of its length
+    if (f > 0.02) add(th(ribbon([{ p: [p0, p1], w: 60 }], 0.3, '#3a4f5e', 0.5 * f), { color: '#9fb8cf', opacity: 0.95 * f })); } }
+FAR.push(add(th(lines(S.rail, 0.5, '#8a8984', 0.5), { color: '#c8c6c0', opacity: 0.7, blending: NB })));
 
+{ // light theme: a stage, a disc about 3 % darker than the page under the airport and the towns, fading out
+  const cv = document.createElement('canvas'); cv.width = cv.height = 256; const cx = cv.getContext('2d'), gr = cx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, 'rgba(0,0,0,0.045)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.03)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); cx.fillStyle = gr; cx.fillRect(0, 0, 256, 256);
+  const disc = new THREE.Mesh(new THREE.PlaneGeometry(26000, 18000), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+  disc.rotation.x = -Math.PI / 2; disc.position.copy(V(-2600, -800, -0.5)); add(disc, -9); lightOnly.push(disc);
+}
 // ------------------------------------------------------------------ buildings (x-ray volumes)
+const AERO_BB = (() => { const r = (S.aerodrome || [[]])[0]; if (!r.length) return null; const xs = r.map(p => p[0]), ys = r.map(p => p[1]); return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]; })();
+const FENCE = (S.aerodrome || [[]])[0];
+const inFence = p => { let c = false; for (let i = 0, j = FENCE.length - 1; i < FENCE.length; j = i++) { const [xi, yi] = FENCE[i], [xj, yj] = FENCE[j]; if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) c = !c; } return c; }; // the airport fence (OSM)
+const onAirport = p => !!AERO_BB && p[0] > AERO_BB[0] && p[0] < AERO_BB[1] && p[1] > AERO_BB[2] && p[1] < AERO_BB[3];
 function buildings() {
-  const pos = [], col = [], epos = [], ecol = [];
+  const pos = [], col = [], epos = [], ecol = [], rpos = [], rposOut = [];
   const base = [0.6, 0.6, 0.58]; // neutral x-ray: white glow, colour is kept for meaning
   const K = { t: 1.2, w: 1.6, h: 0.9, a: 0.8, o: 0.24 };
+  const areaOf = r => Math.abs(r.reduce((a, p, i) => { const q = r[(i + 1) % r.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0) / 2);
   for (const b of S.buildings) {
+    if (areaOf(b.r) < (onAirport(b.r[0]) ? 400 : 2500)) continue; // sheds and houses read as specks; off the airport only the larger blocks stay
     const r = b.r, n = r.length, lo = b.m || 0, hi = Math.max(b.h, lo + 1), k = K[b.k] ?? 0.5;
     const bot = base.map(v => v * k * 0.03), top = base.map(v => v * k * 0.15), roof = base.map(v => v * k * 0.07);
     for (let i = 0; i < n; i++) {
@@ -221,7 +376,7 @@ function buildings() {
       }
     }
     const pts = r.map(p => new THREE.Vector2(p[0], p[1]));
-    for (const t of THREE.ShapeUtils.triangulateShape(pts, [])) for (const i of t) { pos.push(pts[i].x, hi, -pts[i].y); col.push(...roof); }
+    for (const t of THREE.ShapeUtils.triangulateShape(pts, [])) for (const i of t) { pos.push(pts[i].x, hi, -pts[i].y); col.push(...roof); (inFence(r[0]) ? rpos : rposOut).push(pts[i].x, 0.5, -pts[i].y); }
     // edges: roof outline, ground outline (airport only), verticals at corners
     const et = base.map(v => v * k * 0.6), eb = base.map(v => v * k * 0.15);
     for (let i = 0; i < n; i++) {
@@ -236,10 +391,15 @@ function buildings() {
   }
   const g = geom(pos, col);
   g.computeVertexNormals();
-  darkOnly.push(add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, ...ADD })), 50));
-  lightOnly.push(add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: '#fbfbfa', side: THREE.DoubleSide })), 50));
-  add(th(new THREE.LineSegments(geom(epos, ecol), new THREE.LineBasicMaterial({ vertexColors: true, ...ADD })),
-    { vertexColors: false, color: '#9a9893', opacity: 0.35, blending: NB }), 51);
+  // footprints only, as one soft flat tone in both themes (no x-ray volumes, no outlines: at this scale those read as speckle)
+  const flat = add(new THREE.Mesh(geom(rpos), new THREE.MeshBasicMaterial({ color: '#1b1c1e', transparent: true, opacity: 0.1, depthWrite: false, depthTest: false, side: THREE.DoubleSide })), 13);
+  th(flat, { color: '#b9b5ad', opacity: 1 }); // light: solid warm-grey footprints, so the town and terminals read at a glance
+  { const opos = []; for (const b of S.buildings) { if (areaOf(b.r) < (onAirport(b.r[0]) ? 400 : 2500)) continue; if (!inFence(b.r[0])) continue; const r = b.r; for (let i = 0; i < r.length; i++) { const a = r[i], c = r[(i + 1) % r.length]; opos.push(a[0], 0.6, -a[1], c[0], 0.6, -c[1]); } }
+    const ol = add(new THREE.LineSegments(geom(opos), new THREE.LineBasicMaterial({ color: '#635e55', transparent: true, opacity: 0.95, depthTest: false })), 14); lightOnly.push(ol); } flat.material.color.set('#ffffff'); flat.material.opacity = 0.06; // dark: a faint white; light: 10 % ink
+  themed[themed.length - 1].dark = { color: new THREE.Color('#ffffff'), opacity: 0.14 }; // dark: buildings clearly above the ground
+  { const out = add(new THREE.Mesh(geom(rposOut), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.018, depthWrite: false, depthTest: false, side: THREE.DoubleSide })), 13);
+    th(out, { color: '#b9b5ad', opacity: 0.3 }); } // outside the fence: 30 % of the airport's tone
+  void g; void epos; void ecol;
 }
 buildings();
 
@@ -268,14 +428,13 @@ void main(){
   float cross = step(abs(abs(vR.y) - (1. - abs(fract(x / uLen * 6.) * 2. - 1.)) ), 0.07);
   vec3 col;
   if (uLight > 0.5) { // grey asphalt, white markings, flow painted in the direction colour
-    col = mix(vec3(0.11, 0.11, 0.105), vec3(0.95), clamp(marks * 1.4, 0., 1.));
-    float pulse = 0.5 + 0.5 * sin(uTime * 2.4);
-    col = mix(col, uCol, clamp(uActive * (0.72 + 0.18 * pulse + edge * 0.9 + chev * 0.95), 0., 1.)); // highlight: whole strip in the flow colour
+    col = mix(vec3(0.604, 0.592, 0.561), vec3(0.97), clamp(marks * 1.4, 0., 1.)); // light: mid-grey tarmac (#9a978f), the lines sit on something solid
+    col = mix(col, uCol, clamp(uActive * (edge + chev + step(ay, 0.12)), 0., 1.)); // the direction: edges, centreline and chevrons in its colour // solid: the runway in use is the loudest thing on the map // highlight: whole strip in the flow colour
     vec3 closed = mix(vec3(0.82, 0.62, 0.62), vec3(0.75, 0.04, 0.05), clamp(0.6 * hatch + edge + cross, 0., 1.));
     col = mix(col, closed, uClosed);
   } else {             // x-ray: dark strip, glowing edges and chevrons
     col = vec3(0.045, 0.045, 0.043) + vec3(0.55, 0.55, 0.53) * marks;
-    col += uCol * uActive * (0.28 + 0.1 * sin(uTime * 2.4) + edge * 0.7 + chev * 0.9);
+    col += uCol * uActive * (0.05 + edge * 0.8 + chev * 0.9 + step(ay, 0.12) * 0.7); // tarmac stays dark; the direction glows along edges, centreline and chevrons
     col = mix(col, vec3(0.05, 0.03, 0.03) + vec3(0.9, 0.16, 0.16) * (0.18 * hatch + 0.9 * edge + 0.7 * cross), uClosed);
   }
   gl_FragColor = vec4(col, 1.);
@@ -286,7 +445,7 @@ const RW = {};
 for (const [i, r] of S.runways.entries()) {
   const A = r.p[0], B = r.p[r.p.length - 1];
   const len = Math.hypot(B[0] - A[0], B[1] - A[1]);
-  const RW_X = 1.7; // drawn wider than real so the strips read even in the small dashboard card
+  const RW_X = 1.35; // a little over true width, so the strips have presence at airport scale
   const ux = (B[0] - A[0]) / len, uy = (B[1] - A[1]) / len, nx = -uy * r.w * RW_X / 2, ny = ux * r.w * RW_X / 2;
   const g = new THREE.BufferGeometry();
   const c = [[A[0] + nx, A[1] + ny, 0, 1], [B[0] + nx, B[1] + ny, len, 1], [B[0] - nx, B[1] - ny, len, -1], [A[0] - nx, A[1] - ny, 0, -1]];
@@ -303,11 +462,6 @@ for (const [i, r] of S.runways.entries()) {
   const key = r.ref.startsWith('07L') ? 'nw' : r.ref.startsWith('07C') ? 'centre' : r.ref.startsWith('07R') ? 'south' : 'r18';
   const [d07, d25] = r.ref.includes('/') ? r.ref.split('/') : ['18', '36'];
   RW[key] = { i, key, A, B, len, ux, uy, mat, ref: r.ref, w: r.w, d07, d25 };
-}
-{ // the dashboard card is about runway 18 West: orbit around its middle
-  const r = RW.r18, mx = (r.A[0] + r.B[0]) / 2, my = (r.A[1] + r.B[1]) / 2;
-  HOMES.card = { pos: V(mx + 800, my - 5600, 3300), target: V(mx, my, 0) };
-  if (view.card) { camera.position.copy(HOMES.card.pos); controls.target.copy(HOMES.card.target); }
 }
 const RW_NAMES = { nw: 'Northwest', centre: 'Centre', south: 'South', r18: '18 West' };
 
@@ -421,10 +575,10 @@ const PLANE_EDGES = new THREE.EdgesGeometry(PLANE, 25);
   }
   if (meshes.length) {
     const g = mergeGeometries(meshes);
-    darkOnly.push(add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: '#8a8984', opacity: 0.1, side: THREE.DoubleSide, ...ADD })), 55));
-    lightOnly.push(add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: '#ffffff', side: THREE.DoubleSide })), 55));
-    add(th(new THREE.LineSegments(mergeGeometries(edges), new THREE.LineBasicMaterial({ color: '#c3c2b7', opacity: 0.3, ...ADD })),
-      { color: '#9a9893', opacity: 0.5, blending: NB }), 56);
+    FAR.push(darkOnly.push(add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: '#8a8984', opacity: 0.1, side: THREE.DoubleSide, ...ADD })), 55)) && darkOnly[darkOnly.length - 1]);
+    FAR.push(lightOnly[lightOnly.push(add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: '#ffffff', side: THREE.DoubleSide })), 55)) - 1]);
+    FAR.push(add(th(new THREE.LineSegments(mergeGeometries(edges), new THREE.LineBasicMaterial({ color: '#c3c2b7', opacity: 0.3, ...ADD })),
+      { color: '#cfcdc7', opacity: 0.3, blending: NB }), 56));
   }
 }
 
@@ -509,8 +663,8 @@ class Flight { // a SIMULATED movement (future hours): expected traffic on the f
     this.obj.position.copy(V(p.x, p.y, p.h + 2));
     this.obj.rotation.set(0, p.hd, p.pitch, 'YXZ');
     this.obj.scale.setScalar(view.card ? 4.5 : 2.4); // the card is small: bigger aircraft so they read
-    this.mat.opacity = (this.light ? 1 : view.card ? 0.35 : 0.3) * al;
-    this.emat.opacity = al;
+    this.mat.opacity = 0.08 * al; // simulated: an outline only, so it never reads as a real aircraft
+    this.emat.opacity = 0.7 * al;
     this.cur = { ...p, al, t };
     const tp = this.tg.attributes.position.array, tc = this.tg.attributes.color.array;
     const lp = this.lg.attributes.position.array, lc = this.lg.attributes.color.array;
@@ -599,7 +753,7 @@ function label(html, x, y, h, cls) {
   el.className = 'lbl ' + (cls || '');
   el.innerHTML = html;
   labelLayer.appendChild(el);
-  const l = { el, p: V(x, y, h) };
+  const l = { el, p: V(x, y, h), cls };
   labels.push(l);
   return l;
 }
@@ -607,32 +761,187 @@ for (const [name, x, y] of S.places || []) label(name, x, y, 60, 'place');
 // orientation: compass letters at the scene edge, landmarks, WEST/EAST along the 07/25 axis, current flow arrow
 const ARROW_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>';
 const MID = [-716, 337], AX = [Math.sin(69 * Math.PI / 180), Math.cos(69 * Math.PI / 180)]; // runway system centre, 070° axis
-for (const [t, x, y] of [['N', -716, 7300], ['E', 6300, 337], ['S', -716, -6600], ['W', -7700, 337]]) label(t, x, y, 0, 'cmp');
 for (const [t, x, y] of [['Frankfurt city ↗', 7980, 8640], ['Taunus hills', -8130, 16000], ['Mainz · Wiesbaden', -14500, -1500], ['Darmstadt', 5700, -15000]]) label(t, x, y, 0, 'landmark');
 function axisLabel(text, sign, dist) {
   const l = label(sign > 0 ? `${text}${ARROW_SVG}` : `${ARROW_SVG}${text}`, MID[0] + AX[0] * dist * sign, MID[1] + AX[1] * dist * sign, 0, 'axis');
   l.dir = V(MID[0] + AX[0] * (dist + 600) * sign, MID[1] + AX[1] * (dist + 600) * sign, 0);
   return l;
 }
-axisLabel('EAST', 1, 3900);
-axisLabel('WEST', -1, 4300);
-const flowLabel = label('', MID[0], MID[1], 0, 'flow');
+// towns under the paths (WGS84 -> scene metres around the aerodrome reference point 50.0333 N, 8.5706 E)
+for (const [name, lat, lon] of [['Flörsheim', 50.0136, 8.428], ['Raunheim', 50.0098, 8.4535], ['Offenbach', 50.0956, 8.7761], ['Mainz', 49.9929, 8.2473], ['Rüsselsheim', 49.9899, 8.4225],
+  ['Kelsterbach', 50.0613, 8.53], ['Frankfurt', 50.1109, 8.6821], ['Neu-Isenburg', 50.0531, 8.6947], ['Groß-Gerau', 49.9214, 8.485]])
+  { const l = label(`<i></i><span>${name}</span>`, (lon - 8.5706) * 71503, (lat - 50.0333) * 111320, 0, 'town'); l.name = name; }
+// wind over the airport: an arrow pointing the way it blows, with speed and direction (the reason the direction exists)
+const windInd = label('', 900, 4300, 0, 'windind');
 const rwLabels = {};
 for (const rw of Object.values(RW)) {
   rwLabels[rw.key] = [rw.A, rw.B].map((p, k) => {
     const s = k === 0 ? -1 : 1;
-    return label('', p[0] + rw.ux * s * 300, p[1] + rw.uy * s * 300, 10, 'rwy');
+    const sg = rw.key === 'south' ? -1 : 1; // north of 07L and 07C, south of 07R: the two inner runways get opposite sides
+    const side = rw.key === 'r18' ? [1, 0] : [-rw.uy * Math.sign(rw.ux || 1) * sg, rw.ux * Math.sign(rw.ux || 1) * sg];
+    if (rw.key === 'r18') { const so = rw.A[1] > rw.B[1] ? rw.A : rw.B, l = label('', so[0] + 260, so[1] + 200, 10, 'rwy'); l.rw = rw; l.end = V(so[0], so[1], 10); l.other = V((rw.A[1] > rw.B[1] ? rw.B : rw.A)[0], (rw.A[1] > rw.B[1] ? rw.B : rw.A)[1], 10); return l; } // at its south threshold
+    const l = label('', p[0] - rw.ux * s * 260 + side[0] * 190, p[1] - rw.uy * s * 260 + side[1] * 190, 10, 'rwy');
+    const q = k === 0 ? rw.B : rw.A; l.rw = rw; l.end = V(p[0], p[1], 10); l.other = V(q[0], q[1], 10); // this end and the other one
+    return l;
+  });
+}
+// approach and departure paths: dashed = landings coming in, solid = take-offs going out, arrows the way they fly
+const pathGroup = add(new THREE.Group(), 46), pathArrows = [], pathTags = [];
+for (let i = 0; i < 10; i++) pathArrows.push(label(ARROW_SVG, 0, 0, 0, 'parrow'));
+for (let i = 0; i < 2; i++) pathTags.push(label('', 0, 0, 0, 'ptag'));
+let pathKey = '', PATHS = [], PATH_PTS = [];
+const nearSeg = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
+function pathBox(od) { // bbox of the landing / take-off paths of od, the runways and the towns under the approaches
+  const segs = pathSegs(od, true).filter(g => g.kind !== 'ghost'), pts = segs.flatMap(g => [g.a, g.b]);
+  for (const rw of Object.values(RW)) pts.push(rw.A, rw.B);
+  for (const l of labels) if (l.cls === 'town') { const p = [l.p.x, -l.p.z]; if (segs.some(g => g.kind === 'arr' && nearSeg(p, g.a, g.b) < 1500)) pts.push(p); }
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+}
+function pathSegs(od, r18) {
+  const segs = [];
+  for (const rw of Object.values(RW)) {
+    if (rw.key === 'r18' && !r18) continue;
+    const f = flow(rw, od), s = f.start, d = f.dir, e = [s[0] + d[0] * rw.len, s[1] + d[1] * rw.len];
+    if (rw.key === 'nw' || rw.key === 'south') {
+      const AL = appLen(rw, od); segs.push({ a: [s[0] - d[0] * AL, s[1] - d[1] * AL], b: s, kind: 'arr', key: rw.key, des: f.startIsA === (rw.A[0] < rw.B[0]) ? rw.d07 : rw.d25 }); // final approach, 16 km
+      const g = flow(rw, od === 25 ? 7 : 25), gs = g.start; // the other direction, faint: where landings would come from after a switch
+      if (GHOST) { const GL = GHOST_L[`${rw.key}/${od === 25 ? 7 : 25}`] ?? 16000; segs.push({ a: [gs[0] - g.dir[0] * GL, gs[1] - g.dir[1] * GL], b: gs, kind: 'ghost' }); } // to the edge of the free view, clear of the buttons (fitHome)
+    }
+    else { const DL = Math.min(rw.key === 'r18' ? 1100 : 1500, DEP_L[`${rw.key}/${od}`] ?? 1e9); segs.push({ a: e, b: [e[0] + d[0] * DL, e[1] + d[1] * DL], kind: 'dep', r18: rw.key === 'r18' }); } /* shortened so the arrow ends >= 24 px above the timeline (fitHome) */ // climb-out straight ahead
+  }
+  return segs;
+}
+function drawPaths(od, r18) {
+  const DIM = NIGHT ? 0.25 : 1, key = `${od}/${r18}/${theme}/${GHOST}/${NIGHT}`; // the night ban: the paths at 25 %
+  if (key === pathKey) return;
+  pathKey = key; PATHS = [];
+  for (const c of pathGroup.children) { c.geometry.dispose(); c.material.dispose(); }
+  pathGroup.clear();
+  const col = od === 25 ? HEX.westLine : HEX.eastLine, segs = pathSegs(od, r18); lastSegs = segs; // paths in the line tint (lighter in dark mode)
+  PATHS = segs.filter(g => g.kind !== 'ghost').map(g => [g.a, g.b]);
+  { // towns within 2 km of an active approach line are the ones being flown over now
+    const near = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
+    for (const l of labels) if (l.cls === 'town') { const p = [l.p.x, -l.p.z]; l.el.classList.toggle('under', segs.some(g => { if (g.kind !== 'arr') return false; const R = od === 25 ? 14000 : 9000, L = Math.hypot(g.a[0] - g.b[0], g.a[1] - g.b[1]) || 1, bx = (g.a[0] - g.b[0]) / L, by = (g.a[1] - g.b[1]) / L, dx = p[0] - g.b[0], dy = p[1] - g.b[1], f = dx * bx + dy * by, c = Math.abs(dx * by - dy * bx); return f > 0 && f < R && c < 1500; })); } // the dashboard's town rule exactly: ahead of the threshold, under 9 km (07) / 14 km (25) out, within 1.5 km of the path // the dashboard's rule: within 1.5 km of the approach, 9 km out for 07, 14 km for 25
+    TOWN_KEY = labels.filter(l => l.cls === 'town' && l.el.classList.contains('under')).sort((a, b) => a.p.x - b.p.x); // numbered west to east, as on the dashboard
+    TOWN_KEY.forEach((l, k) => { l.el.querySelector('i').textContent = k + 1; l.el.classList.add('num'); l.el.title = l.name; });
+    for (const l of labels) if (l.cls === 'town' && !TOWN_KEY.includes(l)) { l.el.querySelector('i').textContent = ''; l.el.classList.remove('num'); }
+    try { renderMapKey(); } catch {}
+  }
+  for (const rw of Object.values(RW)) { // the runways themselves, bold enough to read at this scale
+    const closed = rw.key === 'r18' && !r18, land = rw.key === 'nw' || rw.key === 'south';
+    // the runway itself is the shader strip at true width; around it a soft glow in the direction colour
+    if (!closed) {
+      const halo = ribbon([{ p: [rw.A, rw.B], w: theme === 'light' ? 300 : 180 }], 2.5, col, (theme === 'light' ? 0.2 : 0.1) * DIM); halo.renderOrder = 46; pathGroup.add(halo);
+      const cl = ribbon([{ p: [rw.A, rw.B], w: view.card ? 30 : (theme === 'light' ? 64 : 46) }], 3.5, col, NIGHT ? 0.35 : 1); cl.renderOrder = 48; pathGroup.add(cl); // the centreline in the direction colour
+    }
+  }
+  for (const g of segs) {
+    const L = Math.hypot(g.b[0] - g.a[0], g.b[1] - g.a[1]), u = [(g.b[0] - g.a[0]) / L, (g.b[1] - g.a[1]) / L], polys = [];
+    if (g.kind !== 'dep') for (let q = 0; q < L; q += 560) polys.push({ p: [[g.a[0] + u[0] * q, g.a[1] + u[1] * q], [g.a[0] + u[0] * Math.min(L, q + 320), g.a[1] + u[1] * Math.min(L, q + 520)]], w: 65 }); // approach dashes: thin and half transparent
+    else polys.push({ p: [g.a, g.b], w: 90 });
+    const ink = theme === 'light' ? '#3a3a38' : '#d8d7d2';
+    if (g.kind === 'arr') { // fading in from the far end: dashes in bands of rising opacity
+      const B = 8; for (let k = 0; k < B; k++) { const part = polys.filter((_, i) => Math.min(B - 1, Math.floor(i / polys.length * B / 0.2)) === k); /* faded out over the outer 20 % */ if (!part.length) continue;
+        const m = ribbon(part.map(q => ({ ...q, w: 48 })), 2, col, 0.9 * DIM * Math.min(1, (k + 0.3) / (B - 1))); m.renderOrder = 46; pathGroup.add(m); }
+      continue;
+    }
+    const mesh = g.kind === 'arr' ? ribbon(polys.map(q => ({ ...q, w: 48 })), 2, col, 0.9) : g.kind === 'ghost' ? ribbon(polys.map(q => ({ ...q, w: 80 })), 2, od === 25 ? HEX.eastLine : HEX.westLine, 0.6 * DIM) /* exactly the key's colour */
+      : ribbon(polys.map(q => ({ ...q, w: 40 })), 2, ink, 0.9 * DIM); mesh.renderOrder = 46; pathGroup.add(mesh); // a thin take-off line, as on the 2D map
+  }
+  let n = 0;
+  for (const g of segs.filter(g => g.kind !== 'ghost')) for (const f of [g.kind === 'arr' ? 0.95 : 1]) { // landings: on the outer part, clear of the towns near the field; take-offs: the arrowhead at the end
+    const l = pathArrows[n++]; if (!l) break;
+    const p = [g.a[0] + (g.b[0] - g.a[0]) * f, g.a[1] + (g.b[1] - g.a[1]) * f];
+    l.p.copy(V(p[0], p[1], 0)); l.dir = V(p[0] + (g.b[0] - g.a[0]) * 0.05, p[1] + (g.b[1] - g.a[1]) * 0.05, 0); l.off = false;
+    l.el.style.color = g.kind === 'arr' ? col : 'var(--label)'; l.el.style.opacity = NIGHT ? '0.3' : ''; // the night ban dims the arrows too (every breakpoint)
+  }
+  for (; n < pathArrows.length; n++) pathArrows[n].off = true;
+  const tags = segs.filter(g => g.kind === 'arr').map(g => [{ a: [g.a[0] + (g.b[0] - g.a[0]) * 0.12, g.a[1] + (g.b[1] - g.a[1]) * 0.12] , key: g.key }, 'a', `${g.des} landings`, g.key === 'nw' ? 1100 : -1100]) // north of the northern path, south of the southern
+    .concat(segs.filter(g => g.kind === 'dep').map(g => [g.r18 ? { b: [g.b[0] + 2400, g.b[1] + 600] } : g, 'b', g.r18 ? '18 take-offs' : `${od === 25 ? '25C' : '07C'} take-offs`, g.r18 ? 1 : 1200]));
+  const gh = segs.find(g => g.kind === 'ghost');
+  while (pathTags.length < tags.length) pathTags.push(label('', 0, 0, 0, 'ptag'));
+  pathTags.forEach((l, k) => {
+    const tg = tags[k]; if (!tg) { l.off = true; return; }
+    const [g, end, txt, dy] = tg; l.off = false; l.el.textContent = txt; l.p.copy(V(g[end][0], g[end][1] + (dy || 700), 0));
   });
 }
 const _v = new THREE.Vector3();
 const _v2 = new THREE.Vector3();
+let PANEL_RECTS = [];
+function panelRects() {
+  const ar = app.getBoundingClientRect();
+  PANEL_RECTS = [...document.querySelectorAll('.hud .panel:not([hidden]),.hud .hero,.hud .attrib')].map(el => {
+    const b = el.getBoundingClientRect(); return b.width ? [b.left - ar.left, b.top - ar.top, b.right - ar.left, b.bottom - ar.top] : null; }).filter(Boolean);
+}
+let TOWN_RECTS = [];
 function updateLabels() {
+  TOWN_RECTS = []; const RWY_RECTS = []; updateLabels.sp = null;
+  { const w = app.clientWidth, h = app.clientHeight; // every town dot first, so no name lands on another town's dot
+    for (const l of labels) if (l.cls === 'town') { _v.copy(l.p).project(camera); const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h; TOWN_RECTS.push([x - 10, y - 10, x + 10, y + 10]); } }
   const w = app.clientWidth, h = app.clientHeight;
   for (const l of labels) {
+    if (l.off) { l.el.style.display = 'none'; continue; }
     _v.copy(l.p).project(camera);
     if (_v.z > 1 || Math.abs(_v.x) > 1.1 || Math.abs(_v.y) > 1.1) { l.el.style.display = 'none'; continue; }
+    let x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h;
+    if (l.cls !== 'rwy' && l.cls !== 'windind') { // nothing half off the canvas or under the panels, the timeline or the controls
+      const lw = l.lw || (l.lw = l.el.offsetWidth || 80), half = l.cls === 'town' ? 0 : lw / 2, nd = l.cls === 'town' && l.el.classList.contains('num'), x0 = nd ? x - 12 : l.cls === 'town' ? x - 8 : x - half, x1 = nd ? x + 12 : l.cls === 'town' ? x + 8 + lw : x + half; /* a numbered disc is 22 px: its name is in the key */
+      if (x0 < 4 || x1 > w - 4 || y < 8 || y > h - 8 || PANEL_RECTS.some(r => x1 > r[0] - 8 && x0 < r[2] + 8 && y > r[1] - 12 && y < r[3] + 12)) { l.el.style.display = 'none'; continue; }
+    }
+    if (l.cls === 'town' && l.el.classList.contains('num')) { l.el.style.display = ''; l.el.style.transform = `translate(${x}px, ${y}px)`; continue; } // numbered: the name is in the key
+    if (l.cls === 'town') { // the dot sits on the town; its name goes where no flight path runs
+      const tw = l.tw || (l.tw = l.el.querySelector('span').offsetWidth || 60), hitR = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+      const own = [x - 10, y - 10, x + 10, y + 10], others = TOWN_RECTS.filter(q => !(q[0] === own[0] && q[1] === own[1]));
+      // the 2D map's rule: 8 anchors around the marker (6 px, then 10 px from its ring), tested against the projected path segments
+      const SP = updateLabels.sp || (updateLabels.sp = PATHS.map(([a, b]) => { const q = v => { _v2.copy(V(v[0], v[1], 0)).project(camera); return [(_v2.x + 1) / 2 * w, (1 - _v2.y) / 2 * h]; }; return [q(a), q(b)]; }));
+      const segD = (a, b, r) => { const cx = Math.max(r[0], Math.min(r[2], (a[0] + b[0]) / 2)); let best = 1e9; for (let t = 0; t <= 1.0001; t += 0.02) { const px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t; best = Math.min(best, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3]))); } void cx; return best; };
+      const pad = q => [q[0] - 4, q[1] - 4, q[2] + 4, q[3] + 4], free = r => SP.every(([a, b]) => segD(a, b, r) >= 3) && !others.some(q => hitR(r, pad(q)));
+      const sides = [], th = 18;
+      for (const G of [14, 18, 24]) sides.push([G, -th / 2, [x + G - 2, y - th / 2, x + G + tw + 2, y + th / 2]]); // the right side first, at every gap
+      for (const G of [14, 18]) { const dg = G * 0.75;
+        for (const [ox, oy] of [[G, -th / 2], [-G - tw, -th / 2], [-tw / 2, -G - th], [-tw / 2, G], [dg, -dg - th], [-dg - tw, -dg - th], [dg, dg], [-dg - tw, dg]]) sides.push([ox, oy, [x + ox - 2, y + oy, x + ox + tw + 2, y + oy + th]]); }
+      const onScr = r => r[0] >= 4 && r[2] <= w - 4 && !PANEL_RECTS.some(p => r[2] > p[0] - 4 && r[0] < p[2] + 4 && r[3] > p[1] - 4 && r[1] < p[3] + 4) && !RWY_RECTS.some(q => hitR(r, q));
+      const side = sides.find(([, , r]) => free(r) && onScr(r)) || sides.find(([, , r]) => onScr(r) && !others.some(q => hitR(r, q))); // a path under a name is acceptable, a name on a name or off screen is not
+      if (!side) { l.el.style.display = "none"; continue; }
+      const sp = l.el.querySelector('span'); sp.style.left = `${side[0]}px`; sp.style.top = `${side[1]}px`; TOWN_RECTS.push(side[2]);
+      l.el.style.display = ''; l.el.style.transform = `translate(${x}px, ${y}px)`; continue;
+    }
+    if (l.cls === 'rwy') { // a runway number never leaves the screen and never hides under a panel
+      const hw = (l.w || (l.w = l.el.offsetWidth || 72)) / 2 + 8;
+      x = Math.max(hw, Math.min(w - hw, x));
+      if (PANEL_RECTS.some(r => x > r[0] - 30 && x < r[2] + 30 && y > r[1] - 12 && y < r[3] + 12)) { l.el.style.display = 'none'; continue; }
+      if (!l.el.innerHTML) { l.el.style.display = 'none'; continue; } // the unused end's label holds no place
+      let oX = 0, oY = 0;
+      if (l.end) { // clear of every runway and path on screen (never on another runway's end): past the end, beside the runway, else hidden
+        const pr = v => { _v2.copy(v).project(camera); return [(_v2.x + 1) / 2 * w, (1 - _v2.y) / 2 * h]; };
+        const S2 = Object.values(RW).map(r => { const a = pr(V(r.A[0], r.A[1], 0)), b = pr(V(r.B[0], r.B[1], 0)); return [a, b, 170 * Math.hypot(b[0] - a[0], b[1] - a[1]) / r.len]; }); // centre line + half width in px
+        const bw = (l.w || 40) / 2 - 4, clear = (cx, cy) => cx > bw + 4 && cx < w - bw - 4 && cy > 12 && cy < h - 12
+          && !RWY_RECTS.some(q => cx - bw - 10 < q[2] && q[0] < cx + bw + 10 && cy - 15 < q[3] && q[1] < cy + 15) // not on a number already placed
+          && !PATH_PTS.some(([px, py]) => Math.abs(px - cx) < bw + 5 && Math.abs(py - cy) < 15)
+          && S2.every(([a, b, hw2]) => { const vx = b[0] - a[0], vy = b[1] - a[1], f = Math.max(0, Math.min(1, ((cx - a[0]) * vx + (cy - a[1]) * vy) / (vx * vx + vy * vy || 1))), px = a[0] + vx * f, py = a[1] + vy * f;
+            return Math.max(Math.abs(px - cx) - bw, Math.abs(py - cy) - 11, 0) >= 5 + hw2; });
+        const cands = [], own = [pr(l.end), pr(l.other)];
+        const xing = (p1, p2, a, b) => { const d = (u, v, q) => (v[0] - u[0]) * (q[1] - u[1]) - (v[1] - u[1]) * (q[0] - u[0]); return d(a, b, p1) * d(a, b, p2) < 0 && d(p1, p2, a) * d(p1, p2, b) < 0; };
+        const others = S2.filter(([a]) => !(Math.abs(a[0] - own[0][0]) < 0.5 && Math.abs(a[1] - own[0][1]) < 0.5) && !(Math.abs(a[0] - own[1][0]) < 0.5 && Math.abs(a[1] - own[1][1]) < 0.5));
+        if (l.rw && l.rw.key === 'r18') { const E = pr(l.end), O = pr(l.other), L = Math.hypot(E[0] - O[0], E[1] - O[1]) || 1, ux = (E[0] - O[0]) / L, uy = (E[1] - O[1]) / L; // 18: beside its south threshold first
+          for (const f of [0.08, 0.18, 0.3]) for (const sd of [1, -1]) for (const o of [18, 24, 30]) cands.push([E[0] - ux * L * f - uy * sd * o, E[1] - uy * L * f + ux * sd * o]); }
+        for (const [E, O] of [[pr(l.end), pr(l.other)], [pr(l.other), pr(l.end)]]) {
+          const L = Math.hypot(E[0] - O[0], E[1] - O[1]) || 1, ux = (E[0] - O[0]) / L, uy = (E[1] - O[1]) / L; // outward from this end
+          for (let k = 0; k <= 5; k++) { const c = [E[0] + ux * (bw + 14 + k * 6), E[1] + uy * (bw + 14 + k * 6)]; if (!others.some(([a, b]) => xing(E, c, a, b))) cands.push(c); } // not across another runway
+          for (const f of [0.12, 0.25, 0.4]) for (const sd of [1, -1]) for (const o of [24, 30, 38]) cands.push([E[0] - ux * L * f - uy * sd * o, E[1] - uy * L * f + ux * sd * o]);
+        }
+        let E0 = pr(l.end), O0 = pr(l.other), L0 = Math.hypot(E0[0] - O0[0], E0[1] - O0[1]) || 1, ux0 = (O0[0] - E0[0]) / L0, uy0 = (O0[1] - E0[1]) / L0, MC = Object.values(RW).map(r => pr(V((r.A[0] + r.B[0]) / 2, (r.A[1] + r.B[1]) / 2, 0))).reduce((a, q, _, A) => [a[0] + q[0] / A.length, a[1] + q[1] / A.length], [0, 0]), MID0 = [(E0[0] + O0[0]) / 2, (E0[1] + O0[1]) / 2], cen = l.rw && l.rw.key === 'centre', sn0 = (-uy0 * (MID0[0] - MC[0]) + ux0 * (MID0[1] - MC[1])) >= 0 ? 1 : -1, sn = cen ? (ux0 > 0 ? -1 : 1) : sn0, nx0 = -uy0 * sn, ny0 = ux0 * sn, /* the side away from the other runways (the centre runway: north) */ c = l.rw && l.rw.key === 'r18' ? [E0[0] + ux0 * 6 - Math.abs(uy0) * 30, E0[1] + uy0 * 6] /* 18: at its north end, on the west side, away from the 07R arrow */ : [E0[0] + ux0 * 24 + nx0 * 18, E0[1] + uy0 * 24 + ny0 * 18]; oX = -ux0; oY = -uy0; { const ownI = Object.values(RW).indexOf(l.rw), nearOwn = q => { let bi = -1, bd = 1e9; S2.forEach(([a, b], k) => { const vx = b[0] - a[0], vy = b[1] - a[1], f = Math.max(0, Math.min(1, ((q[0] - a[0]) * vx + (q[1] - a[1]) * vy) / (vx * vx + vy * vy || 1))), d = Math.hypot(q[0] - a[0] - vx * f, q[1] - a[1] - vy * f); if (d < bd) { bd = d; bi = k; } }); return bi === ownI; };
+          if ((w < 640 && !clear(c[0], c[1])) || !nearOwn(c)) { const c2 = cands.find(q => clear(q[0], q[1]) && nearOwn(q)) || cands.find(q => nearOwn(q)); if (c2) { c = c2; oX = 0; oY = 0; } } } /* a tag stays nearest to its own runway; phones: clear of every other runway too */ // every tag beside its runway's start end (clear of the landing arrow), the same offset
+        if (!c) { l.el.style.display = 'none'; continue; }
+        [x, y] = c;
+      }
+      let rr = [x - hw + 6, y - 11, x + hw - 6, y + 11]; // runway numbers never stack: one that would touch an earlier one moves down, not out
+      for (let k = 0; k < 4 && RWY_RECTS.some(q => rr[0] < q[2] && q[0] < rr[2] && rr[1] < q[3] && q[1] < rr[3]); k++) { x += (oX || 0) * 34; y += (oY || 1) * 34 * (oX ? 1 : 0.65); rr = [x - hw + 6, y - 11, x + hw - 6, y + 11]; } // outward along its own runway, so the order stays readable
+      RWY_RECTS.push(rr);
+    }
     l.el.style.display = '';
-    l.el.style.transform = `translate(${(_v.x + 1) / 2 * w}px, ${(1 - _v.y) / 2 * h}px) translate(-50%, -50%)`;
+    l.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
     if (l.dir) { // arrows point the way the world direction runs on screen, whatever the camera does
       _v2.copy(l.dir).project(camera);
       l.el.style.setProperty('--a', `${Math.atan2(-(_v2.y - _v.y) * h, (_v2.x - _v.x) * w) * 180 / Math.PI}deg`);
@@ -644,6 +953,8 @@ function updateLabels() {
 let liveData = null, liveOk = false, liveSeen = 0, liveMode = false, wantLive = !CALM, lastGen = '';
 const planes = new Map();
 const PHASE_WORD = { arr: 'arriving', dep: 'departing', ground: 'on ground', low: 'low level', enroute: 'en route' };
+const phaseDot = k => (k === 'ground' ? `<i style="background:transparent;box-shadow:inset 0 0 0 2px ${HEX.ground}"></i>`
+  : k === 'air' ? `<i style="background:${HEX.air};border-radius:1px;transform:rotate(45deg) scale(.85)"></i>` : `<i style="background:${HEX[k]}"></i>`); // ring = on the ground, diamond = en route
 const phaseKey = f => (f.phase === 'arr' ? 'arr' : f.phase === 'dep' ? 'dep' : f.phase === 'ground' || f.on_ground ? 'ground' : 'air');
 class LivePlane {
   constructor(f) {
@@ -679,7 +990,7 @@ class LivePlane {
     this.style();
     const near = (f.alt_ft ?? 99999) < 3000 || (f.dist_km ?? 99) < 20;
     this.tagOn = near;
-    this.tag.innerHTML = `<i style="background:${HEX[phaseKey(f)]}"></i>${f.cs || f.id}`;
+    this.tag.innerHTML = `${phaseDot(phaseKey(f))}${f.cs || f.id}`; this.tagW = 0;
   }
   step(dt, now) {
     for (let k = 0; k < 3; k++) this.pos[k] += this.vel[k] * dt;
@@ -695,7 +1006,7 @@ class LivePlane {
     this.alpha = a;
     const show = liveMode;
     this.obj.visible = show && a > 0.01;
-    this.mat.opacity = (theme === 'light' ? 1 : 0.55) * a;
+    this.mat.opacity = (theme === 'light' ? 1 : 0.55) * a * (feedLate() ? 0.3 : 1);
     this.emat.opacity = (theme === 'light' ? 0.35 : 1) * a;
   }
   drawTag(w, h) {
@@ -703,9 +1014,12 @@ class LivePlane {
     if (!vis) { this.tag.style.display = 'none'; return; }
     _v.copy(this.obj.position).project(camera);
     if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05) { this.tag.style.display = 'none'; return; }
+    const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h - 14;
     this.tag.style.display = '';
-    this.tag.style.opacity = this.alpha;
-    this.tag.style.transform = `translate(${(_v.x + 1) / 2 * w}px, ${(1 - _v.y) / 2 * h - 16}px) translate(-50%, -100%)`;
+    this.tag.style.opacity = this.alpha * (feedLate() ? 0.5 : 1);
+    this.tag.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
+    if (!this.tagW) this.tagW = this.tag.offsetWidth || 60;
+    return { p: this, r: [x - this.tagW / 2 - 2, y - 20, x + this.tagW / 2 + 2, y + 1], pri: this === pinned || this === hovered ? 0 : 1 };
   }
   dispose() { scene.remove(this.obj); this.mat?.dispose(); this.emat?.dispose(); this.tag.remove(); }
 }
@@ -735,12 +1049,17 @@ async function pollLive() {
 }
 if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 5000); }
 function liveAge() { return liveData ? (Date.now() - Date.parse(liveData.generated)) / 1000 : Infinity; }
+const LATE_S = 15 * 60; // older than this, live positions are history, not live
+const OFFLINE_S = 6 * 3600; // older than this the feed counts as offline: no aircraft are drawn at all
+const feedLate = () => liveAge() > LATE_S;
+const feedOffline = () => !!liveData && liveAge() > OFFLINE_S;
+const ageWords = s => (s >= 172800 ? `${Math.round(s / 86400)} days old` : s >= 5400 ? `${Math.round(s / 3600)} h old` : `${Math.round(s / 60)} min old`);
 function setLive(on) { // Now = real aircraft; any future hour = simulated traffic
   wantLive = on;
-  liveMode = on && !!liveData;
+  liveMode = on && !!liveData && !feedOffline();
   if (liveMode && !CALM) {
     state.ovOd = ''; state.ovR18 = '';
-    segOd(state.ovOd); segR18(state.ovR18); setPlaying(false); setHour(0, true); knobTo(0, 'jump');
+    syncMode(); setPlaying(false); setHour(curIdx(), true); knobTo(curIdx(), 'jump');
   } else if (state.run) setHour(state.hour, true);
   renderLiveBadge();
 }
@@ -748,7 +1067,7 @@ function setLive(on) { // Now = real aircraft; any future hour = simulated traff
 function exitLive() { // the user picked a forecast hour or a what-if: simulated traffic from here on
   if (!wantLive && !liveMode) return;
   wantLive = false; liveMode = false;
-  state.ovOd = ''; state.ovR18 = ''; segOd(''); segR18('');
+  state.ovOd = ''; state.ovR18 = ''; syncMode();
 }
 
 // ---- hover / click: which aircraft is which
@@ -808,6 +1127,8 @@ const ICON = {
   plane: '<svg viewBox="0 0 24 24"><path d="M21.5 15.6v-1.9l-8.3-5.2V3.6a1.45 1.45 0 0 0-2.9 0v4.9L2 13.7v1.9l8.3-2.6v5.1l-2.1 1.6v1.5l3.6-1 3.6 1v-1.5l-2.1-1.6V13z"/></svg>',
   orbit: '<svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M19.6 13.4A7.8 7.8 0 1 1 17.5 6.5"/><path d="M18.4 2.8v4.4H14"/></svg>',
   info: '<svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19zm0 1.8a7.7 7.7 0 1 0 0 15.4 7.7 7.7 0 0 0 0-15.4zM12 10.3c.55 0 .95.4.95.95v5.4a.95.95 0 0 1-1.9 0v-5.4c0-.55.4-.95.95-.95zm0-3.3a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  home: '<svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="7.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M12 8.5l2 3.5h-4z" style="fill:currentColor;stroke:none"/></svg>',
   needle: '<svg viewBox="0 0 24 24"><g class="needle"><path d="M12 2.6l3.3 9.4H8.7z" fill="#FF453A"/><path d="M12 21.4L8.7 12h6.6z" opacity=".5"/></g></svg>',
   sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.3"/><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M5.2 18.8l1.7-1.7M17.1 6.9l1.7-1.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   moon: '<svg viewBox="0 0 24 24"><path d="M20.4 14.7A8.7 8.7 0 0 1 9.3 3.6a8.7 8.7 0 1 0 11.1 11.1z"/></svg>',
@@ -815,84 +1136,104 @@ const ICON = {
   collapse: '<svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M20 10h-6V4M4 14h6v6M14 10l6.5-6.5M10 14l-6.5 6.5"/></svg>',
   chevrons: '<svg viewBox="0 0 12 12"><path d="M3 4.6 6 1.9l3 2.7M3 7.4l3 2.7 3-2.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
+const T = window.FRA_COPY || {}; // one vocabulary with the dashboard (fra.siteui.COPY)
+const HZ = (window.FRA_STYLE || {}).hatch || { css: 'repeating-linear-gradient(135deg,{c} 0 1.5px,transparent 1.5px 4.5px)', light: 'rgba(255,255,255,.4)', dark: 'rgba(0,0,0,.38)' };
+const ARROW_SVG2 = d => `<svg class="tarr" viewBox="0 0 34 24" aria-hidden="true"><path d="${((window.FRA_STYLE || {}).arrow || { e: 'M3 12h27M22 4l8 8-8 8', w: 'M31 12H4M12 4l-8 8 8 8' })[d]}"/></svg>`; // the headline's arrow
+const HATCH = t => HZ.css.replace('{c}', t === 'light' ? HZ[t] : 'rgba(255,255,255,.35)'); /* dark: light stripes */ // the night-ban hatch, the dashboard's definition
 const hud = document.createElement('div');
 hud.className = 'hud';
 hud.innerHTML = `
   <div class="scrim top"></div><div class="scrim bottom"></div>
+  <header class="panel pbar"><a class="pbrand" href="index.html">${(window.FRA_STYLE || {}).logo || ''}Runway Direction Forecast<span>Frankfurt Airport</span></a>
+    <nav class="ptabs" aria-label="Pages"><a href="index.html">Dashboard</a><a aria-current="page">3D view</a></nav>
+    <div class="prun"><i id="livedot"></i><span class="frs"></span><b id="issued-t" hidden></b></div>
+    <button class="pthm" id="b-thm" title="Light or dark" aria-label="Switch between light and dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+    <div class="ptz" role="group" aria-label="Time zone"><button data-v="Europe/Berlin" aria-pressed="true" id="tzl3">Local</button><button data-v="UTC" aria-pressed="false">UTC</button></div></header>
+  <div class="rail">
   <header class="hero">
-    <div class="eyebrow">Frankfurt Airport · operating direction</div>
+    <a class="dash" href="index.html">← Dashboard</a>
+    <div class="eyebrow" id="eyebrow">${T.now}</div>
     <div class="dir" id="dir" aria-live="polite"></div>
+    <div class="outl" id="outl"></div><div class="disl" id="disl" hidden></div><div class="ground" id="ground"></div>
     <div class="dir-sub" id="dir-sub"></div>
-    <div class="seg" id="seg-od" role="radiogroup" aria-label="What-if operating direction"><i class="thumb"></i>
-      <button role="radio" data-v="">Forecast</button><button role="radio" data-v="7">07 east</button><button role="radio" data-v="25">25 west</button></div>
-  </header>
-  <aside class="panel conditions" aria-label="Conditions">
-    <div class="row">
-      <div class="row-main"><div class="row-title">Runway 18 West</div><div class="row-value" id="r18-v"></div></div>
-      <div class="row-sub" id="r18-s"></div>
-      <div class="seg small" id="seg-r18" role="radiogroup" aria-label="What-if runway 18"><i class="thumb"></i>
-        <button role="radio" data-v="">Forecast</button><button role="radio" data-v="1">Open</button><button role="radio" data-v="0">Closed</button></div>
-    </div>
+    <div class="sumbar" id="sumbar"></div>
+    <button class="more" id="b-more" aria-expanded="false">Wind, Runway 18 and details</button>
+    <div class="hsec"><div class="risknext" id="dir-next"></div></div>
+    <div class="hsec conditions" aria-label="Conditions">
     <div class="row wind">
-      <svg class="compass" viewBox="-22 -22 44 44"><circle r="21"/><line class="axis" x1="-15" y1="0" x2="15" y2="0" transform="rotate(${HDG[7] - 90})"/>
-        <text y="-15">N</text><path class="arrow" id="wind-arrow" d="M0 12 L-4.4 4 L-1.3 4 L-1.3 -10 L1.3 -10 L1.3 4 L4.4 4Z"/></svg>
-      <div><div class="row-main"><div class="row-title">Wind</div><div class="row-value" id="wind-v"></div></div><div class="row-sub" id="wind-s"></div></div>
+      <div class="row-main"><div class="row-title" id="wind-t">${T.wind}</div><div class="row-value"><span class="wcomp" id="wcomp" title="The arrow points the way the wind blows (north up)"><i></i></span><span id="wind-v"></span></div></div>
+      <div class="row-sub" id="wind-why"></div>
+      <div class="row-sub" id="wind-s"></div>
     </div>
     <div class="row">
-      <div class="row-main"><div class="row-title">Forecast issued</div><label class="menu"><select id="run" aria-label="Forecast run"></select>${ICON.chevrons}</label></div>
+      <div class="row-main"><div class="row-title">Runway 18 (take-offs south)</div><div class="row-value" id="r18-v"></div></div>
+      <div class="row-sub" id="r18-s"></div>
     </div>
-    <div class="attrib">Map © OpenStreetMap contributors</div>
-  </aside>
-  <nav class="panel stack" aria-label="View">
-    <button class="ib" id="b-home" aria-label="Reset view" title="Reset view">${ICON.needle}</button>
-    <button class="ib" id="b-follow" aria-pressed="false" aria-label="Follow an arrival" title="Follow an arrival">${ICON.plane}</button>
-    <button class="ib" id="b-orbit" aria-pressed="true" aria-label="Rotate slowly" title="Rotate slowly">${ICON.orbit}</button>
-    <button class="ib" id="b-theme" aria-label="Light mode" title="Light mode">${ICON.sun}</button>
-    <button class="ib" id="b-fs" aria-label="Full screen" title="Full screen">${ICON.expand}</button>
-    <button class="ib" id="b-info" aria-expanded="false" aria-label="Legend" title="Legend">${ICON.info}</button>
-  </nav>
-  <div class="panel popover" id="legend" role="dialog" aria-label="Legend" hidden>
-    <h3>Legend</h3>
-    <div class="lg"><i id="lg-od"></i>Active runway, arrows show the flow</div>
-    <div class="lg"><i style="background:repeating-linear-gradient(45deg,var(--closed) 0 3px,rgba(255,69,58,.25) 3px 6px)"></i>Runway closed</div>
-    <div class="lg"><i style="background:var(--arr);height:3px"></i>Arrivals</div>
-    <div class="lg"><i style="background:var(--dep);height:3px"></i>Departures</div>
-    <div class="lg"><i style="background:rgba(70,130,255,.3);box-shadow:inset 0 0 0 1px #6fa0ff"></i>Buildings and parked aircraft</div>
-    <div class="lg"><i style="background:linear-gradient(90deg,transparent,rgba(160,200,255,.7));height:2px"></i>Forecast wind</div>
-    <div class="lg"><div class="src">Timeline: colour = predicted direction, paler = less certain, red marks = RWY 18 closed.<br>
-      Map data © OpenStreetMap contributors (ODbL). Wind: ECMWF IFS via Open-Meteo.</div></div>
+    <div class="row accrow"><div class="acc" id="acc"></div></div>
+    <div class="row pdetrow"><details class="pdet"><summary>Details</summary><div class="probl">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</div><div class="probl" id="pdetx"></div><div class="probl" id="pdetw"></div></details></div>
+    <div class="row mapkey" id="mapkey" aria-label="Map key"></div>
+    <div class="row how"><details><summary>How this works</summary>Our forecast blends two models trained on the directions actually flown at Frankfurt over the last 120 days; one of them runs 200 wind scenarios around the ECMWF and ICON forecasts. Calibrated out of sample and tested hour by hour on Jun to Oct 2026. The official forecast (INAA) is the operating-direction forecast published by the Umwelthaus. 07 and 25 are the runway headings (070° east, 250° west); Runway 18 West is used for take-offs to the south only. The live record since 1 Nov is only a few days long, too short to judge yet.<span class="howpg" id="how-pg"></span></details></div>
+    </div>
+    <div class="seg" id="seg-mode" role="radiogroup" aria-label="Show"><i class="thumb"></i>
+      <button role="radio" data-v="live" title="Real aircraft right now (ADS-B)">Live</button><button role="radio" data-v="fc" title="Simulated traffic for the hour picked on the timeline">Forecast</button></div>
+  </header>
   </div>
+  <div class="attrib">${(window.FRA_STYLE || {}).footer || 'Official forecast = INAA (Umwelthaus). Map data © OpenStreetMap contributors. Wind: ECMWF IFS, DWD ICON.'}</div>
+  <nav class="panel stack" aria-label="View">
+    <div class="ib windchip" id="windchip" title="Forecast wind at the shown hour; the arrow points the way it blows"></div>
+    <button class="ib" id="b-home">${ICON.orbit}<span>Reset view</span></button>
+    <button class="ib" id="b-follow" aria-pressed="false" hidden>${ICON.plane}<span>Follow a landing aircraft</span></button>
+    <button class="ib" id="b-fs">${ICON.expand}<span>Full screen</span></button>
+  </nav>
   <div class="panel caption" id="caption" aria-live="polite"></div>
   <div class="panel actip" id="actip" hidden></div>
+  <div class="acring" id="acring" hidden></div>
   <div class="panel aclegend" id="aclegend"></div>
-  <button class="panel livebadge" id="livebadge" hidden></button>
   <div class="panel rose" id="rose" aria-hidden="true"><b data-d="N">N</b><b data-d="E">E</b><b data-d="S">S</b><b data-d="W">W</b><i id="rose-n"></i></div>
   <footer class="panel dock">
+    <div class="dhd"><div class="dhl"><b class="dtitle">Next 48 hours</b><div class="readout" aria-live="polite"><span class="ro" id="dro"></span><button class="rback" id="dback" style="visibility:hidden">Back to now</button></div><span class="dpk" id="dpk" title="Highest hourly chance outside the night ban (23:00 to 05:00, no flights)"></span></div>
+      <label class="menu dmenu" title="Pick an older forecast to compare"><span>Replay an earlier run</span><select id="run" aria-label="Forecast run"></select>${ICON.chevrons}</label></div>
     <button class="play" id="play" aria-label="Pause">${ICON.pause}</button>
+    <div class="rowlbl" aria-hidden="true"><span id="dir-l">Direction</span><span id="risk-l" hidden></span><span id="r18-l">Runway 18</span><span id="wind-l" hidden>${T.headwind}</span></div>
     <div class="scrub">
-      <div class="track" id="track" role="slider" tabindex="0" aria-label="Forecast hour" aria-valuemin="1" aria-valuemax="48">
-        <div class="segs" id="segs"></div><div class="marks" id="marks"></div>
-        <div class="thumb-knob" id="knob"></div>
-        <div class="panel bubble" id="bubble"><b id="bub-t"></b><span id="bub-l"></span></div>
-      </div>
       <div class="ticks" id="ticks"></div>
+      <div class="track" id="track" role="slider" tabindex="0" aria-label="Forecast hour" aria-valuemin="1" aria-valuemax="48">
+        <div class="nights" id="nights"></div><div class="mids" id="mids"></div><div class="segs" id="segs"></div><svg class="risk" id="risk" preserveAspectRatio="none" aria-hidden="true" hidden></svg><svg class="windrow" id="windrow" aria-hidden="true"></svg><span class="rgl0" aria-hidden="true">0</span><i class="pgwash3" id="pgwash"></i><span class="rgl" id="rgl">10\u202f%</span><span class="rgl2" id="rgl2" aria-hidden="true" hidden></span><span class="rpk" id="rpk"></span><span class="pgl" id="pgl" hidden title="Official forecast (INAA): possible switch">Official</span><div class="pgmark" id="pgmark" hidden title="Official INAA forecast: possible switch"></div><div class="marks" id="marks"></div>
+        <div class="nowline" id="nowline"></div><div class="selcol" id="selcol"></div>
+        <div class="thumb-knob" id="knob"></div>
+        <div class="bubble" id="bubble"><b id="bub-t"></b></div>
+      </div>
     </div>
+    <button class="keyb" id="b-key" aria-expanded="false" aria-label="Show the legend">i</button>
+    <div class="dkey" id="dkey" aria-hidden="true"></div>
   </footer>
 `;
 app.appendChild(hud);
 const $ = id => document.getElementById(id);
+{ // one accuracy line from the backtest the dashboard uses (window.FRA_QUALITY); omitted when it is missing
+  const R = ((window.FRA_QUALITY || {}).od25 || []).filter(r => r.acc !== null && r.acc !== undefined), r24 = R.find(r => r.lead === 24);
+  const beats = R.length && R.every(r => r.prog !== null && r.prog !== undefined && r.acc > r.prog);
+  const ti = (window.FRA_QUALITY || {}).test_info, MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const a0 = ti && new Date(ti.start), b0 = ti && new Date(a0.getTime() + ti.days * 864e5), per = ti ? `backtest ${MON[a0.getUTCMonth()]}–\u2060${MON[b0.getUTCMonth()]}\u00a0${b0.getUTCFullYear()}` : '';
+  const pc = v => Math.round(v * 100), rng = a => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? `${lo}` : `${lo}–${hi}`; }, hasP = R.length && R.every(r => r.prog !== null && r.prog !== undefined);
+  $('acc').innerHTML = R.length ? `<div class="pstat"><div class="kv"><span>Accuracy</span><b>${rng(R.map(r => pc(r.acc)))}\u202f%${hasP ? ` <small>· official <em>${rng(R.map(r => pc(r.prog)))}\u202f%</em></small>` : ''}</b></div></div>` : ''; // one row; the gain is under Details
+  if ($('pdetx') && R.length && hasP) $('pdetx').innerHTML = `${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f% fewer wrong hours than the official forecast, ${Math.min(...R.map(r => r.lead))}–${Math.max(...R.map(r => r.lead))}\u202fh ahead.`;
+  $('acc').title = R.map(r => `${r.lead} h ahead: ${Math.round(r.acc * 100)}% right (official ${Math.round(r.prog * 100)}%)`).join('\n');
+}
+$('b-key').onclick = () => { const on = !app.classList.contains('keyon'); app.classList.toggle('keyon', on); $('b-key').setAttribute('aria-expanded', on); requestAnimationFrame(resize); };
+$('b-more').onclick = () => { const on = !app.classList.contains('sheet'); app.classList.toggle('sheet', on); $('b-more').setAttribute('aria-expanded', on); };
 
 let fmtRun, fmtBub, fmtH, fmtDay;
 function makeFormats() {
   fmtRun = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-  fmtBub = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  fmtBub = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   fmtH = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hourCycle: 'h23' });
-  fmtDay = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric' });
+  fmtDay = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' });
 }
 makeFormats();
-const pct = p => `${Math.round(p * 100)}%`;
+const pct = p => (p >= 0.995 ? '>99\u202f%' : p < 0.005 ? '<1\u202f%' : `${Math.round(p * 100)}\u202f%`); // same format as the dashboard
 
-const state = { run: null, hour: 0, playing: !RM.matches && !CALM, orbit: CARD0 || (!RM.matches && !BARE), follow: false, cur: null, ovOd: '', ovR18: '' };
+const state = { run: null, hour: 0, playing: false, orbit: false, follow: false, cur: null, ovOd: '', ovR18: '' };
 for (const r of F.runs) $('run').insertAdjacentHTML('beforeend', `<option value="${r.source}">${fmtRun.format(new Date(r.issue))}</option>`);
 
 // ---- segmented controls: the selection thumb springs from wherever it is
@@ -911,16 +1252,25 @@ function segmented(el, onPick) {
   btns.forEach(b => b.addEventListener('click', () => { select(b.dataset.v); onPick(b.dataset.v); }));
   return select;
 }
-const segOd = segmented($('seg-od'), v => { if (liveMode) { wantLive = false; liveMode = false; } state.ovOd = v; setHour(state.hour, true); });
-const segR18 = segmented($('seg-r18'), v => { if (liveMode) { wantLive = false; liveMode = false; } state.ovR18 = v; setHour(state.hour, true); });
+const segMode = segmented($('seg-mode'), v => { if (v === 'live') setLive(true); else { exitLive(); setHour(state.hour, true); } syncMode(); });
+function syncMode() {
+  const b = $('seg-mode').querySelector('[data-v=live]');
+  b.disabled = !liveData || feedOffline();
+  $('seg-mode').hidden = !liveData || feedOffline(); // no feed: no choice to offer
+  $('b-follow').hidden = !liveMode;
+  const txt = !liveData ? 'Live (no feed)' : feedOffline() ? 'Live (offline)' : feedLate() ? `Live (${ageWords(liveAge())})` : 'Live';
+  if (liveMode && feedOffline()) { liveMode = false; setHour(state.hour, true); } // went offline while showing it
+  if (b.textContent !== txt) b.textContent = txt;
+  segMode(liveMode ? 'live' : 'fc');
+}
 
 // ---- hero: the new direction slides in the way the traffic flows (east = right, west = left)
 let heroEl = null, heroWord = '';
 function setHero(word, color, sign) {
-  if (word === heroWord) { heroEl.style.color = theme === 'light' ? '' : color; heroEl.firstChild.style.background = color; return; }
+  if (word === heroWord) return; // the title stays neutral; the plate carries the direction colour
   const box = $('dir'), el = document.createElement('span'), old = heroEl, d = 26 * sign;
-  el.innerHTML = `<i style="background:${color}"></i>${word}`;
-  el.style.color = theme === 'light' ? '' : color;
+  const m = /^(\d\d) (.*)$/.exec(word); // "07 Eastbound": the runway number as a painted plate, as on the dashboard
+  if (m) { el.innerHTML = `<b class="dbadge"></b>`; el.firstChild.textContent = m[1]; el.firstChild.style.setProperty('--dc', m[1] === '25' ? HEX.west : HEX.east); el.firstChild.dataset.d = m[1]; el.append(` ${m[2]}`); } else el.textContent = word;
   box.appendChild(el);
   heroEl = el;
   if (!heroWord) { heroWord = word; return; }
@@ -943,46 +1293,108 @@ function knobPx(v) { return (v + 0.5) * ($('track').clientWidth / N()); }
 function drawKnob() {
   const x = knobPx(knob.x);
   $('knob').style.transform = `translateX(${x}px)`;
-  const bub = $('bubble'), w = bub.offsetWidth, tw = $('track').clientWidth;
-  bub.style.transform = `translateX(${Math.max(-8, Math.min(tw - w + 8, x - w / 2))}px)`;
+  $('knob').style.visibility = liveMode || (!scrubbing && Math.round(knob.x) === curIdx()) ? 'hidden' : ''; // at now, the now line is the one marker
+  { const i = Math.max(0, Math.min(N() - 1, Math.round(knob.x))); Object.assign($('selcol').style, { left: `${i / N() * 100}%`, width: `${100 / N()}%` }); }
   const i = Math.max(0, Math.min(N() - 1, Math.round(knob.x)));
-  $('bub-t').textContent = liveMode ? 'Now' : fmtBub.format(new Date(state.run.hours[i].t));
-  $('bub-l').textContent = liveMode ? 'live aircraft' : `+${i + 1} h`;
+  bubText(i);
+  const bub = $('bubble'), w = bub.offsetWidth, tw = $('track').clientWidth;
+  bub.style.visibility = liveMode || !(scrubbing || state.hour !== curIdx()) ? 'hidden' : '';
+  { const pinned = !HOVERING && !scrubbing && state.hour !== curIdx() && !liveMode; bub.classList.toggle('pin', pinned); $('knob').classList.toggle('pin', pinned); } // a click pins: 2 px line, filled chip // only on hover, scrub or a picked hour; now is in the panel
+  { const k = bub.style.visibility === 'hidden' ? -1 : state.hour; const rs = $('risk') ? $('risk').querySelectorAll('rect') : []; rs.forEach((r, i) => r.classList.toggle('hov', i === k)); } // the hovered bar, darker (as on the dashboard)
+  const lo = 0, hi = Math.max(0, tw - w); // the hour label stays inside the timeline panel, like the dashboard's
+  bub.style.transform = `translateX(${Math.max(lo, Math.min(hi, x - w / 2))}px)`;
+  { const br = bub.getBoundingClientRect(), vis = bub.style.visibility !== 'hidden'; // the pill sits on the tick row: only the tick labels it lands on step aside
+    $('ticks').querySelectorAll('span.day,span.hr,span.nowtick').forEach(l => { l.style.translate = ''; const r = l.getBoundingClientRect(), kx2 = $('knob') ? $('knob').getBoundingClientRect().left + $('knob').getBoundingClientRect().width / 2 : -1e9, hit = vis && ((r.right > br.left - 6 && r.left < br.right + 6 && r.bottom > br.top - 2 && r.top < br.bottom + 2) || (l.classList.contains('hr') && r.left - 2 < kx2 && r.right + 2 > kx2)); /* the shared rule: 6 px around the pill, and the label under the cursor line */
+      if (hit && l.classList.contains('day')) { const dx = br.right + 8 - r.left, tr = $('ticks').getBoundingClientRect(); if (dx > 0 && dx <= 60 * (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1) && r.right + dx <= tr.right) { /* over 60 px: hidden, as on the dashboard */ l.style.translate = `${dx}px 0`; l.classList.remove('near'); return; } }
+      l.classList.toggle('near', hit); }); // ticks under the pill hide; a day label moves right past it (never back over the day before), hidden when that leaves the plot
+    const pk = $('rpk'), pr = pk.getBoundingClientRect(), kx = $('track').getBoundingClientRect().left + x; pk.classList.toggle('off', vis); if ($('rpkl')) $('rpkl').style.opacity = vis ? '0' : ''; void pr; void kx; // label and leader together // the peak label never sits under the cursor
+    const tg = $('pgl'), tr = tg.getBoundingClientRect(), ch = $('track').querySelector('.swchip')?.getBoundingClientRect(), kxs = (r => r.left + r.width / 2)($('knob').getBoundingClientRect()), over = (!tg.hidden && kxs > tr.left - 3 && kxs < tr.right + 3) || (ch && kxs > ch.left - 3 && kxs < ch.right + 3); /* the shared tag-gap rule, on screen coordinates (the dock is zoomed) */ /* the Official tag and the "to 25" chip */
+    $('knob').style.setProperty('top', over ? 'var(--dt)' : '0px', 'important'); } { const kn = $('knob'), kr = kn.getBoundingClientRect(), kxl = kr.left + kr.width / 2, hz = app.clientWidth < 640 ? 1 : (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1); // the cursor breaks behind the in-bar label and, on phones, behind every row title (as on the dashboard)
+      const boxes = [...document.querySelectorAll('.segs .dlab'), ...(app.clientWidth < 640 ? document.querySelectorAll('.dock .rowlbl > span') : [])].filter(l => !l.hidden).map(l => l.getBoundingClientRect()).filter(r => r.width && kxl > r.left - 3 && kxl < r.right + 3);
+      const gaps = boxes.map(r => [(r.top - kr.top) / hz - 2, (r.bottom - kr.top) / hz + 2]).sort((a, b) => a[0] - b[0]);
+      kn.style.setProperty('--mk', gaps.length ? `linear-gradient(${gaps.map(([a, b]) => `#000 ${a.toFixed(1)}px,transparent ${a.toFixed(1)}px,transparent ${b.toFixed(1)}px,#000 ${b.toFixed(1)}px`).join(',')})` : 'none'); } // the line starts under the Official tag when it would cross it
   if (scrubbing && i !== state.hour) setHour(i);
+}
+const peakNote = (p, t) => `Highest: ${pct(p)} at ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(t))}`; // the dashboard's formatter
+let PGDIS = [], GHOST = false, OTHER = 'West', HOVERING = false, TOWN_KEY = [], NIGHT = false;
+function renderMapKey() { // the map key: an overlay at the bottom-left of the 3D viewport, above the timeline
+  const el = document.getElementById('mapkey'); if (!el) return; if (!el.classList.contains('mapov') && !el.classList.contains('inrail')) { el.classList.add('mapov', 'panel'); hud.appendChild(el); }
+  const odK = (typeof state !== 'undefined' && state.cur) ? state.cur.od : 7, oK = odK === 25 ? 'east' : 'west'; // the dashboard's key: Landings in the shown direction's colour, the other direction's approaches only when a switch is in play
+  el.innerHTML = `<span><i class="plk" style="border-top-color:var(--${odK === 25 ? 'westLine' : 'eastLine'})!important"></i>${T.landings}</span><span><i class="tok"></i>${T.takeoffs}</span>${GHOST ? `<span><i class="plk gh" data-tok="${oK}Line" style="border-top-color:var(--${oK}Line)!important;opacity:.6"></i>${oK === 'west' ? 'West' : 'East'} approaches (if switched)</span>` : ''}<span class="kbr"></span>` + TOWN_KEY.map((l, k) => `<span class="tkey"><b>${k + 1}</b>${l.name}</span>`).join('');
+}
+const curIdx = () => (state.run ? Math.max(0, Math.min(N() - 1, Math.floor((Date.now() - Date.parse(state.run.hours[0].t)) / 36e5))) : 0);
+const isNowHour = () => liveMode || state.hour === curIdx();
+const odName = od => (od === 25 ? '25 West' : '07 East'); // one wording on both pages: the plate and East / West
+function drawPgMark() { // where the official INAA prognosis disagrees with our model, marked on the strip
+  const el = $('pgmark'); if (!state.run) return;
+  const key = $('pgkey'); if (key) key.style.display = PGDIS.length ? '' : 'none';
+  if (!PGDIS.length) { el.hidden = true; return; }
+  const n = N(); el.hidden = false;
+  Object.assign(el.style, { left: `${PGDIS[0] / n * 100}%`, width: `${(PGDIS[PGDIS.length - 1] - PGDIS[0] + 1) / n * 100}%` });
+}
+function bubText(i) { // the scrubber label: the selected hour and what is forecast for it
+  const h = state.run.hours[i], west = h.p25 >= 0.5;
+  const now = liveMode || i === curIdx();
+  const wd = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t));
+  $('bub-t').innerHTML = `<svg class="pinG" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6 3 3v2h-4v7l-1 1-1-1v-7H7v-2l3-3z" fill="currentColor"/></svg>${wd} ${fmtHM(new Date(h.t))}`; // short: the full date is in the readout
+  const tw = h.ws === undefined ? null : Math.round(h.ws * Math.cos((h.wd - (h.od === 25 ? 249 : 69)) * Math.PI / 180)); // + = headwind on the runways in use
+  const hsN = state.run.hours, nk = !now && isNight(h) ? hsN.findIndex((x, k) => k > i && !isNight(x)) : -1;
+  if (!now && isNight(h)) { const sm = innerWidth < 480, nx = nk >= 0 ? T.night_next.replace('{od}', hsN[nk].od === 25 ? '25' : '07').replace('{t}', fmtHM(new Date(hsN[nk].t))).replace(/^N/, 'n') : 'night ban'; $('dro').innerHTML = `<b>${sm ? `${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}` : fmtBub.format(new Date(h.t))}</b> · ${nx}`; } // the shared night phrase (siteui.COPY.night_next) else
+  else $('dro').innerHTML = `<b>${now ? `Now, ${fmtHM(new Date(h.t))}` : fmtBub.format(new Date(h.t))}</b> · ${now ? `${pct(west ? h.p25 : 1 - h.p25)} ${west ? 'West' : 'East'}` : `${pct(pOther(h))} chance of ${OTHER}`}${tw === null ? '' : ` · ${tw >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(tw)}\u202fkt`}`; // phones: the wind is in the panel
+  $('dback').style.visibility = now || HOVERING ? 'hidden' : 'visible'; // only once a click has pinned an hour // in the DOM always: no layout shift; only off the current hour
 }
 function knobTo(i, opts) {
   if (opts === 'jump') { knob.jump(i); drawKnob(); return; }
   animate(knob.to(i, opts), drawKnob);
 }
-function renderLiveBadge() {
-  const lg = document.getElementById('aclegend'), lb = document.getElementById('livebadge');
+function drawNow() { // a vertical line at the current time, labelled, when it falls inside this run
+  if (!state.run) return;
+  const hs = state.run.hours, t0 = Date.parse(hs[0].t), f = (Date.now() - t0) / (hs.length * 36e5), on = f > -0.03 && f < 1;
+  const x = Math.max(0, f) * 100;
+  $('nowline').style.display = on ? '' : 'none'; $('nowline').style.left = `${x}%`;
+  const tw = $('ticks').clientWidth || 1, nt = $('nowtick'), busy = [];
+  if (nt) { nt.style.display = on ? '' : 'none'; nt.style.left = `${x}%`; }
+  { const st0 = $('tick-start'); if (st0 && nt && on) st0.style.left = `${x * tw / 100}px`; } // the first date at Now (the Now tag sits on the hour row)
+  const pl = $('pgl');
+  if (pl) { pl.hidden = !PGDIS.length; if (PGDIS.length) { const near = (1 - PGDIS[0] / hs.length) * ($('track').clientWidth || 999) < 120; pl.style.right = near ? '0' : 'auto'; pl.style.left = near ? 'auto' : `${(PGDIS[0] / hs.length * 100).toFixed(2)}%`; // near the end: anchored inside the right edge
+    const fh = t => +fmtH.format(new Date(t)), wd = t => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(t));
+    { const ta = hs[PGDIS[0]].t, tb = new Date(Date.parse(hs[PGDIS[PGDIS.length - 1]].t) + 36e5), hh = t => String(fh(t)).padStart(2, '0'), full = `Official: switch ${wd(ta)} ${hh(ta)}:00–${wd(tb)} ${hh(tb)}:00`;
+      const ctx = drawNow.cx || (drawNow.cx = document.createElement('canvas').getContext('2d')); ctx.font = '500 11px "IBM Plex Sans", system-ui, sans-serif';
+      const TW = $('track').clientWidth || 999, room = (1 - PGDIS[0] / hs.length) * TW, mid = (((window.FRA_STYLE || {}).pgtag || {}).long || 'Official: {da} {ha}h → {db} {hb}h').replace('{da}', wd(ta)).replace('{ha}', hh(ta)).replace('{db}', wd(tb)).replace('{hb}', hh(tb)), ph = innerWidth < 480, mw = q => ctx.measureText(q).width + 12;
+      const fit = [mid].find(s2 => mw(s2) <= room), txt = fit || (ph ? mid : 'Official'); void full; pl.dataset.l = mid; pl.dataset.m = (((window.FRA_STYLE || {}).pgtag || {}).mid || 'Official').replace('{db}', wd(tb)).replace('{hb}', hh(tb)); requestAnimationFrame(fitTagChip); /* one wording on both pages (siteui.STYLE.pgtag) */ pl.textContent = txt; // the dashboard's rule: left-aligned at the window start when it fits up to the plot edge, else right-aligned with a tick at the window start
+      pl.classList.toggle('ra', !fit); pl.style.right = fit ? 'auto' : '0'; pl.style.left = fit ? `${(PGDIS[0] / hs.length * 100).toFixed(2)}%` : 'auto'; pl.style.setProperty('--tk', `${Math.max(0, Math.round(mw(txt) - room))}px`);
+      pl.title = `Official forecast (INAA): possible switch ${wd(ta)} ${hh(ta)}:00 to ${wd(tb)} ${hh(tb)}:00`; } fitTagChip(); /* at once, so no frame shows the tag over the chip */ // as much as fits, the full window in the title
+    const wsh = $('pgwash'); if (wsh) Object.assign(wsh.style, { display: '', left: `${(PGDIS[0] / hs.length * 100).toFixed(2)}%`, width: `${((PGDIS[PGDIS.length - 1] - PGDIS[0] + 1) / hs.length * 100).toFixed(2)}%` }); }
+  else { const wsh = $('pgwash'); if (wsh) wsh.style.display = 'none'; } } // at the bracket's left end, never clipped // on the bracket, at the right end of the bar's top edge
+  for (const l of $('ticks').querySelectorAll('span.hr')) { const c = +l.dataset.x * tw / 100, hw = l.offsetWidth / 2; const tk = l.previousElementSibling && l.previousElementSibling.classList.contains('tk') ? l.previousElementSibling : null; if (tk) tk.style.visibility = ''; l.style.visibility = l.offsetWidth && (busy.some(([a, b]) => c + hw > a && c - hw < b) || (on && c + hw + 6 > x * tw / 100 - (nt ? nt.offsetWidth : 30) && c - hw - 6 < x * tw / 100) /* the Now chip runs left from its line, into the gutter */) ? 'hidden' : ''; if (tk) tk.style.visibility = l.style.visibility; } // a label that touches the Now chip goes, and its tick with it (no orphan tick)
+  { const tr = $('ticks').getBoundingClientRect(); $('ticks').querySelectorAll('span.day').forEach(l => { l.classList.remove('dend'); if (l.getBoundingClientRect().right > tr.right + 1) l.classList.add('dend'); }); // a day label that would overflow is right-aligned at the plot edge
+    const pr = $('pgl') && !$('pgl').hidden ? $('pgl').getBoundingClientRect() : null; if (pr) $('ticks').querySelectorAll('span.hr').forEach(l => { const r = l.getBoundingClientRect(); if (r.right > pr.left - 4 && r.left < pr.right + 4 && r.bottom > pr.top - 2) l.style.visibility = 'hidden'; }); } // tick labels under the Official tag step aside
+  const firstDay = $('ticks').querySelector('span.day'), st = $('tick-start');
+  if (st) st.style.visibility = firstDay && parseFloat(firstDay.style.left) / 100 * tw < 90 ? 'hidden' : ''; // the start day, unless its midnight label is right there
+}
+const fmtHM = d => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(d);
+function renderLiveBadge() { // one freshness state, with its time: the hero line and the legend never disagree
+  const lg = document.getElementById('aclegend');
   if (!lg) return;
-  const dot = k => `<i style="background:${HEX[k]}"></i>`;
+  syncMode(); drawNow();
+  const dot = k => phaseDot(k);
   if (liveMode) {
-    const n = [...planes.values()].filter(p => p.dead === null).length, stale = liveAge() > 60;
-    lg.innerHTML = `<b class="${stale ? 'stale' : 'on'}">${stale ? 'Stale' : 'Live'}</b><span>${n} aircraft</span><span>${dot('arr')}Arriving</span><span>${dot('dep')}Departing</span><span>${dot('ground')}On ground</span><span>${dot('air')}En route</span>`;
+    const n = [...planes.values()].filter(p => p.dead === null).length, stale = liveAge() > 60, at = fmtHM(new Date(liveData.generated));
+    $('dir-sub').innerHTML = feedLate() ? `<span class="late">${ICON.warn}Aircraft positions are from ${at}, ${ageWords(liveAge())}, shown faded</span>`
+      : `<span class="${stale ? 'dot-stale' : 'dot-live'}"></span>Live · ${n} aircraft · updated ${at}`;
+    lg.innerHTML = `<span>${dot('arr')}Arriving</span><span>${dot('dep')}Departing</span><span>${dot('ground')}On the ground</span><span>${dot('air')}En route</span>`;
   } else {
-    const row = (liveData?.future || []).find(r => state.run && Date.parse(r.t) === Date.parse(state.run.hours[state.hour]?.t));
-    lg.innerHTML = `<b class="sim">Simulated</b><span>${row ? `${row.arrivals} arrivals · ${row.departures} departures expected this hour` : 'illustrative traffic'}</span><span>${dot('arr')}Arrival</span><span>${dot('dep')}Departure</span>`;
-  }
-  if (lb && !CALM) {
-    lb.hidden = !liveData;
-    if (liveData) {
-      const stale = liveAge() > 60;
-      lb.className = `panel livebadge ${liveMode ? 'on' : ''} ${stale ? 'stale' : ''}`;
-      lb.innerHTML = `<i></i>${stale ? 'Stale' : 'Live'} · ${[...planes.values()].filter(p => p.dead === null).length} aircraft · flown now OD ${liveData.od_live === 25 ? 25 : liveData.od_live === 7 ? '07' : '–'}`;
-      lb.title = liveMode ? 'Showing live aircraft' : 'Back to live aircraft';
-    }
+    const od = state.cur?.od ?? 7, c = od === 25 ? 'var(--west)' : 'var(--east)', c2 = od === 25 ? 'var(--east)' : 'var(--west)';
+    lg.innerHTML = `<span><i class="pl" style="--c:${c}"></i>${od === 25 ? '25' : '07'} landings</span><span><i class="pl solid"></i>Take-offs</span><span><i class="ring"></i>Under a landing path now</span>` + (GHOST ? `<span><i class="pl" style="--c:${c2};opacity:.6"></i>Landings after a switch to ${od === 25 ? '07' : '25'}</span>` : '');
   }
 }
 function setPlaying(on) {
   state.playing = on;
-  $('play').innerHTML = on ? ICON.pause : ICON.play;
-  $('play').setAttribute('aria-label', on ? 'Pause' : 'Play');
+  $('play').innerHTML = on ? `${ICON.pause}<span>Pause</span>` : `${ICON.play}<span>Play 48\u202fh</span>`;
+  $('play').title = 'Step through the forecast hour by hour';
   hourTimer = 0;
 }
 $('play').onclick = () => { exitLive(); setPlaying(!state.playing); };
-$('livebadge').onclick = () => setLive(true);
 {
   const track = $('track');
   let drag = null;
@@ -996,7 +1408,7 @@ $('livebadge').onclick = () => setLive(true);
   };
   track.addEventListener('pointerdown', e => {
     exitLive();
-    track.setPointerCapture(e.pointerId);
+    track.setPointerCapture(e.pointerId); HOVERING = false; hover = null; // a click pins: leaving the timeline no longer springs back
     track.classList.add('dragging');
     setPlaying(false);
     const r = track.getBoundingClientRect(), x = e.clientX - r.left, kx = knobPx(knob.x);
@@ -1027,7 +1439,7 @@ $('livebadge').onclick = () => setLive(true);
     knobTo(target, { velocity: vpx / pph, damping: Math.abs(vpx) > 300 ? 0.8 : 1, response: 0.4 });
     drag = null;
     moving.add(knob);
-    knob.onRest = () => { scrubbing = false; setHour(target); };
+    knob.onRest = () => { scrubbing = false; setHour(target); drawKnob(); }; /* the pill turns into the filled pinned chip */
   };
   track.addEventListener('pointerup', release);
   track.addEventListener('pointercancel', release);
@@ -1047,7 +1459,7 @@ $('livebadge').onclick = () => setLive(true);
   const endHover = () => {
     if (!hover) return;
     const from = hover.from, x = knob.x;
-    hover = null; scrubbing = false;
+    hover = null; HOVERING = false; scrubbing = false;
     if (liveData) { setLive(true); knob.jump(x); knobTo(0, { damping: 1, response: 0.4 }); }
     else { setHour(from); knobTo(from, { damping: 1, response: 0.4 }); }
   };
@@ -1056,56 +1468,161 @@ $('livebadge').onclick = () => setLive(true);
     const r = track.getBoundingClientRect(), pad = 24;
     const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top - pad && e.clientY <= r.bottom + pad;
     if (!inside) return endHover();
-    if (!hover) { hover = { from: state.hour }; exitLive(); setPlaying(false); }
+    if (!hover) { hover = { from: state.hour }; exitLive(); setPlaying(false); } HOVERING = true;
     scrubbing = true;
     moving.delete(knob); knob.v = 0; knob.onRest = null;
     knob.jump(Math.max(0, Math.min(N() - 1, (e.clientX - r.left) / (r.width / N()) - 0.5)));
     drawKnob();
   });
   document.documentElement.addEventListener('mouseleave', endHover);
+  $('dback').onclick = () => { setPlaying(false); if (liveData && !feedOffline()) setLive(true); else setHour(curIdx()); knobTo(curIdx(), { damping: 1, response: 0.4 }); };
 }
 addEventListener('keydown', e => {
   if (e.code === 'Space' && !/SELECT|BUTTON/.test(document.activeElement?.tagName)) { e.preventDefault(); setPlaying(!state.playing); }
 });
 
-// ---- legend popover: materialises out of its button and goes back into it
-{
-  const pop = $('legend'), btn = $('b-info'), s = new Spring(0, { damping: 1, response: 0.34 });
-  const draw = p => {
-    pop.style.opacity = Math.max(0, Math.min(1, p));
-    pop.style.transform = `scale(${0.86 + 0.14 * p})`;
-    pop.style.filter = `blur(${Math.max(0, (1 - p) * 10)}px)`;
-  };
-  const open = on => {
-    btn.setAttribute('aria-expanded', on);
-    if (on) pop.hidden = false;
-    animate(s.to(on ? 1 : 0), draw, () => { if (!on) pop.hidden = true; });
-  };
-  draw(0);
-  btn.onclick = () => open(btn.getAttribute('aria-expanded') !== 'true');
-  addEventListener('pointerdown', e => {
-    if (btn.getAttribute('aria-expanded') === 'true' && !pop.contains(e.target) && !btn.contains(e.target)) open(false);
-  });
-  addEventListener('keydown', e => { if (e.key === 'Escape') open(false); });
-}
 
 // ---- forecast runs and hours
+const isNight = h => { const x = +fmtH.format(new Date(h.t)); return x >= 23 || x < 5; }; // night ban 23-05 local
+// dock rows, laid out like the dashboard chart: event row (the hour label), direction, switch chance, Runway 18, headwind
+const DOCK = { rh: 24, r18: false, wind: false };
+function swScale(peak) { // the shared switch-chance scale (fra.siteui.SWITCH, the same function on the dashboard)
+  const S = (window.FRA_STYLE || {}).switch || { real: 0.2, real_h: 80, calm_top: 0.2, calm_h: 40, grid: 0.1 };
+  const top = Math.min(1, Math.max(S.nice_min || 0.2, Math.ceil(peak / (S.nice_step || 0.1) - 1e-9) * (S.nice_step || 0.1))); // the dashboard's nice top (siteui.SWITCH)
+  return { top, h: Math.min(80, peak >= S.real ? S.real_h : S.calm_h_3d || 50), grid: top / 2 }; // never taller than the dashboard's chance row // the 10 % gridline gives the headroom
+}
+function dockLayout(hs) {
+  const oth = h => (hs[curIdx()].od === 25 ? 1 - h.p25 : h.p25), real = Math.max(...hs.map(oth)) >= 0.2, nar = app.clientWidth < 640;
+  DOCK.sc = swScale(Math.max(...hs.map(oth))); DOCK.rh = DOCK.sc.h; // the dashboard's scale and row height: as tall as the peak needs
+  DOCK.r18 = hs.some(h => !isNight(h) && h.p18 < 0.9);
+  DOCK.wind = false; // the headwind row lives on the dashboard; the 3D dock keeps direction and switch chance at full size
+  const ph = app.clientWidth < 600, dt = ph ? 30 : 19, /* the official tag's band: 4 px more air above it */ dh = nar ? 32 : 34, lgH = (() => { const k = $('dkey'), tr = $('track'); if (!k || !tr) return 0; if (ph) { if (k.parentElement !== tr) tr.appendChild(k); k.classList.add('inbar'); return (k.offsetHeight || 36) + 8; } if (k.classList.contains('inbar')) { k.classList.remove('inbar'); document.querySelector('.dock').appendChild(k); } return 0; })(), /* phones: the legend right under the direction bar, as on the dashboard */ rt = dt + dh + lgH + (ph ? 30 : 12), /* 12 px under the bar, as on the dashboard */ /* phones: an 8 px gap above and below each row name */ mt = rt + DOCK.rh + 16, wt = mt + (DOCK.r18 ? 18 : 4), wh = 44; // phones: each row's name in the 20 px above it
+  const th = DOCK.wind ? wt + wh : DOCK.r18 ? mt + 10 : rt + DOCK.rh;
+  DOCK.rt = rt;
+  for (const [k, v] of Object.entries({ dt, dh, rt, rh: DOCK.rh, mt, wt, wh, th })) app.style.setProperty(`--${k}`, `${v}px`);
+  $('wind-l').hidden = !DOCK.wind; $('windrow').style.display = DOCK.wind ? '' : 'none';
+}
+function drawWindRow() { // headwind on the runways in use, against the switch limit (tailwind above 1 kt), as on the dashboard
+  const el = $('windrow'); if (!state.run || !DOCK.wind) { el.innerHTML = ''; return; }
+  const hs = state.run.hours, W = $('track').clientWidth, H = 44, cw = W / hs.length; if (!W) return;
+  const hw = h => h.ws * Math.cos((h.wd - (h.od === 25 ? 249 : 69)) * Math.PI / 180), have = hs.filter(h => h.ws !== undefined), vals = have.map(hw);
+  const hi = Math.max(6, Math.ceil(Math.max(...vals) + 1)), lo = Math.min(-4, Math.floor(Math.min(...vals) - 1)), top = 4, bot = H - 2;
+  const y = v => top + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * (bot - top), step = hi - lo > 24 ? 10 : 5, ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) if (v >= 0 || v <= -step) ticks.push(v);
+  let d = '', pen = false;
+  hs.forEach((h, i) => { if (h.ws === undefined) { pen = false; return; } d += `${pen ? 'L' : 'M'}${((i + 0.5) * cw).toFixed(1)} ${y(hw(h)).toFixed(1)}`; pen = true; });
+  el.setAttribute('viewBox', `0 0 ${W} ${H}`); el.setAttribute('width', W); el.setAttribute('height', H);
+  el.innerHTML = `<rect x="0" y="${y(-1)}" width="${W}" height="${Math.max(0, bot - y(-1))}" class="zone"/>`
+    + ticks.map(v => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="${v ? 'grid' : 'zero'}"/>`).join('')
+    + `<line x1="0" x2="${W}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><path class="ln" d="${d}"/>`
+    + ticks.map(v => `<rect x="1" y="${y(v) - 14}" width="${v ? 34 : 12}" height="13" rx="2" class="chip"/><text x="4" y="${y(v) - 3}">${v ? `${Math.abs(v)} kt` : '0'}</text>`).join('')
+    + `<text x="${W - 4}" y="${Math.min(bot - 1, y(-1) + 11)}" text-anchor="end" class="limt">limit</text>`;
+}
+new ResizeObserver(() => { if (state.run) { dockLayout(state.run.hours); drawWindRow(); drawNow(); } }).observe(app);
+function fitTicks() { // hide only the ticks that touch the "Forecast ends" label; skipped while the dock has no layout yet
+  const tk = $('ticks'), e = tk.querySelector('.end'); if (!e) return;
+  const r = e.getBoundingClientRect(); if (!r.width || !tk.getBoundingClientRect().width) return;
+  e.style.visibility = ''; // the end label gives way to a day label it would touch (the hour labels sit on their own line)
+  for (const s of tk.querySelectorAll('span.day,span.start')) { const b = s.getBoundingClientRect(); if (b.width && s.style.visibility !== 'hidden' && b.right > r.left - 8 && b.left < r.right) e.style.visibility = 'hidden'; }
+}
+new ResizeObserver(() => fitTicks()).observe(document.body);
 function setRun(name, keepHour) {
   state.run = F.runs.find(r => r.source === name) || F.runs[F.runs.length - 1];
   $('run').value = state.run.source;
+  renderIssued(); // the header says which forecast is shown, its age, as on the dashboard
   const hs = state.run.hours;
   $('track').setAttribute('aria-valuemax', hs.length);
+  const hatch = (a, b, w = 3) => `repeating-linear-gradient(135deg,${a} 0 ${w}px,${b} ${w}px ${2 * w}px)`;
+  requestAnimationFrame(() => { const sg = $('segs'), TW = sg.clientWidth, H2 = hs, c0 = curIdx(), TMIN = ((window.FRA_STYLE || {}).switch_tab_min) || 24; // the dashboard's rule: the predicted switch at least 24 px wide (into the 24 px kept free), faded like its hours, always with its chip
+    sg.querySelector('.swtab')?.remove(); $('track').querySelector('.swchip')?.remove();
+    const ci = H2.findIndex((x2, q) => q > c0 && x2.od !== H2[c0].od); if (ci < 0) return; let e2 = ci; while (e2 + 1 < H2.length && H2[e2 + 1].od === H2[ci].od) e2++;
+    const cwp = TW / H2.length, x0 = ci * cwp, segW = (e2 + 1 - ci) * cwp, od2 = H2[ci].od, lo = H2.slice(ci, e2 + 1).some(x2 => Math.min(x2.p25, 1 - x2.p25) >= 0.1);
+    if (segW < TMIN) sg.insertAdjacentHTML('beforeend', `<i class="swtab ${od2 === 25 ? 'w' : 'e'}${lo ? ' lo' : ''}" style="left:${Math.min(x0, TW - TMIN)}px;width:${TMIN}px;background:${od2 === 25 ? HEX.west : HEX.east}" title="The switch starts here; the forecast ends after this hour"></i>`);
+    $('track').insertAdjacentHTML('beforeend', `<span class="swchip" style="--dc:${od2 === 25 ? HEX.west : HEX.east}">to ${od2 === 25 ? '25' : '07'}</span>`);
+    const chip = $('track').querySelector('.swchip'), cw2 = chip.offsetWidth, cl = Math.max(0, Math.min(x0, TW - cw2)); /* inside the axis */ chip.style.left = `${cl}px`;
+    fitTagChip(); });
   $('segs').innerHTML = hs.map(h => {
-    const west = h.p25 >= 0.5, cert = Math.abs(h.p25 - 0.5) * 2;
-    return `<i style="background:${west ? HEX.west : HEX.east};opacity:${(0.32 + 0.68 * cert).toFixed(2)}"></i>`;
-  }).join('');
-  $('marks').innerHTML = hs.map(h => `<i style="background:${h.p18 < 0.5 ? HEX.closed : 'transparent'}"></i>`).join('');
-  $('ticks').innerHTML = hs.map((h, i) => {
-    const d = new Date(h.t), hr = fmtH.format(d), left = ((i + 0.5) / hs.length * 100).toFixed(2);
-    if (hr === '00') return `<span class="day" style="left:${left}%">${fmtDay.format(d)}</span>`;
-    return ['06', '12', '18'].includes(hr) ? `<span style="left:${left}%">${hr}</span>` : '';
-  }).join('');
-  const i = keepHour ? Math.min(state.hour, hs.length - 1) : 0;
+    const west = h.p25 >= 0.5, other = Math.min(h.p25, 1 - h.p25); // <2%: solid, 2-25%: faded (less certain), more: hatched
+    const c = west ? HEX.west : HEX.east; // solid = very likely; white stripes = less certain (2-25%); two colours = either way; grey = night ban
+    const bg = isNight(h) ? `${HATCH(theme)} fixed,${c}` : c; /* fixed: one continuous pattern per night, no seam at each hour */ // night: the direction stays visible under a light hatch, as on the dashboard
+    return `<i class="${west ? 'w' : 'e'}${!isNight(h) && other >= 0.1 ? ' lo' : ''}" style="background:${bg}" title="${isNight(h) ? 'Night ban, no scheduled flights' : `${odName(west ? 25 : 7)}, ${pct(1 - other)}`}"></i>`;
+  }).join('') + (() => { // "07 East →" on each run of one direction (from its first hour outside the night ban, if 5 h fit)
+    let out = '', i = 0;
+    while (i < hs.length) { let j = i; const w = hs[i].p25 >= 0.5; while (j + 1 < hs.length && (hs[j + 1].p25 >= 0.5) === w) j++;
+      let a = i; while (a <= j && isNight(hs[a])) a++;
+      const nf = Math.max(0, (Date.now() - Date.parse(hs[0].t)) / (hs.length * 36e5)), lf = Math.max(a / hs.length, a <= nf * hs.length ? nf : 0); // after the now line, 8 px in
+      if (j - a >= 4) out += `<span class="dlab ${w ? 'w' : 'e'}" style="left:calc(${(lf * 100).toFixed(2)}% + 8px)">${w ? `${ARROW_SVG2('w')}25 West` : `07 East${ARROW_SVG2('e')}`}</span>`;
+      i = j + 1; }
+    return out; })();
+  $('marks').innerHTML = hs.map(h => `<i class="${isNight(h) ? 'n' : h.p18 < 0.5 ? 'x' : h.p18 < 0.9 ? 'r' : 'o'}" title="Runway 18 ${isNight(h) ? 'night ban' : h.p18 < 0.5 ? 'closed' : h.p18 < 0.9 ? `${pct(1 - h.p18)} chance of a closure` : 'open'}"></i>`).join('');
+  dockLayout(hs);
+  { // switch chance per hour on the dashboard's scale: 0 to 20 % in a half-height row while no real switch is in view, else 0 to 100 %
+    { OTHER = hs[curIdx()].od === 25 ? 'East' : 'West'; } // what the bars measure: p(the other direction) that hour
+    const PKI = hs.reduce((m, h, i) => (!isNight(h) && (m < 0 || (OTHER === 'East' ? 1 - h.p25 : h.p25) > (OTHER === 'East' ? 1 - hs[m].p25 : hs[m].p25)) ? i : m), -1); // the labelled peak (outside the night ban), one step darker
+    const oth = pOther /* the dashboard's meaning: p(the other direction than the one flown now) */, TOP = DOCK.sc.top, W = hs.length * 10, RH = DOCK.rh, LS = 0, PH = RH - LS, GY = Math.max(LS + 0.5, RH - DOCK.sc.grid / TOP * PH); // a 16 px strip on top for the peak label
+    $('risk').setAttribute('viewBox', `0 0 ${W} ${RH}`);
+    app.style.setProperty('--gf', (DOCK.sc.grid / TOP).toFixed(3)); // the 10 % label sits on its gridline
+    $('rgl').style.top = `${DOCK.rt + GY + 1}px`;
+    $('risk').innerHTML = `<line x1="0" y1="${GY}" x2="${W}" y2="${GY}" class="grid"/>` + (TOP > DOCK.sc.grid + 1e-9 ? `<line x1="0" y1="0.5" x2="${W}" y2="0.5" class="grid half"/>` : '') + `<line x1="0" y1="${RH - 0.5}" x2="${W}" y2="${RH - 0.5}" class="base calm"/>` + hs.map((h, i) => { const o = oth(h), ht = o < (((window.FRA_STYLE || {}).switch || {}).min_bar ?? 0.01) ? 0 : Math.max(2, Math.min(1, o / TOP) * PH);
+      const vpp = 10 * hs.length / ($('track').clientWidth || 1000), bw = Math.min(10 - 2 * vpp, 14 * vpp); return !ht ? `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - 1}" width="${bw.toFixed(2)}" height="1" fill="${theme === 'light' ? '#4b4d53' : '#9aa0a6'}" opacity=".3"/>` /* under 1 %: a 1 px stub, so the row reads as ~0, not as missing */ : `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - ht}" width="${bw.toFixed(2)}" height="${ht}" fill="${isNight(h) ? (theme === 'light' ? '#b9babc' : '#4b4b4c') : theme === 'light' ? '#4b4d53' : '#9aa0a6'}"${isNight(h) ? ' class="nt"' : ''} opacity="${isNight(h) ? 1 : o >= 0.2 || i === PKI ? 1 : 0.85}"${i === PKI ? ` style="filter:brightness(${theme === 'light' ? '.75' : '1.1'})"` : ''}><title>${fmtBub.format(new Date(h.t))}: ${pct(o)} chance of ${OTHER} that hour</title></rect>`; }).join('');
+    $('rgl').textContent = `${Math.round(DOCK.sc.grid * 100)} %`;
+    { const t2 = $('rgl2'); if (t2) { t2.textContent = `${Math.round(TOP * 100)}\u202f%`; t2.hidden = !(TOP > DOCK.sc.grid + 1e-9) || !!DOCK.sc.calm; } } // the scale's top, as on the dashboard
+    { // the single peak callout, as on the dashboard: "5 % · Fri 22:00", beside the tallest bar
+      const pk = hs.reduce((m, h, i) => (!isNight(h) && (isNight(hs[m]) || oth(h) > oth(hs[m])) ? i : m), 0) /* the peak outside the night ban, as on the dashboard */, o = oth(hs[pk]), el = $('rpk');
+      if (o < 0.01 || DOCK.sc.calm) { el.textContent = ''; if ($('rpkl')) $('rpkl').style.display = 'none'; } // a calm day names its peak in the row label
+      else {
+        const f = (pk + 0.5) / hs.length;
+        el.textContent = peakNote(o, hs[pk].t); if ($('dpk')) $('dpk').textContent = ''; // at the chance row's right end, just above its bar, as on the dashboard
+        const bh = Math.max(2, Math.min(1, o / TOP) * PH); // just above its bar, inside the row, as on the dashboard
+        { const n = hs.length, tw = $('track').clientWidth || 1, cx = (pk + 0.5) / n * tw, w0 = el.offsetWidth || 120, flip = cx - 8 - w0 < 0, top = app.clientWidth < 600 ? DOCK.rt + 2 : DOCK.rt - 15; /* the dashboard's placement: just above the axis top, never on a bar (phones: inside the row's top, under the legend) */ // the note at the top of the row, right-aligned at its leader; the leader ends in a dot on the peak bar
+          Object.assign(el.style, { left: `${(flip ? cx : Math.min(cx, tw - 6 + 8)).toFixed(1)}px`, right: 'auto', top: `${top}px`, transform: flip ? 'translateX(8px)' : 'translateX(calc(-100% - 8px))' }); /* never past the plot's right edge (6 px inside) */
+          let ld = $('rpkl'); if (!ld) { ld = document.createElement('i'); ld.id = 'rpkl'; ld.className = 'rpkl'; $('track').appendChild(ld); }
+          Object.assign(ld.style, { left: `${cx.toFixed(1)}px`, top: `${top + 6}px`, height: `${Math.max(0, DOCK.rt + RH - bh - top - 6 - 2)}px`, display: '' }); }
+        requestAnimationFrame(() => { const q = el.getBoundingClientRect(), hit = !el.textContent || [...document.querySelectorAll('#risk rect')].some(b => { const r = b.getBoundingClientRect(); return r.height > 1.5 && r.right > q.left && r.left < q.right && r.bottom > q.top && r.top < q.bottom; }) || [document.getElementById('dkey')].some(k => { if (!k || !k.offsetHeight) return false; const r = k.getBoundingClientRect(); return r.bottom > q.top && r.top < q.bottom; });
+          if (hit && el.textContent) { el.textContent = ''; if ($('rpkl')) $('rpkl').style.display = 'none'; return; }
+          const ld = $('rpkl'), br = document.querySelectorAll('#risk rect')[pk]?.getBoundingClientRect(), tr = $('track').getBoundingClientRect(), hz = parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1;
+          if (ld && br && el.textContent && !el.textContent.startsWith('peak ')) { const t0 = (q.top + q.height / 2 - tr.top) / (app.clientWidth < 640 ? 1 : hz); Object.assign(ld.style, { top: `${t0}px`, height: `${Math.max(0, (br.top - q.top - q.height / 2) / (app.clientWidth < 640 ? 1 : hz) - 3)}px` }); } }); // no room for the note: the dot and its leader go too (never a lone dot); else the leader runs from the note to its bar
+        { const c0 = curIdx(), noSw = !hs.some((x, q) => q > c0 && x.od !== hs[c0].od); if (noSw) { const ty = DOCK.rt + RH - bh - 2; if (bh + 20 <= RH) { el.textContent = `peak ${pct(o)}`; Object.assign(el.style, { left: `${((pk + 0.5) / hs.length * ($('track').clientWidth || 1) + 4).toFixed(1)}px`, top: `${ty - 18}px`, transform: 'translateX(-100%)' }); Object.assign($('rpkl').style, { top: `${ty}px`, height: '0px' }); } else { el.textContent = ''; $('rpkl').style.display = 'none'; } } } // as on the dashboard: "peak 20 %" on its dot, or the darker bar alone // no switch expected: the panel names the peak; here only its dot and the darker bar (as on the dashboard)
+      }
+    }
+    { const pk = hs.reduce((m, h, i) => (!isNight(h) && (isNight(hs[m]) || oth(h) > oth(hs[m])) ? i : m), 0) /* the peak outside the night ban, as on the dashboard */; $('rgl').hidden = !!DOCK.sc.calm;
+      $('risk-l').innerHTML = `${T.switch} ${OTHER}`; }
+    $('risk').removeAttribute('hidden'); $('risk-l').hidden = false; // an SVG element has no .hidden property
+    $('marks').hidden = !DOCK.r18; $('r18-l').hidden = !DOCK.r18;
+  }
+  drawWindRow();
+  { // the key lists only what this run shows
+    const any = f => hs.some(f), K = [];
+    for (const o of [7, 25]) K.push([o === 25 ? 'west' : 'east', `<span><i style="background:var(--${o === 25 ? 'west' : 'east'})"></i>${o === 25 ? '25 West' : '07 East'}</span>`]);
+    K.push(['official', `<span id="pgkey" style="display:none"><i class="pgk"></i>${T.inaa_flag}</span>`]); // shown by drawPgMark
+    if (any(isNight)) K.push(['night', `<span><i class="nightk" style="background:${HATCH(theme)},${HEX.east}"></i>${T.night}</span>`]);
+    if (DOCK.wind) K.push(['limit', `<span><i class="limk"></i>${T.limit}</span>`]);
+    if (any(h => !isNight(h) && Math.min(h.p25, 1 - h.p25) >= 0.1)) K.push(['faded', `<span><i class="lessk"></i>${T.faded}</span>`]);
+    if (any(h => !isNight(h) && h.p18 < 0.5)) K.push(['r18closed', '<span><i class="closedk"></i>Runway 18 closed</span>']);
+    if (any(h => !isNight(h) && h.p18 >= 0.5 && h.p18 < 0.9)) K.push(['r18risk', '<span><i class="riskk"></i>Runway 18, 10 to 50\u202f% closure chance</span>']);
+    { const ORD = ((window.FRA_STYLE || {}).legend_order) || []; K.sort((a, b) => ORD.indexOf(a[0]) - ORD.indexOf(b[0])); } // the dashboard's order (siteui.STYLE.legend_order)
+    renderMapKey();  // the map key lives in the scene
+    $('dkey').innerHTML = K.map(k => k[1]).join('');
+  }
+  { // night ban 23-05 local as grey bands behind both rows
+    const night = isNight;
+    let b = '', a = -1;
+    hs.forEach((h, i) => {
+      if (night(h) && a < 0) a = i;
+      if (a >= 0 && (!night(h) || i === hs.length - 1)) { const e = night(h) ? i + 1 : i; b += `<i style="left:${(a / hs.length * 100).toFixed(2)}%;width:${((e - a) / hs.length * 100).toFixed(2)}%"></i>`; a = -1; }
+    });
+    $('nights').innerHTML = b;
+  }
+  // the axis on top, as on the dashboard: dates on the first line (at midnight, the start, the end), 06 / 12 / 18 on the second
+  const wide = innerWidth >= (((window.FRA_STYLE || {}).axis || {}).short_below || 520) && ($('track').clientWidth || 800) / hs.length * 6 >= (((window.FRA_STYLE || {}).axis || {}).long_px || 48), /* the shared axis rule (fra.siteui.AXIS) */ endD = new Date(new Date(hs[hs.length - 1].t).getTime() + 36e5);
+  $('ticks').innerHTML = hs.map((h, i) => { // Now alone at the start: the readout carries the date, day labels sit at midnights only
+    const d = new Date(h.t), hr = fmtH.format(d), left = (i / hs.length * 100).toFixed(2); // the hour starts at the cell's left edge
+    if (hr === '00') return `<i class="dl" style="left:${left}%"></i><span class="day" style="left:${left}%">${fmtDay.format(d)}</span>`; // every midnight; one near the end is right-aligned inside
+    return ['06', '12', '18'].includes(hr) && i <= hs.length - 4 ? `<i class="tk" style="left:${left}%"></i><span class="hr" data-x="${left}" style="left:${left}%">${wide ? `${hr}:00` : hr}</span>` : '';
+  }).join('') + `<span class="nowtick" id="nowtick" title="Current hour; forecast issued ${fmtHM(new Date(state.run.issue))}">Now</span>`;
+  $('mids').innerHTML = hs.map((h, k) => (k && fmtH.format(new Date(h.t)) === '00' ? `<i style="left:${(k / hs.length * 100).toFixed(2)}%"></i>` : '')).join(''); // midnight: one hairline through every row
+  requestAnimationFrame(fitTicks);
+  const i = keepHour ? Math.min(state.hour, hs.length - 1) : curIdx();
   setHour(i, true);
   knobTo(i, 'jump');
 }
@@ -1118,6 +1635,14 @@ function stateAt(i) {
   return { h, od, r18 };
 }
 
+const pOther = h => (OTHER === 'East' ? 1 - h.p25 : h.p25); // the one value the chance row, its readout and the panel show: p(the direction other than the one flown now)
+function fitTagChip() { // the dashboard's fitTag: the official tag steps down "Official: Fri 19h → Sat 13h", "Official → Sat 13h", "Official" and ends 4 px before the switch chip
+  const tg = $('pgl'), chip = $('track')?.querySelector('.swchip'); if (!tg || tg.hidden || !chip || !PGDIS.length) return;
+  const TW = $('track').clientWidth, lim = chip.offsetLeft - 4, xa = PGDIS[0] / state.run.hours.length * TW;
+  if (tg.offsetLeft + tg.offsetWidth <= lim) return;
+  for (const t of [tg.dataset.l, tg.dataset.m, 'Official']) { if (!t) continue; tg.textContent = t; if (xa + tg.offsetWidth <= lim) { Object.assign(tg.style, { left: `${xa}px`, right: 'auto' }); tg.classList.remove('ra'); return; } }
+  tg.textContent = 'Official'; Object.assign(tg.style, { left: `${Math.max(0, lim - tg.offsetWidth)}px`, right: 'auto' }); tg.classList.remove('ra');
+}
 function setHour(i, force) {
   state.hour = Math.max(0, Math.min(N() - 1, i));
   const { h, od, r18 } = stateAt(state.hour);
@@ -1128,28 +1653,90 @@ function setHour(i, force) {
 
   const west = od === 25, odCol = west ? HEX.west : HEX.east;
   const pOd = west ? h.p25 : 1 - h.p25;
-  setHero(west ? 'Westbound' : 'Eastbound', odCol, west ? -1 : 1);
-  $('dir-sub').innerHTML = liveMode
-    ? `<b>Live</b> · flown now <b>OD ${west ? 25 : '07'}</b> · ${[...planes.values()].filter(p => p.dead === null).length} real aircraft`
-    : state.ovOd
-    ? `What-if <b>OD ${west ? 25 : '07'}</b> · model gives it ${pct(pOd)}`
-    : `<b>OD ${west ? 25 : '07'}</b> · ${pct(pOd)} likely · landings from the ${west ? 'east' : 'west'}`;
-  $('lg-od').style.background = odCol;
+  setHero(isNowHour() ? `${west ? '25' : '07'} Frankfurt flies ${west ? 'West' : 'East'}` : isNight(h) ? (k => { const H2 = state.run.hours, o = k < 0 ? (west ? '25' : '07') : H2[k].p25 >= 0.5 ? '25' : '07'; return `${o} ${k < 0 ? 'Night ban' : T.night_next.replace('{od}', o).replace('{t}', fmtHM(new Date(H2[k].t)))}`; })(state.run.hours.findIndex((x, q) => q > state.hour && !isNight(x))) : `${west ? '25' : '07'} Expected: ${west ? 'West' : 'East'}`, odCol, west ? -1 : 1); $('dir').classList.toggle('fut', !isNowHour()); $('dir').classList.toggle('nbh', !isNowHour() && isNight(h)); /* night ban: an outlined badge, no operations */ document.querySelector('.rail .hero')?.classList.toggle('fut', !isNowHour()); // a forecast hour: the story lines step out // a forecast hour reads as a forecast; now restores it
+  $('eyebrow').textContent = isNowHour() ? (window.FRA_SINCE ? `${T.now} · since ${fmtDay.format(new Date(window.FRA_SINCE))}, ${fmtHM(new Date(window.FRA_SINCE))}` : T.now) : `Frankfurt · forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(h.t))}`;
+  $('ground').textContent = '';
+  if (!liveMode) $('dir-sub').innerHTML = '';
+  bubText(state.hour);
+  { // the key question, without scrubbing: does it change, and when
+    const hs = state.run.hours, from = liveMode ? 0 : state.hour, j = hs.findIndex((x, k) => k > from && x.od !== h.od);
+    const other = k => (h.od === 25 ? 1 - hs[k].p25 : hs[k].p25);
+    const worst = Math.max(...hs.slice(from).map((_, q) => other(from + q)));
+    const end = fmtBub.format(new Date(new Date(hs[hs.length - 1].t).getTime() + 36e5));
+    const prog = x => (x.pg === undefined ? null : x.pg >= 0.75 ? 25 : x.pg <= 0.25 ? 7 : 0), dis = [];
+    { const PW = window.FRA_PGWIN; const shared = PW && state.run && state.run.source === PW.run; // the default run: the windows computed once in Python, the same as the dashboard's
+      hs.forEach((x, q) => { if (q < (liveMode ? 0 : Math.min(from, curIdx()))) return; const t = Date.parse(x.t), s = prog(x);
+        if (shared ? PW.win.some(w => t >= Date.parse(w.start) && t < Date.parse(w.end)) : ((s && s !== x.od) || (s === 0 && Math.max(x.p25, 1 - x.p25) >= 0.9))) dis.push(q); }); }
+    PGDIS = dis;
+    const pgWhat = dis.length ? (dis.some(q => prog(hs[q]) === 0) ? 'Possible switch' : `Switch to ${prog(hs[dis[0]]) === 25 ? '25' : '07'}`) : '';
+    const wk = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    const wq = hs.findIndex((_, q) => q >= from && other(q) === worst);
+    const wqOp = hs.reduce((m, x, q) => (q >= from && !isNight(x) && (m < 0 || other(q) > other(m)) ? q : m), -1), worstOp = wqOp < 0 ? worst : other(wqOp); // shown: outside the night ban
+    { // the dashboard hero's outlook and official-disagreement lines, the same strings
+      const wday = t => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(t)), hh = t => +fmtH.format(new Date(t));
+      const part = t => { const v = hh(t); return v >= 23 || v < 5 ? 'night' : v < 12 ? 'morning' : v < 17 ? 'afternoon' : 'evening'; };
+      const big = worst >= 0.2, wdT = t => `${wday(t)}\u00a0${fmtHM(new Date(t))}`, oname = o => (o === 25 ? 'West' : 'East');
+      const atNow = isNowHour(), oh = pOther(h); // a picked or hovered hour: the panel describes that hour, not now
+      $('outl').innerHTML = !atNow && isNight(h) ? 'No scheduled flights 23:00 to 05:00' : !atNow ? `${pct(h.p25 >= 0.5 ? h.p25 : 1 - h.p25)} ${h.p25 >= 0.5 ? 'West' : 'East'} this hour` // the switch chance is the row below
+        : j >= 0 ? T.out_expected.replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{t}', wdT(hs[j].t)) + (hs.length - 1 - j <= 1 ? (T.out_edge || '') : '') : big ? T.out_possible.replace('{p}', pct(worst)).replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{when}', (hs.length - 1 - wq <= 2 ? T.out_when_end : T.out_when_mid).replace('{t}', wdT(hs[wq].t))) /* siteui.COPY, shared with the dashboard */ : T.out_none; // the model's own 48 h number (p_change_48h)
+      const disagree = dis.length && j < 0 && !big && (atNow || dis.includes(state.hour)); // the official line only while the shown hour is inside its window
+      $('disl').hidden = !disagree;
+      $('outl').title = state.run.p_change === null || state.run.p_change === undefined ? '' : `Calibrated chance of any switch in 48 h: ${pct(state.run.p_change)}\nThe hourly bars are uncalibrated model probabilities.`;
+      if (!dis.length) $('disl').innerHTML = ''; else { const part2 = t => { const v = hh(t); return v >= 23 || v < 5 ? 'night' : v < 11 ? 'morning' : v < 14 ? 'midday' : v < 17 ? 'afternoon' : 'evening'; };
+        const a = hs[dis[0]].t, b = new Date(Date.parse(hs[dis[dis.length - 1]].t) + 36e5).toISOString(), e = new Date(Date.parse(b) - 36e5), sameNight = wday(e) === wday(a) || (Date.parse(b) - Date.parse(a) <= 18 * 36e5 && hh(e) < 5);
+        const when = sameNight ? `${wday(a)}\u00a0${part2(a)}` : `from ${wday(a)}\u00a0${part2(a)} to ${wday(b)}\u00a0${part2(b)}`; // the dashboard's words (siteui.COPY.disagree)
+        $('disl').innerHTML = disagree ? (T.disagree || '{of} warns of a switch {when}; we don\'t expect one.').replace('{of}', `<span class="ofn">${T.of_name || 'The official forecast'}</span>`).replace('{when}', when) : ''; }
+    }
+    { // one line: the peak ahead (now) or the shown hour's chance, with a small bar on the timeline's scale
+      const oh = pOther(h), v = isNowHour() ? worst : oh, sc = DOCK.sc ? DOCK.sc.top : 0.2, bar = `<i class="swb"><i style="width:${(Math.min(1, v / sc) * 100).toFixed(0)}%"></i></i>`;
+      $('dir-next').innerHTML = false && j >= 0 && isNowHour() ? /* the outlook already names the switch time: no repeat */ `<div class="kv"><span>${T.nextsw}</span><b>to ${h.od === 25 ? '07' : '25'}, ${wk.format(new Date(hs[j].t))}</b></div>`
+        : isNowHour() ? `<div class="kv" title="The operating hour (outside the 23:00 to 05:00 night ban) with the highest chance of ${OTHER}, to ${end}. The 48 h figure above is calibrated on past switches from the highest hourly chance, so it can be lower."><span>${T.switch} ${OTHER}</span><b>${worstOp < 0.01 ? 'Under 1\u202f% every hour' : `peak ${pct(worstOp)} · ${wk.format(new Date(hs[wqOp < 0 ? wq : wqOp].t))}`}</b></div>`
+        : `<div class="kv"><span>${T.switch} ${OTHER}</span><b>${pct(oh)} at ${fmtHM(new Date(h.t))}</b></div>`; }
+    { // phones: a compact answer card (the plate and headline, the outlook, the accuracy)
+      const Rq = ((window.FRA_QUALITY || {}).od25 || []).filter(r => r.acc !== null && r.acc !== undefined), pc = v => Math.round(v * 100), rg = a => (Math.min(...a) === Math.max(...a) ? `${Math.min(...a)}` : `${Math.min(...a)}–${Math.max(...a)}`);
+      const since = window.FRA_SINCE ? `since ${fmtDay.format(new Date(window.FRA_SINCE))}` : ''; // the dashboard phone's order: eyebrow, answer, outlook, proof, problem, official warning
+      $('sumbar').innerHTML = `<div class="sb0">Frankfurt${!isNowHour() ? ` · <span class="nw">forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}</span>` : since ? ` · <span class="nw">${since}</span>` : ''}</div><div class="sb1${!isNowHour() && isNight(h) ? ' nbh' : ''}"><b class="dbadge" style="--dc:${h.od === 25 ? HEX.west : HEX.east}" data-d="${h.od === 25 ? '25' : '07'}">${h.od === 25 ? '25' : '07'}</b><span class="nw">${isNowHour() ? `flies ${h.od === 25 ? 'West' : 'East'}\u00a0${ARROW_SVG2(h.od === 25 ? 'w' : 'e')}` : (/^\d\d (.*)$/.exec(heroWord || '') || [0, ''])[1]}</span></div><div class="sb2">${$('outl').innerHTML}</div>`
+        + `<details class="sbx"${app.classList.contains('sbopen') ? ' open' : ''}><summary>Details</summary>` + (Rq.length ? `<div class="sb3">Right <b>${rg(Rq.map(r => pc(r.acc)))}\u202f%</b> of hours · official <em>${rg(Rq.map(r => pc(r.prog)))}\u202f%</em></div>` : '')
+        + `<div class="sb4">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</div>${$('disl').hidden ? '' : `<div class="sb5">${$('disl').innerHTML}</div>`}</details>`;
+      { const sm = $('sumbar').querySelector('.sbx>summary'), o2 = $('sumbar').querySelector('.sb1'); if (sm && o2) sm.style.top = `${o2.offsetTop + (o2.offsetHeight - (sm.offsetHeight || 24)) / 2}px`; } // Details sits on the headline row, right-aligned; the outlook runs full width
+      { const d = $('sumbar').querySelector('.sbx'); if (d) d.ontoggle = () => { app.classList.toggle('sbopen', d.open); requestAnimationFrame(resize); }; } // phones: proof, problem and the official line behind a toggle, so the map keeps its room
+    }
+    $('how-pg').textContent = dis.length ? ` The official forecast flags ${fmtBub.format(new Date(hs[dis[0]].t))} to ${fmtHM(new Date(new Date(hs[dis[dis.length - 1]].t).getTime() + 36e5))} as a possible switch (orange bracket on the timeline).`
+      : hs.some(x => x.pg !== undefined) ? ' The official forecast agrees with ours for this run.' : '';
+    GHOST = j >= 0 || worst >= 0.2; /* only when the outlook names a switch (expected or possible) */ // the alternative paths only when our own switch risk is real
+    drawPgMark(); // an orange bracket above the strip where INAA flags a possible switch
+  }
 
-  $('r18-v').innerHTML = `<span style="color:${r18 ? HEX.r18 : HEX.closed}">${r18 ? 'Open' : 'Closed'}</span>`;
-  $('r18-s').textContent = state.ovR18 ? `What-if · model gives ${pct(h.p18)} open`
-    : `${r18 ? 'Departures to the south' : 'Departures via Centre'} · ${pct(r18 ? h.p18 : 1 - h.p18)} likely`;
+  { // a fact for now, a chance for a forecast hour, never both in one phrase
+    const day = state.run.hours.slice(liveMode ? 0 : state.hour), worst = Math.max(...day.map(x => 1 - x.p18));
+    $('r18-v').innerHTML = !isNowHour() && isNight(h) ? '<span class="badge nb">Night ban</span>' : `<span class="badge${r18 ? '' : ' closed'}">${r18 ? `${(window.FRA_STYLE || {}).check || ''}In use` : 'Closed'}</span>`; // the night ban: no take-offs, so no status
+    $('r18-s').textContent = ''; $('r18-v').title = r18 ? `Closure chance to the end of the forecast: at most ${pct(worst)} in any hour` : 'Its take-offs use the Centre runway';
+  }
 
   if (h.ws !== undefined) {
     setWind(h.wd, h.ws);
-    $('wind-arrow').setAttribute('transform', `rotate(${h.wd})`);
-    const comp = hdg => -h.ws * Math.cos((h.wd - hdg) * Math.PI / 180); // + = tailwind
-    const word = v => `${v >= 0 ? 'tailwind' : 'headwind'} ${Math.abs(v).toFixed(0)} kt`;
-    $('wind-v').innerHTML = `${String(h.wd).padStart(3, '0')}° ${h.ws.toFixed(0)}<small>kt · G${h.wg.toFixed(0)}</small>`;
-    $('wind-s').innerHTML = `${west ? 25 : '07'}: ${word(comp(HDG[od]))}<br>18: ${word(comp(HDG[18]))}`;
+    const ws = Math.round(h.ws), comp = hdg => -h.ws * Math.cos((h.wd - hdg) * Math.PI / 180); // + = tailwind, from the unrounded speed (as on the dashboard), rounded only when shown
+    const wg = Math.round(h.wg), gust = hdg => -wg * Math.cos((h.wd - hdg) * Math.PI / 180);
+    const word0 = v => `${v >= 0 ? 'tailwind' : 'headwind'} ${Math.round(Math.abs(v))}\u202fkt`;
+    const word = (v, hdg = null) => { const g = hdg === null ? null : gust(hdg); return word0(v) + (g !== null && wg > ws + 2 && Math.round(Math.abs(g)) !== Math.round(Math.abs(v)) ? `, gusts ${Math.round(Math.abs(g))}` : ''); };
+    const from = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'][Math.round(h.wd / 45) % 8];
+    const cmp = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(h.wd / 45) % 8];
+    { const tI = Math.round(comp(HDG[od])); $('wind-v').innerHTML = `${Math.abs(tI)}\u202fkt ${tI > 0 ? 'tailwind' : 'headwind'} on ${west ? 25 : '07'}`; } // one wind format on both pages
+    windInd.el.innerHTML = `<svg viewBox="0 0 24 24" style="--a:${h.wd + 180}deg"><path d="M12 21V4M6 10l6-6 6 6"/></svg><span><b>${ws}\u202fkt ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(h.wd / 45) % 8]}</b></span>`; // the arrow: just the speed and where it comes from; the full line is in the panel
+    $('windchip').innerHTML = windInd.el.innerHTML;
+    LAST_WD = h.wd;
+     // phones: the wind in the summary bar, turned with the view
+    $('wcomp').innerHTML = `<svg viewBox="0 0 24 24" style="--a:${h.wd + 180}deg"><path d="M12 21V4M6 10l6-6 6 6"/></svg>` // the arrow is drawn pointing south: rotating by the FROM direction makes it point downwind;
+    const t25 = Math.round(-ws * Math.cos((h.wd - HDG[25]) * Math.PI / 180)); // + = tailwind for westbound
+    const tIn = Math.round(comp(HDG[od]));
+    $('wind-why').textContent = `${cmp} ${ws}\u202fkt · ${String(Math.round(h.wd)).padStart(3, '0')}°`; /* one wind format on both pages */ $('wind-why').title = 'The official rule switches direction when the tailwind stays above 1 kt for 30 minutes, or at once from 10 kt';
+    const xw = Math.round(Math.abs(h.ws * Math.sin((h.wd - HDG[od]) * Math.PI / 180)));
+    $('wind-s').innerHTML = ''; { const pw = $('pdetw'); if (pw) pw.innerHTML = `<b>Wind per runway</b><br>${String(h.wd).padStart(3, '0')}°, gusts ${Math.round(h.wg)}\u202fkt<br>`
+      + `${west ? 25 : '07'}: ${word(comp(HDG[od]), HDG[od])}, crosswind ${xw}\u202fkt<br>18: ${word(comp(HDG[18]), HDG[18])}`; } // inside Details: one disclosure at the bottom
   } else {
     setWind(0, 0);
-    $('wind-v').textContent = '–';
+    windInd.el.innerHTML = ''; $('windchip').innerHTML = '';
+    $('wind-v').textContent = 'n/a';
     $('wind-s').textContent = 'No wind forecast for this run';
   }
 
@@ -1158,15 +1745,15 @@ function setHour(i, force) {
     const closed = rw.key === 'r18' && !r18;
     rw.target = { active: closed ? 0 : 1, closed: closed ? 1 : 0 };
     u.uDir.value = f.startIsA ? 1 : -1;
-    u.uCol.value.set(rw.key === 'r18' ? HEX.r18 : odCol);
+    u.uCol.value.set(odCol); // every runway in use in the direction colour
     const arr = rw.key === 'nw' || rw.key === 'south';
     const [la, lb] = rwLabels[rw.key];
     const startLbl = f.startIsA ? la : lb, endLbl = f.startIsA ? lb : la;
     const des = p => rw.key === 'r18' ? '18' : (p[0] < (p === rw.A ? rw.B : rw.A)[0] ? rw.d07 : rw.d25);
     const startP = f.startIsA ? rw.A : rw.B, endP = f.startIsA ? rw.B : rw.A;
-    const chip = closed ? '<em class="chip closed">Closed</em>' : arr ? '<em class="chip arr">Arrivals</em>' : '<em class="chip dep">Departures</em>';
-    startLbl.el.innerHTML = `<b>${des(startP)}</b>${chip}<small>${RW_NAMES[rw.key]}</small>`;
-    endLbl.el.innerHTML = rw.key === 'r18' ? '' : `<b class="dim">${des(endP)}</b>`;
+    const chip = closed ? '<em class="chip closed">Closed</em>' : '';
+    startLbl.el.innerHTML = `<b>${des(startP)}</b>${chip}`; startLbl.w = 0;
+    endLbl.el.innerHTML = ''; // only the designator in use is named
   }
   const act = new THREE.Vector4(), arrEnd = new THREE.Vector4(-1, -1, -1, -1);
   for (const rw of Object.values(RW)) {
@@ -1175,19 +1762,15 @@ function setHour(i, force) {
   }
   lightMat.uniforms.uAct.value.copy(act);
   lightMat.uniforms.uArr.value.copy(arrEnd);
+  if (!view.card && !BARE && od !== homeOd) { homeOd = od; fitHome(); if (!camTouched) flyHome(); }
   configureFlights(state.cur, clock.elapsedTime, changed && force);
-  {
-    const dir = west ? -1 : 1;
-    flowLabel.dir = V(MID[0] + AX[0] * 900 * dir, MID[1] + AX[1] * 900 * dir, 0);
-    flowLabel.el.innerHTML = `<i style="background:${odCol}"></i>Traffic flows ${west ? 'west' : 'east'} · OD ${west ? 25 : '07'}${ARROW_SVG}`;
-    flowLabel.el.style.color = '';
-  }
+  NIGHT = !isNowHour() && isNight(h); drawPaths(od, r18);
   renderLiveBadge();
   {
     const dot = c => `<i style="background:${c}"></i>`;
-    $('caption').innerHTML = `<span><b>${fmtRun.format(new Date(h.t))}</b><small>+${state.hour + 1} h</small></span>`
+    $('caption').innerHTML = `<span><b>${fmtRun.format(new Date(h.t))}</b><small>+${state.hour + 1}\u202fh</small></span>`
       + `<span>${dot(odCol)}<b>${west ? '25' : '07'} ${west ? 'Westbound' : 'Eastbound'}</b><small>${pct(pOd)}</small></span>`
-      + `<span>${dot(r18 ? HEX.r18 : HEX.closed)}<b>RWY 18 ${r18 ? 'usable' : 'closed'}</b><small>${pct(r18 ? h.p18 : 1 - h.p18)}</small></span>`
+      + `<span>${dot(r18 ? 'var(--label3)' : HEX.closed)}<b>Runway 18 ${r18 ? 'usable' : 'closed'}</b><small>${pct(r18 ? h.p18 : 1 - h.p18)}</small></span>`
 ;
   }
 }
@@ -1200,7 +1783,6 @@ function setCamMode(m) {
   camMode = m;
   state.follow = m === 'follow';
   $('b-follow').setAttribute('aria-pressed', state.follow);
-  $('b-orbit').setAttribute('aria-pressed', state.orbit);
   controls.autoRotate = state.orbit && m === 'free';
 }
 function flyHome() {
@@ -1212,12 +1794,8 @@ function flyHome() {
 }
 $('b-home').onclick = flyHome;
 $('b-follow').onclick = () => (state.follow ? flyHome() : setCamMode('follow'));
-$('b-orbit').onclick = () => { state.orbit = !state.orbit; setCamMode(camMode === 'follow' ? 'free' : camMode); };
 let orbitResume = 0;
-controls.addEventListener('start', () => { clearTimeout(orbitResume); state.orbit = false; setCamMode('free'); });
-controls.addEventListener('end', () => { // the dashboard card picks up its slow turn again once left alone
-  if (view.card) orbitResume = setTimeout(() => { state.orbit = true; setCamMode(camMode === 'follow' ? 'free' : camMode); }, 4000);
-});
+controls.addEventListener('start', () => { camTouched = true; clearTimeout(orbitResume); state.orbit = false; setCamMode('free'); });
 RM.addEventListener('change', () => { if (RM.matches) { state.orbit = false; setCamMode(camMode); } });
 
 // ---- theme
@@ -1227,25 +1805,25 @@ function setTheme(t, persist) {
   C = Object.fromEntries(Object.entries(HEX).map(([k, v]) => [k, new THREE.Color(v)]));
   app.classList.toggle('light', t === 'light');
   for (const [k, v] of Object.entries(HEX)) app.style.setProperty('--' + k, v);
+  { const TB = (window.FRA_STYLE || {}).tag_bg; if (TB) { app.style.setProperty('--tagbg', t === 'light' ? TB.light : TB.dark); app.style.setProperty('--tagink', t === 'light' ? TB.ink_light : TB.ink_dark); } } // the official tag: the dashboard's colour
   app.style.setProperty('--bg', LOOK[t].bg);
   scene.background.set(LOOK[t].bg);
   scene.fog.color.set(LOOK[t].bg);
   applyThemed();
   for (const rw of Object.values(RW)) rw.mat.uniforms.uLight.value = t === 'light' ? 1 : 0;
+  document.querySelectorAll('.dir .dbadge').forEach(b => b.style.setProperty('--dc', b.textContent === '25' ? HEX.west : HEX.east)); // the plate in this theme's direction colour
   lightMat.uniforms.uLight.value = t === 'light' ? 1 : 0;
   lightMat.blending = t === 'light' ? NB : AB;
   lightMat.needsUpdate = true;
   tuneBloom();
-  const next = t === 'light' ? 'dark' : 'light';
-  $('b-theme').innerHTML = next === 'light' ? ICON.sun : ICON.moon;
-  $('b-theme').setAttribute('aria-label', next === 'light' ? 'Light mode' : 'Dark mode');
-  $('b-theme').title = $('b-theme').getAttribute('aria-label');
-  if (persist) try { localStorage.setItem('fra3d-theme', t); } catch { /* storage blocked */ }
+  if (typeof gridVis === 'function') gridVis();
+  if (document.documentElement.dataset.theme !== t) document.documentElement.dataset.theme = t;
+  if (persist) try { localStorage.setItem('fra-theme', t); } catch { /* storage blocked */ }
   if (persist && window.parent !== window) window.parent.postMessage({ fra: 'theme-changed', value: t }, '*');
   if (state.run) { setRun(state.run.source, true); }
 }
-$('b-theme').onclick = () => setTheme(theme === 'light' ? 'dark' : 'light', true);
-SYS_DARK.addEventListener('change', e => { if (!THEME_Q && !saved) setTheme(e.matches ? 'dark' : 'light'); });
+new MutationObserver(() => { const t = document.documentElement.dataset.theme; if ((t === 'dark' || t === 'light') && t !== theme) setTheme(t); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ---- full screen: a dashboard card expands into the complete view and returns to the card on exit
 function setCardMode(on) {
@@ -1254,7 +1832,7 @@ function setCardMode(on) {
   document.body.classList.toggle('embed', EMBED && on);
   tuneBloom();
   resize();
-  requestAnimationFrame(() => { segOd(state.ovOd); segR18(state.ovR18); drawKnob(); });
+  requestAnimationFrame(() => { syncMode(); drawKnob(); });
   flyHome();
 }
 function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement; }
@@ -1275,9 +1853,7 @@ $('b-fs').onclick = async () => {
 };
 function onFsChange() {
   const fs = !!fsElement() || parentFs;
-  $('b-fs').innerHTML = fs ? ICON.collapse : ICON.expand;
-  $('b-fs').setAttribute('aria-label', fs ? 'Exit full screen' : 'Full screen');
-  $('b-fs').title = $('b-fs').getAttribute('aria-label');
+  $('b-fs').innerHTML = `${fs ? ICON.collapse : ICON.expand}<span>${fs ? 'Exit full screen' : 'Full screen'}</span>`;
   if (CARD0) setCardMode(!fs);
   else document.body.classList.toggle('embed', EMBED && !fs);
 }
@@ -1289,17 +1865,14 @@ const clock = new THREE.Clock();
 let sim = 0, hourTimer = 0, followed = null;
 setTheme(theme);
 setRun(Q.get('run') || F.default);
-segOd('');
-segR18('');
+syncMode();
 setPlaying(state.playing);
 setCamMode('free');
 resize();
-requestAnimationFrame(() => { segOd(state.ovOd); segR18(state.ovR18); drawKnob(); });
+requestAnimationFrame(() => { syncMode(); drawKnob(); });
 
 const HOUR_S = 3.2;
 const roseLetters = [...document.querySelectorAll('#rose b')], roseN = $('rose-n');
-const needle = $('b-home').querySelector('.needle');
-needle.style.transformOrigin = '12px 12px';
 const _want = new THREE.Vector3(), _look = new THREE.Vector3();
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.1), now = clock.elapsedTime;
@@ -1331,9 +1904,9 @@ renderer.setAnimationLoop(() => {
     if (p.dead !== null && now - p.dead > 1.6) { if (pinned === p) pinned = null; if (hovered === p) hovered = null; p.dispose(); planes.delete(id); continue; }
     p.step(dt, now);
   }
-  for (const f of flights) f.obj.visible = !liveMode;
-  if (liveMode) for (const f of flights) { f.trail.visible = false; f.line.visible = false; } else for (const f of flights) { f.trail.visible = true; f.line.visible = true; }
-  windLines.visible = !RM.matches && !view.card;
+  for (const f of flights) f.obj.visible = false; // simulated traffic is not drawn: only real aircraft (live) are
+  for (const f of flights) { f.trail.visible = false; f.line.visible = false; }
+  windLines.visible = false; // the streaks read as dust; wind is in the card
   if (!RM.matches) updateWind(dt);
 
   if (camMode === 'follow') {
@@ -1357,7 +1930,7 @@ renderer.setAnimationLoop(() => {
     if (camMode === 'fly' && camPos.resting && camTgt.resting) setCamMode('free');
   }
   controls.update(dt); // dt: the orbit turns at the same speed on 60 and 144 Hz screens
-  needle.style.transform = `rotate(${controls.getAzimuthalAngle() * 180 / Math.PI}deg)`;
+  $('rose').style.opacity = Math.abs(controls.getAzimuthalAngle()) > 0.09 ? 1 : 0; // only when the view is turned away from north up
   {
     const t = controls.target, w = app.clientWidth, h = app.clientHeight;
     _v.copy(t).project(camera);
@@ -1371,10 +1944,25 @@ renderer.setAnimationLoop(() => {
     }
   }
   composer.render();
+  panelRects();
+  { // flight paths sampled on screen, for the town labels to steer clear of
+    const w = app.clientWidth, h = app.clientHeight; PATH_PTS = [];
+    for (const [a, b] of PATHS) for (let k = 0; k <= 160; k++) { _v.copy(V(a[0] + (b[0] - a[0]) * k / 160, a[1] + (b[1] - a[1]) * k / 160, 0)).project(camera); PATH_PTS.push([(_v.x + 1) / 2 * w, (1 - _v.y) / 2 * h]); }
+  }
   updateLabels();
   {
     const w = app.clientWidth, h = app.clientHeight;
-    for (const p of planes.values()) p.drawTag(w, h);
+    { // flight tags: never on top of each other or of a panel (pinned / hovered first, then the lowest aircraft)
+      const keep = PANEL_RECTS.slice();
+      const cand = [];
+      for (const p of planes.values()) { const c = p.drawTag(w, h); if (c) cand.push(c); }
+      cand.sort((a, b) => a.pri - b.pri || (a.p.pos[2] - b.p.pos[2]));
+      const hit = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+      for (const c of cand) {
+        if (c.pri && keep.some(k => hit(c.r, k))) { c.p.tag.style.display = 'none'; continue; }
+        keep.push(c.r);
+      }
+    }
     const tipFor = hovered || pinned, tip = $('actip');
     if (tipFor && (tipFor.dead === null) && (liveMode === (tipFor instanceof LivePlane))) {
       _v.copy(tipFor.obj.position).project(camera);
@@ -1382,12 +1970,17 @@ renderer.setAnimationLoop(() => {
       const html = tipText(tipFor);
       if (tip.dataset.k !== html) { tip.innerHTML = html; tip.dataset.k = html; }
       const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h;
-      tip.style.transform = `translate(${Math.min(w - tip.offsetWidth - 8, Math.max(8, x + 18))}px, ${Math.max(8, y - tip.offsetHeight - 18)}px)`;
-    } else tip.hidden = true;
+      const tw = tip.offsetWidth, th = tip.offsetHeight, hit = r => PANEL_RECTS.some(k => r[0] < k[2] && k[0] < r[2] && r[1] < k[3] && k[1] < r[3]);
+      const spots = [[x + 18, y - th - 18], [x - tw - 18, y - th - 18], [x + 18, y + 18], [x - tw - 18, y + 18]]
+        .map(([a, b]) => [Math.min(w - tw - 8, Math.max(8, a)), Math.min(h - th - 8, Math.max(8, b))]);
+      const [tx, ty] = spots.find(([a, b]) => !hit([a, b, a + tw, b + th])) || spots[0];
+      tip.style.transform = `translate(${tx}px, ${ty}px)`;
+      $('acring').hidden = false; $('acring').style.transform = `translate(${x}px, ${y}px)`;
+    } else { tip.hidden = true; $('acring').hidden = true; }
     if (Math.floor(now) !== Math.floor(now - dt)) renderLiveBadge();
   }
 });
-new ResizeObserver(() => { segOd(state.ovOd); segR18(state.ovR18); drawKnob(); }).observe(app);
+new ResizeObserver(() => { syncMode(); drawKnob(); }).observe(app);
 
 // the dashboard drives the hour: postMessage({ fra: 'hour', i }) / ({ fra: 'run', name })
 addEventListener('message', e => {
@@ -1397,18 +1990,18 @@ addEventListener('message', e => {
   if (m.fra === 'run') setRun(m.name);
   if (m.fra === 'view') { // { live: true } = real aircraft now; { live: false, t, od, r18 } = a forecast hour, simulated traffic
     setPlaying(false);
-    wantLive = !!m.live; liveMode = wantLive && !!liveData;
+    wantLive = !!m.live; liveMode = wantLive && !!liveData && !feedOffline();
     state.ovOd = m.od ? String(m.od) : ''; state.ovR18 = m.r18 === undefined || m.r18 === null ? '' : m.r18 ? '1' : '0';
-    let i = 0;
+    let i = curIdx();
     if (m.t && state.run) {
       const t = Date.parse(m.t), hs = state.run.hours;
       i = hs.reduce((b, h, k) => (Math.abs(Date.parse(h.t) - t) < Math.abs(Date.parse(hs[b].t) - t) ? k : b), 0);
     }
-    setHour(i, true); knobTo(i, 'jump');
+    setHour(i, true); knobTo(i, 'jump'); syncMode();
   }
   if (m.fra === 'override') {
     state.ovOd = m.od ? String(m.od) : ''; state.ovR18 = m.r18 === undefined || m.r18 === null ? '' : m.r18 ? '1' : '0';
-    segOd(state.ovOd); segR18(state.ovR18); setHour(state.hour);
+    syncMode(); setHour(state.hour);
   }
   if (m.fra === 'pad') {
     for (const k of ['top', 'right', 'bottom', 'left']) { pad[k] = +m[k] || 0; app.style.setProperty(`--pad-${k[0]}`, `${pad[k]}px`); }
@@ -1416,19 +2009,41 @@ addEventListener('message', e => {
   }
   if (m.fra === 'fs') { parentFs = !!m.on; onFsChange(); }
   if (m.fra === 'theme' && (m.value === 'light' || m.value === 'dark') && m.value !== theme) setTheme(m.value);
-  if (m.fra === 'tz' && typeof m.value === 'string' && m.value !== TZ) {
-    TZ = m.value;
-    makeFormats();
-    for (const r of F.runs) $('run').querySelector(`option[value="${r.source}"]`).textContent = fmtRun.format(new Date(r.issue));
-    setRun(state.run.source, true);
-  }
+  if (m.fra === 'tz' && typeof m.value === 'string' && m.value !== TZ) setTz(m.value);
 });
+function setTz(v) { // Local (Frankfurt) or UTC, from the top bar or the dashboard
+  TZ = v;
+  makeFormats();
+  for (const r of F.runs) $('run').querySelector(`option[value="${r.source}"]`).textContent = fmtRun.format(new Date(r.issue));
+  setRun(state.run.source, true);
+  document.querySelectorAll('.ptz button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === TZ));
+  try { localStorage.setItem('fra-tz', TZ === 'UTC' ? 'utc' : 'local'); } catch { /* storage blocked */ }
+}
+$('b-thm').onclick = () => setTheme(theme === 'light' ? 'dark' : 'light', true);
+const thmLabel = () => { const t = `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`; $('b-thm').title = t; $('b-thm').setAttribute('aria-label', t); };
+thmLabel(); new MutationObserver(thmLabel).observe(app, { attributes: true, attributeFilter: ['class'] });
+try { if (innerWidth >= 480) $('tzl3').textContent = `Local (${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value})`; } catch { /* keep "Local" */ }
+document.querySelectorAll('.ptz button').forEach(b => b.addEventListener('click', () => { if (b.dataset.v !== TZ) setTz(b.dataset.v); }));
+try { if (!EMBED && localStorage.getItem('fra-tz') === 'utc') setTz('UTC'); } catch { /* storage blocked */ }
 if (window.parent !== window) window.parent.postMessage({ fra: 'ready' }, '*');
 
 window.__fra = {
   wind: setWind,
   setHour(i) { setHour(i); knobTo(i, 'jump'); }, setRun, state, camera, controls, RW, flights: () => flights, setPlaying,
-  setOverride(od, r18) { state.ovOd = od ?? ''; state.ovR18 = r18 ?? ''; segOd(state.ovOd); segR18(state.ovR18); setHour(state.hour); },
+  setOverride(od, r18) { state.ovOd = od ?? ''; state.ovR18 = r18 ?? ''; syncMode(); setHour(state.hour); },
   follow() { setCamMode('follow'); },
-  setTheme, setCardMode, planes: () => planes, live: () => ({ liveMode, wantLive, n: planes.size, gen: liveData?.generated }),
+  setTheme, setCardMode, planes: () => planes,
+  rwScreen() { // each runway's ends on screen, with its designators (check.mjs: every tag sits nearest its own runway)
+    const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), ar = app.getBoundingClientRect(), p = q => { v.copy(V(q[0], q[1], 0)).project(camera); return [ar.left + (v.x + 1) / 2 * w, ar.top + (1 - v.y) / 2 * h]; };
+    return Object.values(RW).map(r => [[r.d07, r.d25], p(r.A), p(r.B)]);
+  },
+  depTips() { // the take-off arrows' tips on screen and the free viewport (check.mjs)
+    const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), F = freeArea;
+    return { tips: (lastSegs || []).filter(g => g.kind === 'dep').map(g => { v.copy(V(g.b[0], g.b[1], 0)).project(camera); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; }), free: [F.left, F.top, w - F.right, h - F.bottom] };
+  },
+  fitStats() { // the framed box (airport + towns) on screen against the free rect: fill on each side and the centre offset
+    const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), sp = FIT_PTS.map(p => { v.copy(V(p[0], p[1], 0)).project(camera); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; });
+    const x0 = Math.min(...sp.map(q => q[0])), x1 = Math.max(...sp.map(q => q[0])), y0 = Math.min(...sp.map(q => q[1])), y1 = Math.max(...sp.map(q => q[1])), F = freeArea, fw = w - F.left - F.right, fh = h - F.top - F.bottom;
+    const rp = Object.values(RW).flatMap(r => [r.A, r.B]).map(p => { v.copy(V(p[0], p[1], 0)).project(camera); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; }); return { rwW: +((Math.max(...rp.map(q => q[0])) - Math.min(...rp.map(q => q[0]))) / fw).toFixed(2), rwH: +((Math.max(...rp.map(q => q[1])) - Math.min(...rp.map(q => q[1]))) / fh).toFixed(2), fillW: +((x1 - x0) / fw).toFixed(2), fillH: +((y1 - y0) / fh).toFixed(2), offX: +(((x0 + x1) / 2 - (F.left + fw / 2)) / fw).toFixed(3), offY: +(((y0 + y1) / 2 - (F.top + fh / 2)) / fh).toFixed(3) };
+  }, live: () => ({ liveMode, wantLive, n: planes.size, gen: liveData?.generated }),
 };

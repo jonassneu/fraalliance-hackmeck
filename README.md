@@ -25,11 +25,11 @@ For each of the next 48 hours the forecast gives the chance of each direction, t
 ## The product
 
 <p align="center">
-  <img src="assets/screenshots/live-3d.png" alt="3D view of Frankfurt Airport showing the forecast operating direction, active runways and the 48-hour timeline" width="100%">
+  <img src="assets/screenshots/live-3d.png" alt="3D view of Frankfurt Airport: the runways in use, landing paths over the numbered towns, the forecast panel and the 48-hour timeline" width="100%">
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/dashboard.png" alt="Forecast dashboard: current direction, next change, Runway 18 status, the next 48 hours, alerts, the live record and the 3D view" width="100%">
+  <img src="assets/screenshots/dashboard.png" alt="Forecast dashboard: the direction flown now and the outlook, accuracy against the official forecast, the next 48 hours with the chance of a switch, and the flight paths" width="100%">
 </p>
 
 The 3D view and the dashboard are rebuilt every hour from the newest forecast, with alerts and the live record. The hackathon version runs offline: open [`submission/dashboard.html`](submission/dashboard.html).

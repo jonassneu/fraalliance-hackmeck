@@ -4,8 +4,8 @@
 
 Built for the duty planner, laid out as one laptop screen in a quiet Apple-style look (fra.siteui): one summary
 surface on top (operating direction, next direction change, Runway 18 West), the 48 h timeline below with our
-forecast, the published Umwelthaus prognosis, Runway 18 and wind as lanes, and the 3D airport (airport3d.html, an
-iframe) next to it. Hovering the timeline previews an hour, a click or drag holds it; the summary and the 3D view
+forecast, the published Umwelthaus prognosis, Runway 18 and wind as lanes, and a 2D map of the paths next to it
+(the full 3D view is airport3d.html). Tall windows scroll instead of stretching; under 900 px it is one column. Hovering the timeline previews an hour, a click or drag holds it; the summary and the 3D view
 follow the shown hour. Keys: arrows step / jump between events, Space plays, Esc returns to now.
 Self-contained page (inline CSS + JS, data as JSON); times are rendered client-side so the Local/UTC switch works
 offline.
@@ -318,6 +318,46 @@ def live_record():
                 windows={k: {kk: w.get(kk) for kk in keys} for k, w in rec.get("windows", {}).items()})
 
 
+def map_geo():
+    """Runway centre lines (end points) and the airport outline for the 2D paths map, in metres east / north of the
+    aerodrome reference point (data/scene3d.json, OSM). None without the cache."""
+    try:
+        g = json.loads((DATA / "scene3d.json").read_text())
+    except Exception:
+        return None
+    rws = [dict(ref=r["ref"], a=r["p"][0], b=r["p"][-1]) for r in g.get("runways", [])]
+    ring = (g.get("aerodrome") or [[]])[0]
+    return dict(runways=rws, area=[[round(x, -1), round(y, -1)] for x, y in ring[::4]])
+
+
+def official_windows(hours, change_t=None, gap_h=2):
+    """The hours where the published INAA prognosis disagrees with ours, as windows [start, end) (end = the first hour
+    after the window, the one convention for the tag and its tooltip). An hour counts when INAA says the other
+    direction (west >= 0.75 or <= 0.25 against our od), or "change possible" (0.25 < west < 0.75) while we are >= 90 %
+    sure, except within 3 h of our own predicted switch. Windows separated by <= gap_h hours are merged. Computed once
+    here and passed to both pages, so the dashboard (desktop and phone) and the 3D view show the same windows."""
+    ts = [pd.Timestamp(h["t"]) for h in hours]
+    ci = None if change_t is None else min(range(len(ts)), key=lambda i: abs((ts[i] - pd.Timestamp(change_t)).total_seconds()))
+    idx = []
+    for i, h in enumerate(hours):
+        if "pg" not in h:
+            continue
+        w = h["pg"]
+        s = 25 if w >= 0.75 else 7 if w <= 0.25 else 0
+        sure = max(h["p25"], 1 - h["p25"]) >= 0.9
+        if (s and s != h["od"]) or (s == 0 and sure and (ci is None or abs(i - ci) > 3)):
+            idx.append(i)
+    wins = []
+    for i in idx:
+        if wins and i - wins[-1][1] <= gap_h + 1:
+            wins[-1][1] = i
+        else:
+            wins.append([i, i])
+    return [dict(start=iso(ts[a]), end=iso(ts[b] + pd.Timedelta(hours=1)),
+                 kind="possible" if any(0.25 < hours[k]["pg"] < 0.75 for k in range(a, b + 1) if "pg" in hours[k]) else "switch")
+            for a, b in wins]
+
+
 def payload(path):
     f = load_forecast(path)
     run = run_hours(path)  # hourly p25 / p18 / od / rule + ECMWF IFS wind
@@ -327,6 +367,10 @@ def payload(path):
     p6 = f["p_od25"].values[:6]
     conf6 = np.maximum(p6, 1 - p6).mean()  # how sure the model is about the direction it predicts
     hours = run["hours"]
+    if t is not None:  # the switch time is the first forecast hour in the other direction: the same hour the 3D view and the chart show
+        flip = next((h for h in hours if pd.Timestamp(h["t"]) >= issue.floor("h") and h["od"] != od_now), None)
+        if flip is not None:
+            t = pd.Timestamp(flip["t"])
     pg = published_prognosis(issue, [pd.Timestamp(h["t"]) for h in hours])
     al = alerts_for(path)
     if pg:
@@ -337,9 +381,9 @@ def payload(path):
                 if run.get("wind_init") else None, generated=iso(pd.Timestamp.now("UTC")),
                 od_now=od_now, since=iso(in_use_since(issue, od_now)), conf6=round(float(conf6), 3),
                 change=None if t is None else dict(t=iso(t), start=iso(ws), end=iso(we)), p_change=p_change,
-                hours=hours, quality=quality(), prog_asof=iso(pg["asof"]) if pg else None, traffic=traffic(),
+                hours=hours, pgwin=official_windows(hours, t), quality=quality(), prog_asof=iso(pg["asof"]) if pg else None, traffic=traffic(),
                 alerts=al["alerts"], alerts_stale=al["stale"], alerts_msg=al["message"], alerts_issue=al["issue"],
-                live=live_record())
+                live=live_record(), geo=map_geo())
 
 
 # ---------------------------------------------------------------- page
@@ -349,139 +393,1004 @@ ICONS = dict(
     play='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.6v14.8a1 1 0 0 0 1.52.85l12.1-7.4a1 1 0 0 0 0-1.7L8.52 3.75A1 1 0 0 0 7 4.6z"/></svg>',
     pause='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5.5" y="4" width="4.6" height="16" rx="1.4"/><rect x="13.9" y="4" width="4.6" height="16" rx="1.4"/></svg>',
     copy='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
+    layout='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16M10 12h11"/></svg>',
+    ok='<svg class="st" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg>',
+    no='<svg class="st" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
     expand='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>',
+    pin='<svg class="pinG" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6 3 3v2h-4v7l-1 1-1-1v-7H7v-2l3-3z" fill="currentColor"/></svg>',
 )
 
 CSS = """
-/* colour by job: 25 = blue, 07 = amber (validated pair, CVD-safe, same as the 3D view); Runway 18 = status
-   (usable = soft green that recedes, not usable = red that pops); text always in ink, never in a series colour */
+/* one rule per selector and breakpoint (consolidated); colour by job: East navy, West teal, official orange, tailwind red */
+html,body{overflow-x:hidden;overflow-y:auto}
+html{color-scheme:light}
 body{display:flex;flex-direction:column}
-main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:0 24px 20px}
-
-/* summary: one surface, three columns sharing their rows (label / value / details) so the hairlines line up */
-.sum{display:grid;grid-template-columns:1.2fr 1fr 1fr;grid-template-rows:auto auto auto;flex:none}
-.sum>section{grid-row:span 3;display:grid;grid-template-rows:subgrid;padding:18px 26px 20px;min-width:0}
-.sum>section+section{border-left:1px solid var(--line)}
-.lbl{display:flex;align-items:center;gap:8px;height:22px;font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
-.lbl small{font-size:13px;font-weight:400;color:var(--ink3)}
-.tag{font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--fill);color:var(--ink)}
-.tag.later{background:var(--ink);color:#fff}
-.back{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--accent)}
-.back:hover{text-decoration:underline;text-underline-offset:3px}
+main{position:relative;flex:none;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));grid-template-rows:repeat(23,var(--rowh,21px));padding:0 18px 14px}
+.topbar .nav{margin-left:-8px}
+.eyebrow{margin:0;font-size:15px;color:var(--ink2)}
+.answer{display:flex;align-items:center;gap:16px;margin-top:6px}
+.headline .sep{color:var(--ink2);font-weight:400}
+.headline .qual{font-weight:500;color:var(--ink2)}
+.ipill{flex:none;padding:3px 10px;border-radius:999px;background:var(--fill);font-size:13px;color:var(--ink2);white-space:nowrap}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.stats3>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.stats3 dd{margin:0;font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.1;color:var(--ink);white-space:nowrap}
+.stats3 dt{font-size:13px;line-height:1.35;color:var(--ink)}
+.stats3 .of{font-size:13px;color:var(--ink2)}
+abbr[title]{text-decoration:underline dotted var(--b1);text-underline-offset:3px;cursor:help}
+.cell{position:relative;display:flex;min-width:0;min-height:0;padding:6px}
+.cell>.card{flex:1;min-width:0;min-height:0;overflow:hidden}
+.pc{display:flex;flex-direction:column;padding:16px 24px}
+.hcol{display:flex;flex-direction:column;min-width:0}
+.hcol.hnow{grid-column:1;grid-row:1}
+.hcol.out{border-left:1px solid var(--line);padding-left:32px;grid-column:2;grid-row:1}
+.more{grid-column:1;grid-row:1;align-self:end;margin-top:12px;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.more summary{cursor:pointer;font-weight:500;color:var(--ink2);width:max-content}
+.morebody{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.r18line{display:flex;align-items:center;gap:10px}
+.r18line b{color:var(--ink);font-weight:600}
+.method{margin-top:auto;padding-top:10px;font-size:13px;color:var(--ink2)}
+.method b{font-weight:600;color:var(--ink)}
+.method .mt{width:100%;font-size:11px;color:var(--ink3)}
+.pill{padding:1px 8px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;color:var(--ink2);white-space:nowrap}
+.pill:empty{display:none}
+.tag{font-size:13px;font-weight:500;line-height:20px;padding:0 8px;border-radius:6px;background:var(--fill);color:var(--ink)}
+.tag.later{background:var(--ink);color:var(--on-ink)}
+.back{margin-left:auto;font-size:13px;font-weight:500;color:var(--ink);text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:4px}
+.back:hover{text-decoration-color:currentColor}
 .val{margin-top:12px;min-width:0}
-.foot{align-self:start;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);min-width:0}
-.od{display:flex;align-items:flex-end;gap:16px}
-.num{font-size:68px;font-weight:700;letter-spacing:-.045em;line-height:.84}
-.word{display:flex;align-items:center;gap:8px;font-size:21px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
-.desc{font-size:13px;color:var(--ink2)}
+.foot{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);min-width:0}
+.foot:empty{display:none}
+.glance dd small{font-size:13px}
+.rows{margin:0;display:flex;flex-direction:column}
+.rows>div{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:6px 0;border-top:1px solid var(--line)}
+.rows>div:first-child{border-top:0}
+.rows dt small{font-size:13px;color:var(--ink3)}
+.hcol.out .foot{margin-top:12px;border-top:0;padding-top:0}
+.od{display:flex;align-items:center;gap:20px}
+.num{flex:none;font:600 36px/1 var(--sans);letter-spacing:-.02em;color:var(--ink)}
+.dbadge{min-width:36px;height:28px;font-size:15px;font-weight:600;box-shadow:inset 0 -3px 0 var(--dc,transparent)}
+.word{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
+.desc{margin-top:2px;font-size:15px;line-height:1.5;color:var(--ink2)}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
-.facts{display:flex;gap:28px}
-.facts dt{font-size:12px;color:var(--ink2)}
-.facts dd{margin:2px 0 0;font-size:16px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
-.big{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1.15;white-space:nowrap}
-.big small{align-self:flex-end;padding-bottom:5px;font-size:14px;font-weight:400;letter-spacing:0;color:var(--ink2)}
-.big button{font-weight:700;letter-spacing:-.03em}
-.big button:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
-.dot{width:11px;height:11px;border-radius:50%;flex:none}
-.sub,.flow{margin-top:4px;font-size:13px;color:var(--ink2)}
-.flow{display:flex;align-items:center;gap:6px}
-.flow b{color:var(--ink);font-weight:600}
-.meter{display:inline-block;vertical-align:middle;width:64px;height:4px;border-radius:2px;background:var(--fill);margin-left:8px;overflow:hidden}
-.meter i{display:block;height:100%;border-radius:2px;background:var(--ink)}
-.notes{margin-top:10px;display:grid;gap:3px;font-size:12px;color:var(--ink2);line-height:1.35}
-.notes b,.alert b{color:var(--ink);font-weight:600}
-.alert{display:grid;gap:2px;font-size:12px;color:var(--ink2);line-height:1.35}
+.facts{display:grid;grid-template-columns:auto auto;gap:10px 32px;margin:0;justify-content:start}
+.dd2{display:block;margin-top:3px;font-size:13px;font-weight:400;color:var(--ink2)}
+.facts dt{font-size:13px;color:var(--ink2);white-space:nowrap}
+.facts dd{margin:4px 0 0;font:500 15px/1.2 var(--mono);white-space:nowrap}
+.facts dd small{font-size:13px;font-weight:400;color:var(--ink2)}
+.stats{margin-top:12px;padding-top:4px;border-top:1px solid var(--line)}
+.acs:first-child{padding-left:0;border-left:0}
+.acs b small{display:block;font-size:13px;font-weight:400;letter-spacing:0;color:var(--ink2)}
+.acs>span{font-size:13px;line-height:1.35;color:var(--ink2)}
+.rtab th{font-weight:400;font-size:13px;color:var(--ink2);text-align:right;padding:0 0 4px}
+.rtab th:first-child,.rtab td:first-child{text-align:left}
+.rtab td:first-child{color:var(--ink)}
+.rtab .o1{background:rgb(var(--ink-rgb) / .045);color:var(--ink);font-weight:600;text-align:center!important;padding:0 6px}
+.rtab th.o1{font-weight:500;border-radius:6px 6px 0 0}
+.rtab td.dl{color:var(--ink);font-weight:700}
+.rs{display:flex;flex-direction:column;gap:2px;margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.rs b{font-weight:600;color:var(--ink)}
+.r18note{margin-top:8px;font-size:13px;color:var(--ink2)}
+.r18note:empty{display:none}
+.big{display:flex;align-items:baseline;gap:12px;font-size:36px;font-weight:500;letter-spacing:-.015em;line-height:1.15;white-space:nowrap}
+.big small{font-size:15px;font-weight:400;letter-spacing:0;color:var(--ink2)}
+.big button{font-weight:500;letter-spacing:-.015em}
+.big button:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;align-self:center}
+.sub,.flow{margin-top:8px;font-size:13px;color:var(--ink2)}
+.flow{display:flex;align-items:center;gap:6px;color:var(--ink)}
+.flow b{font-weight:600}
+.big2{font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.pnum{margin-left:6px;padding:0 8px;border-radius:6px;background:var(--fill);font-weight:600}
+.big3{font-size:18px;font-weight:500}
+.badge.sm{font-size:15px}
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+.status::before{content:"";width:8px;height:8px;border-radius:50%}
+.status.closed::before{background:var(--red)}
+.mute{color:var(--ink3)}
+.flag b{font-weight:600}
+.flag{margin-top:14px;font-size:15px;line-height:1.45;background:transparent;border-left:3px solid var(--b2);border-radius:0;padding:4px 0 4px 12px;color:var(--ink2)}
+.flag.ok{border-left-color:var(--line)}
+.howbtn{margin-top:8px;font-size:13px;font-weight:500;color:var(--ink2);text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:3px}
+.howpop{position:fixed;z-index:40;max-width:340px;padding:12px 14px;border-radius:10px;background:var(--card);box-shadow:var(--shadow);font-size:13px;line-height:1.5;color:var(--ink2)}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:2px 12px 2px 10px;border-radius:999px;background:var(--fill);font-size:18px;font-weight:500}
+.badge::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--c,var(--ink3))}
+.dirw{display:inline-flex;align-items:center;gap:10px;font-size:24px;font-weight:600}
+.dirw i{width:14px;height:14px;border-radius:3px}
+.howto{font-size:13px;color:var(--ink3);line-height:1.45}
+.howto summary{cursor:pointer;color:var(--ink2);font-weight:500}
+.quiet+.quiet{margin-top:8px}
+.st{width:28px;height:28px;flex:none;align-self:center}
+.notes{margin-top:8px;display:grid;gap:4px;font-size:13px;color:var(--ink2);line-height:1.45}
+.notes b,.alert b{color:var(--ink);font-weight:500}
+.alert{display:grid;gap:4px;font-size:13px;color:var(--ink2);line-height:1.45}
 .alert b{font-size:13px}
-.alert b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px}
-.quiet{font-size:12.5px;color:var(--ink2);line-height:1.4}
-
-/* live operation strip: alerts banner (fra.alerts) + live record (fra.scoring); same columns as the row below */
-.strip{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;flex:none}
-.alerts{display:flex;align-items:center;gap:26px;min-width:0;min-height:48px;padding:8px 24px;overflow:hidden}
-.alerts.on{background:#fff5f4;box-shadow:inset 0 0 0 1px rgba(224,53,43,.2)}
-.al{display:flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.alert b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:8px;vertical-align:1px}
+.quiet{font-size:13px;color:var(--ink2);line-height:1.45}
+.alerts{display:flex;align-items:center;gap:24px;min-width:0;padding:0 24px;overflow:hidden}
+.alerts.on{background:var(--alert-bg);box-shadow:inset 0 0 0 1px rgba(216,57,46,.22)}
+.al{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;color:var(--ink2);white-space:nowrap}
 .al span{overflow:hidden;text-overflow:ellipsis}
-.al b{color:var(--ink);font-weight:600}
+.al b{display:inline-flex;align-items:center;gap:4px;color:var(--ink);font-weight:500}
 .al i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--red)}
 .al.watch i{background:none;box-shadow:inset 0 0 0 2px var(--red)}
 .al.ok i{background:var(--green)}
 .al.stale i{background:var(--ink3)}
-.lrec{display:flex;align-items:center;gap:14px;min-width:0;min-height:48px;padding:8px 20px}
-.lrec .lh{display:flex;flex-direction:column;flex:none;font-size:13px;font-weight:600;line-height:1.25}
-.lrec .lh small{font-size:11.5px;font-weight:400;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lrec dl{display:flex;gap:14px;margin:0 0 0 auto}
-.lrec dt{font-size:11px;color:var(--ink3)}
-.lrec dd{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
-.lrec .lq{margin-left:auto;text-align:right;font-size:11.5px;color:var(--ink2);line-height:1.3}
-
-/* the timeline + the 3D view: take whatever height is left */
-.row2{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px}
-.tlc{display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 24px 16px}
-.hd{display:flex;align-items:center;gap:10px;height:28px;flex:none}
-.hd h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
-.hd .icon{margin-left:auto}
-.c3d{position:relative;overflow:hidden;background:#f4f4f2;min-height:0}
-.f3d{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
-.fs{position:absolute;right:10px;bottom:10px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
-  background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
-  box-shadow:0 1px 3px rgba(0,0,0,.14),0 0 0 .5px rgba(0,0,0,.06);transition:transform .12s ease-out,background-color .15s}
-.fs svg{width:12px;height:12px}
-.fs:hover{background:#fff}
-.fs:active{transform:scale(.92)}
-
-/* timeline: labels and lanes share one grid; the direction lane absorbs spare height */
-.tl{flex:1;min-height:0;display:grid;grid-template-columns:96px minmax(0,1fr);row-gap:8px;margin-top:12px;
-  grid-template-rows:22px 20px minmax(48px,1fr) 10px 18px 30px}
-.tl.noev{grid-template-rows:22px 0 minmax(48px,1fr) 10px 18px 30px}
-.hl{grid-column:1;display:flex;flex-direction:column;justify-content:center;font-size:12px;font-weight:600;line-height:1.25;white-space:nowrap}
-.hl small{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:400;color:var(--ink3)}
+.lrec{display:flex;flex-direction:column;min-width:0;padding:12px 20px}
+.lrec .lh{display:flex;align-items:center;height:24px;font-size:13px;font-weight:500;color:var(--ink2);cursor:help;flex:none}
+.lrec table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
+.lrec th{font-weight:400;color:var(--ink3);text-align:right;padding:0 0 4px}
+.lrec td{padding:3px 0;border-top:1px solid var(--line);text-align:right;font-family:var(--mono);color:var(--ink2);white-space:nowrap}
+.lrec th:first-child,.lrec td:first-child{text-align:left;font-family:var(--sans)}
+.lrec td.v{color:var(--ink);font-weight:500;font-size:13px}
+.lrec .lq{margin-top:8px;font-size:13px;color:var(--ink2);line-height:1.45}
+.hd{display:flex;align-items:center;gap:12px;height:32px;flex:none}
+#play svg{width:12px;height:12px}
+.c3d{position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column;padding:16px 20px 14px}
+.mhd{display:flex;align-items:center;gap:10px;flex:none;min-width:0}
+.mhd .lbl{flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;white-space:nowrap;pointer-events:none;user-select:none}
+.chip .rw{height:20px}
+.chip small{font-size:13px;font-weight:400;color:var(--ink2)}
+.map{flex:1;min-height:0;position:relative;margin-top:6px}
+.map svg{position:absolute;inset:0;display:block;overflow:hidden}
+.map .rwy{stroke:var(--rwy);stroke-width:5;stroke-linecap:butt}
+.map svg.e .rwy{stroke:var(--east-line)}
+.map svg.w .rwy{stroke:var(--west-line)} /* runways in use in the direction colour (as in 3D); a closed one light grey */
+.map .rwy.closed{stroke:rgb(var(--ink-rgb) / .2)!important;opacity:1}
+.map .app{fill:none;stroke-width:2;stroke-dasharray:7 5}
+.map .dep{fill:none;stroke:var(--ink);stroke-width:2}
+.map .arw{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.map .town{font:400 13px var(--sans);fill:var(--ink2)}
+.map .town.under{font-size:13px;font-weight:600;fill:var(--ink)}
+.map .tdot{fill:var(--ink3)}
+.map .tring{fill:var(--card);stroke:var(--east-line);stroke-width:2}
+.map .tcore{fill:var(--east-line)}
+.map .town.halo{stroke-width:3px}
+.map .ptag{font:500 13px var(--sans);fill:var(--ink2)}
+.mlg{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;flex:none;margin-top:6px;font-size:13px;color:var(--ink2);white-space:nowrap}
+.mlg span{display:inline-flex;align-items:center;gap:6px}
+.mlg svg{width:22px;height:10px}
+.m3d{margin-left:auto;font-size:13px;font-weight:500;color:var(--ink2);text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:3px;white-space:nowrap}
+.m3d:hover{text-decoration-color:currentColor}
+.mv{display:none;position:absolute;inset:6px;z-index:6;border-radius:16px;cursor:grab;touch-action:none;background:rgb(var(--ink-rgb) / .03);box-shadow:inset 0 0 0 1.5px rgb(var(--ink-rgb) / .35);transition:background-color .15s var(--ease)}
+body.edit .mv{display:block}
+.mv:hover{background:rgb(var(--ink-rgb) / .07)}
+.mv b{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:24px;padding:0 10px;border-radius:6px;background:var(--ink);color:var(--on-ink);font-size:13px;font-weight:500;white-space:nowrap;pointer-events:none}
+.mv b::before{content:"";width:8px;height:12px;background:radial-gradient(circle,var(--on-ink) 1px,transparent 1.4px) 0 0/4px 4px}
+.mv i{position:absolute;right:0;bottom:0;width:28px;height:28px;cursor:nwse-resize}
+.mv i::after{content:"";position:absolute;right:8px;bottom:8px;width:10px;height:10px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);border-bottom-right-radius:4px}
+.cell.lift{z-index:8}
+.cell.lift>.card{box-shadow:var(--shadow)}
+.cell.lift .mv{cursor:grabbing}
+.ghost{display:none;margin:6px;border-radius:16px;border:2px dashed rgb(var(--ink-rgb) / .3);background:rgb(var(--ink-rgb) / .03);pointer-events:none}
+body.rzing .ghost{display:block}
+body.rzing,body.rzing *{user-select:none}
+body.edit iframe{pointer-events:none}
+.btn[hidden]{display:none}
+#rzbtn,.tl-link{height:auto;padding:0;gap:6px;background:transparent;box-shadow:none;color:var(--ink2);font-size:13px;font-weight:400;text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:3px}
+#rzbtn:hover,.tl-link:hover{background:transparent;color:var(--ink)}
+#rzbtn:hover{background:var(--fill)}
+#rzbtn[aria-pressed=true]{background:var(--ink);color:var(--on-ink);box-shadow:none;text-decoration:none;padding:2px 8px;border-radius:6px}
+.lpg{align-items:flex-end}
+.lpg text,.lwd text{font:400 13px var(--sans);font-variant-numeric:tabular-nums;fill:var(--ink2)}
+.tchip{fill:var(--card)}
+.lpg .base{stroke:rgb(var(--ink-rgb) / .12);stroke-width:1}
+.halo{paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
+.ruler .pgl{top:auto;bottom:2px}
+.pgl{position:absolute;top:3px;padding:0 5px;border-radius:3px;background:rgba(224,138,0,.14);line-height:14px!important;font:500 13px/16px var(--sans);color:var(--inaa-ink);white-space:nowrap}
+.pgb{position:absolute;top:-7px;height:6px;border:2px solid var(--amber);border-bottom:0;border-radius:2px 2px 0 0;pointer-events:none}
+.lpg>div i{display:block;width:100%;background:var(--west);border-radius:2px 2px 0 0}
+.mk.pg{background:var(--asphalt);transform:translateX(-100%)}
+.mk.pg:active{transform:translateX(-100%) scale(.95)}
 .hl small .sw{width:8px;height:8px;border-radius:2px}
 .hl small .sw+.sw{margin-left:4px}
-.lanes{grid-column:2;grid-row:1/-1;display:grid;grid-template-rows:subgrid;position:relative;user-select:none;touch-action:pan-y}
-.lanes:focus-visible{outline:2px solid rgba(0,113,227,.3);outline-offset:6px;border-radius:8px}
 .ln{display:flex;gap:var(--g,2px);min-height:0;position:relative;z-index:1}
 .ln>div{flex:1;min-width:0}
-.lod>div{display:flex;flex-direction:column;border-radius:4px;overflow:hidden;background:var(--east)}
-.lod i,.l18 i{flex:none;background:var(--west)}
-.lpg>div{border-radius:2px;background:var(--fill)}
-.lpg .w{background:var(--west)}.lpg .e{background:var(--east)}
-.mixed,.lpg .m{background:repeating-linear-gradient(135deg,var(--west) 0 3px,var(--east) 3px 6px)}
-.l18>div{display:flex;flex-direction:column;border-radius:3px;overflow:hidden;background:var(--ok)}
-.l18 i{background:var(--red)}
-.lwd>div{display:flex;flex-direction:column;align-items:center;color:var(--ink2)}
-.lwd svg{width:11px;height:11px}
-.lwd small{font-size:10.5px;color:var(--ink3);margin-top:1px}
+.lod{gap:0}
+.lod>div{border-radius:0;background:var(--east)}
+.lod>div:first-child{border-radius:4px 0 0 4px}
+.lod>div:last-child{border-radius:0 4px 4px 0}
+.lod .w{background:var(--west)}
+.lod .s.e,.smallsw{background:repeating-linear-gradient(135deg,var(--east) 0 3px,rgba(255,255,255,.7) 3px 5px)}
+.lod .s.w{background:repeating-linear-gradient(135deg,var(--west) 0 3px,rgba(255,255,255,.7) 3px 5px)}
+.lod>div.n{background-image:var(--hatch-bg)}
+.lod .lo{opacity:1}
+.lod .e.lo{background:color-mix(in srgb,var(--east) 38%,var(--card))!important}
+.lod .w.lo{background:color-mix(in srgb,var(--west) 38%,var(--card))!important} /* faded keeps its direction: a 38 % tint */
+.lod .u,.mixed{background:repeating-linear-gradient(135deg,var(--west) 0 3px,var(--east) 3px 6px)}
+.l18 .n{opacity:.4}
+.lpg>div{background:transparent;display:flex;align-items:flex-end;border-radius:2px}
+.lpg .w{background:var(--west)}
+.lpg .e{background:var(--east)}
+.lpg .m{background:repeating-linear-gradient(135deg,var(--west) 0 3px,var(--east) 3px 6px)}
+.pgsw{background:linear-gradient(90deg,var(--west) 50%,var(--east) 50%)}
+.l18>div{border-radius:3px;background:var(--fill)}
+.l18 .x{background:var(--red)}
+.l18 .r,.risksw{background:repeating-linear-gradient(135deg,var(--red) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--red)}
+.lwd .ln-w{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.lwd .grid{stroke:var(--line);stroke-width:1}
+.lwd .flagband{fill:rgba(224,138,0,.08)}
+.lwd .flagt{font-size:11px;font-weight:500;fill:var(--inaa-ink)}
+.lwd .dip{fill:var(--amber);stroke:var(--card);stroke-width:1.5}
+.lwd .dipt{font-size:11px;font-weight:500;fill:#a35f00}
+.lwd .tip-w{fill:none;stroke:var(--ink2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .ruler{position:relative;border-bottom:1px solid var(--line)}
-.ruler .d{position:absolute;bottom:5px;font-size:11.5px;font-weight:600;white-space:nowrap}
-.ruler .h{position:absolute;bottom:5px;transform:translateX(-50%);font-size:11px;color:var(--ink3);white-space:nowrap}
-.ruler .d,.ruler .h{transition:opacity .15s}
+.ruler .d.end{font-weight:400;color:var(--ink2)}
+.ruler .h{position:absolute;bottom:5px;transform:translateX(-50%);font:400 13px/1 var(--sans);color:var(--ink2);white-space:nowrap}
+.ruler .d,.ruler .h{transition:opacity .15s var(--ease)}
 .ruler .off{opacity:0}
-.ruler .t{position:absolute;bottom:0;width:1px;height:4px;background:rgba(0,0,0,.18)}
-.ruler .t.dd{height:100%;background:var(--line)}
+.ruler .t{position:absolute;bottom:0;width:1px;height:4px;background:rgb(var(--ink-rgb) / .2)}
 .ev{position:relative;z-index:2}
-.mk{position:absolute;top:1px;height:18px;padding:0 8px;border-radius:999px;transform:translateX(-50%);font-size:11px;font-weight:600;
-  line-height:18px;white-space:nowrap;background:var(--ink);color:#fff;transition:transform .12s ease-out}
-.mk.r18{background:var(--red)}
-.mk:active{transform:translateX(-50%) scale(.94)}
-.bands{position:absolute;left:0;right:0;top:30px;bottom:0;pointer-events:none}
-.night,.nightsw{background:rgba(0,0,0,.045)}
-.night{position:absolute;top:0;bottom:0;border-radius:6px}
-.ph{position:absolute;top:0;bottom:-4px;left:0;width:0;z-index:3;pointer-events:none;will-change:transform}
-.ph::before{content:"";position:absolute;top:20px;bottom:0;left:-1px;width:2px;border-radius:1px;background:var(--ink)}
-.ph b{position:absolute;top:0;left:0;height:20px;padding:0 8px;border-radius:6px;background:var(--ink);color:#fff;
-  font-size:11.5px;font-weight:600;line-height:20px;white-space:nowrap}
-.tlf{display:flex;align-items:center;gap:16px;margin-top:14px;font-size:11.5px;color:var(--ink2);white-space:nowrap;flex:none}
-.tlf span{display:inline-flex;align-items:center;gap:6px}
-.tlf i{width:10px;height:10px;border-radius:3px}
-.upd{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);white-space:nowrap}
-.upd i{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.mk{position:absolute;top:0;height:20px;padding:0 6px;border-radius:4px;transform:translateX(-50%);font:500 13px/20px var(--mono);white-space:nowrap;background:var(--asphalt);color:var(--paint);box-shadow:inset 0 -2px 0 var(--dc,transparent);transition:transform .12s var(--ease)}
+.mk.r18{--dc:var(--red)}
+
+#lod .swchip,.lanes > .swchip{position:absolute;top:-14px;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 11px/14px var(--sans);color:#fff;background:var(--dc);z-index:8;white-space:nowrap;cursor:pointer}
+:root[data-theme=dark] #lod .swchip,:root[data-theme=dark] .lanes > .swchip{color:#0f1a17}
+@media (max-width:479px){.tl{position:relative} .tl > #tlf.inbar{position:absolute;left:0;right:0;margin:0;z-index:7;row-gap:2px;font-size:13px;background:var(--card);padding:2px 0} #lod{align-self:start;height:var(--dirh,44px)}} /* the bar keeps its height; the legend sits on top of the cursor line */
+#lod .swtab{position:absolute;top:0;bottom:0;border-radius:0 6px 6px 0;z-index:2;pointer-events:auto}
+.now{position:absolute;top:0;left:0;height:20px;padding:0 6px;border-radius:4px;font:500 13px/20px var(--sans);background:var(--fill);color:var(--ink)}
+.mk:active{transform:translateX(-50%) scale(.95)}
+.nightsw{background:rgb(var(--ink-rgb) / .07)}
+.night{background:rgb(var(--ink-rgb) / .025);position:absolute;top:0;bottom:0}
+.dlab{position:absolute;top:50%;transform:translateY(-50%);z-index:2;font:600 13px/1 var(--sans);color:var(--on-dir);white-space:nowrap;pointer-events:none}
+.rl{position:absolute;left:6px;top:2px;z-index:3;font:600 11px/14px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);pointer-events:none;white-space:nowrap}
+.lod .rl{top:50%;transform:translateY(-50%);color:var(--on-dir);left:8px}
+.lpg .rl,.lwd .rl{background:color-mix(in srgb,var(--card) 80%,transparent);padding:0 3px;left:3px}
+.pgt{position:absolute;top:-8px;bottom:0;background:rgba(224,138,0,.06)}
+.icon.thm{background:transparent;color:var(--ink2)}
+.icon.thm svg{width:16px;height:16px}
+.icon.thm:hover{background:var(--fill)}
+.tlf .cap{margin-left:auto;color:var(--ink2)}
+.upd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);white-space:nowrap}
 .upd.stale i{background:var(--east)}
-.toast{position:fixed;left:50%;bottom:24px;padding:9px 16px;border-radius:999px;background:var(--glass);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:var(--lift);
-  font-size:13px;font-weight:500;pointer-events:none;opacity:0;transform:translate(-50%,10px) scale(.96);
-  transition:opacity .2s,transform .4s cubic-bezier(.2,.9,.25,1)}
-.toast.on{opacity:1;transform:translate(-50%,0) scale(1)}
+.pfoot span{flex:1}
+@media (max-width:899px){
+  body{width:auto}
+  #rzbtn,#rzreset{display:none}
+  .brand{font-size:18px}
+  .brand span{display:none}
+  .topbar .nav a{padding:3px 10px;border-radius:6px}
+  .topbar .nav a[aria-current]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .answer{order:-1;flex-direction:column;align-items:flex-start;gap:8px;margin:0 0 8px}
+  .headline .lg{display:none}
+  .stats3{grid-template-columns:1fr;gap:12px}
+  .stats3 dd{font-size:24px}
+  .pgw{display:none}
+}
+@media (max-width:479px){
+  .rtab th:nth-child(3),.rtab td:nth-child(3){display:none}
+  .lede{flex-direction:column;align-items:flex-start;gap:12px;padding:0 16px 12px}
+  .score{margin-left:0;flex-wrap:wrap}
+  main{display:flex;flex-direction:column;gap:12px;padding:0 10px 16px}
+  .cell{padding:0}
+  .hero{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;row-gap:18px;padding:18px 18px 16px}
+  .hcol.hnow,.hcol.out{grid-column:1;grid-row:auto}
+  .hcol.out{border-left:0;padding-left:0;padding-top:16px;border-top:1px solid var(--line)}
+  .stats{margin-top:16px}
+  .big2{font-size:24px}
+  .tlc{padding:16px 14px}
+  .hd{flex-wrap:wrap;height:auto;gap:8px}
+  .tl{grid-template-columns:84px minmax(0,1fr);grid-template-rows:34px 20px 32px var(--swh,40px) var(--r18,0px) 60px}
+  .tl.noev{grid-template-rows:34px 0 32px var(--swh,40px) var(--r18,0px) 60px}
+  .hl.top{padding-right:28px}
+  .hl.top small{display:none}
+  .c3d{height:300px}
+  .mlg{flex-wrap:wrap;row-gap:4px}
+}
+.proof:empty{display:none}
+.hero .hcol .stats,.hero .hcol.out .foot{margin-top:auto}
+.hero .hcol.out .foot{border-top:1px solid var(--line);padding-top:4px}
+.hero .val{margin-top:12px}
+.cmp>div{display:contents}
+.cmp span{color:var(--ink2)}
+.cmp b{font-weight:600;color:var(--ink)}
+.cmp.one{grid-template-columns:auto minmax(0,1fr)}
+.cmp .pgbsw{width:14px!important;height:12px!important}
+.oursw{display:block;width:14px;height:8px;border-radius:2px;background:var(--risk)}
+.sts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.acs{display:flex;flex-direction:column;padding:0 14px;border-left:1px solid var(--line);min-width:0;gap:1px}
+.acs b{color:var(--ink);font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.acs .sl{font-size:13px;line-height:1.3;color:var(--ink)}
+.acs .sc{font-size:13px;line-height:1.3;color:var(--ink2)}
+.nw{white-space:nowrap}
+.mb{display:flex;flex-direction:column;gap:3px;margin-top:auto;padding-top:6px}
+.mb i{display:block;height:6px;border-radius:3px;background:var(--ink)}
+.mb i.o{height:3px;border-radius:2px;background:var(--amber)}
+.rtab{width:100%;border-collapse:collapse;font-size:15px;margin-top:10px}
+.rtab td{text-align:right;border-top:1px solid var(--line);color:var(--ink2);height:24px}
+.rtab tr.fa td{border-top:1px solid rgb(var(--ink-rgb) / .16)}
+.limsw{width:16px!important;height:0!important;border-radius:0!important;border-top:2px dashed var(--red);opacity:.85}
+.lwd .lim{stroke:var(--red);stroke-width:1;stroke-dasharray:3 3;opacity:.9}
+@media (max-width:899px){
+  .topbar .brand{grid-area:brand;flex-basis:auto;font-size:14px!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .nav{padding:2px;border-radius:8px;background:var(--fill);margin-left:0;grid-area:nav;justify-self:start;margin:0}
+  .topbar-r{justify-content:space-between;width:auto;margin-left:auto;display:contents}
+  .topbar #theme{grid-area:thm}
+  .topbar #tz{grid-area:tz;justify-self:end}
+  .pf1{height:auto;line-height:1.1}
+  .pf2{font-size:15px}
+  .hero .hcol .stats{margin-top:12px}
+}
+.headline{display:flex;align-items:center;margin:0;font-weight:600;color:var(--ink);font-size:56px;line-height:1.08;gap:16px;letter-spacing:-.025em}
+.headline .dbadge{background:var(--dc);color:var(--on-dir);box-shadow:none;font-size:.625em;height:1.733em;min-width:2.2em;border-radius:6px}
+.headline .arr{font-weight:500;flex:none;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;color:var(--ink);width:42px;height:30px;stroke-width:3.4}
+.brand{font-size:15px}
+.brand span{font-size:15px}
+.nav a,.upd{font-size:15px}
+.lbl{display:flex;align-items:center;gap:8px;height:24px;font-weight:600;color:var(--ink);letter-spacing:.01em;white-space:nowrap;flex:none;font-size:15px}
+.lbl small{font-weight:400;color:var(--ink3);font-size:13px}
+.hd h2{margin:0;font-weight:600;letter-spacing:-.01em;white-space:nowrap;font-size:15px}
+.strip{display:grid;grid-template-columns:1.25fr 1fr 1fr 1.25fr;margin:0;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.strip>div{display:flex;flex-direction:column;gap:2px;padding:0 16px;border-left:1px solid var(--line);min-width:0}
+.strip>div:first-child{padding-left:0;border-left:0}
+.strip dt{font-size:13px;color:var(--ink2);white-space:nowrap}
+.strip dd{margin:0;font-size:15px;font-weight:500;color:var(--ink);white-space:nowrap}
+.hero .r18note:not(:empty){margin-top:8px}
+.out .lbl .tag{margin-left:8px}
+.out .lbl .back{margin-left:auto}
+.ogrid .val{margin:0;display:flex}
+.ogrid .foot{margin:0;padding:0;border:0}
+.ogrid .rows>div{padding:6px 0}
+.rows dt{color:var(--ink2);white-space:nowrap;font-size:15px}
+.rows dd{margin:0;font-weight:500;color:var(--ink);text-align:right;font-size:15px}
+.cmp .half{display:flex;flex-direction:column;gap:1px;padding-left:12px;border-left:3px solid transparent}
+.cmp .half.warn{border-left-color:var(--amber)}
+.cmp .half span{font-size:13px;color:var(--ink2)}
+.cmp .half b{font-size:15px;font-weight:600;color:var(--ink)}
+.cmp .half small{font-size:15px;color:var(--ink2)}
+.mcap{margin-top:2px;font-size:13px;color:var(--ink2)}
+.cmp>.half{display:flex}
+.cmp{grid-template-columns:14px auto minmax(0,1fr);font-size:15px;line-height:1.35;flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgb(var(--ink-rgb) / .035);align-items:stretch}
+.tl.noev{grid-template-rows:34px 0 32px var(--swh,40px) var(--r18,0px) minmax(56px,1fr)}
+.lanes{grid-column:2;grid-row:1/-1;display:grid;grid-template-rows:subgrid;grid-template-columns:minmax(0,1fr);min-width:0;position:relative;user-select:none;touch-action:pan-y;margin-right:8px}
+.tlf span{display:inline-flex;align-items:center;gap:4px}
+.out{display:flex;flex-direction:column;flex:1;min-height:0;margin-top:10px}
+.ogrid{flex:1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:stretch;display:block;margin-top:6px}
+.ogrid .val:empty{display:none}
+.ostrip{grid-template-columns:1fr 1fr 1.2fr;border-bottom:0;padding:0}
+.ostrip dd .pgbsw{display:inline-block;margin-right:8px;vertical-align:1px}
+.tl{flex:1;min-height:0;display:grid;row-gap:6px;margin-top:8px;grid-template-rows:34px 20px 32px var(--swh,40px) var(--r18,0px) minmax(56px,1fr);grid-template-columns:120px minmax(0,1fr)}
+.lwd svg{display:block;overflow:visible}
+.lwd .ax{font-size:13px;fill:var(--ink2)}
+.rec .lbl small,.c3d .lbl small,.out .lbl small{font-size:13px;font-weight:400;color:var(--ink2)}
+.kpi{display:flex;align-items:baseline;gap:12px;margin-top:2px}
+.kpi b{font-size:36px;font-weight:600;letter-spacing:-.025em;line-height:1.05;color:var(--ink)}
+.kpi span{font-size:15px;color:var(--ink2)}
+.kpil{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink2)}
+.kpil .dbk{margin:0}
+.db svg{display:block;overflow:visible}
+.db .dbt{font-size:13px;fill:var(--ink2)}
+.db .dbs{stroke:rgb(var(--ink-rgb) / .25);stroke-width:2}
+.db .dbo{fill:var(--amber)}
+.db .dbm{fill:#26282c;stroke:#000;stroke-opacity:.35;stroke-width:1}
+:root[data-theme=dark] .db .dbm{fill:#eceef0;stroke:#fff;stroke-opacity:.5} /* ours: dark graphite with a thin ring, apart from the chance bars */
+.db .dbv{font-size:13px;font-weight:600;fill:var(--ink)}
+.dbk span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.dbk i{width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.dbk i.o{background:var(--amber)}
+.aline{margin-top:2px;font-size:13px;line-height:1.35;color:var(--ink2)}
+.rec .db+.aline{margin-top:2px;padding-top:5px;border-top:1px solid var(--line)}
+.aline b{font-weight:600;color:var(--ink)}
+@media (max-width:899px){
+  .disagree{font-size:15px}
+  .ostrip{grid-template-columns:1fr 1fr}
+  .kpil{flex-direction:column;gap:2px}
+  .ostrip>div:nth-child(3){grid-column:1/-1;padding-left:0;border-left:0}
+  .subhead{font-size:18px}
+  .expl,.disagree{font-size:15px}
+  .strip{grid-template-columns:1fr 1fr;row-gap:12px}
+  .strip>div:nth-child(3){padding-left:0;border-left:0}
+  .ogrid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .pf1 b{font-size:24px}
+  .pf1 span{font-size:18px}
+}
+.lede .eyebrow{margin:0 0 2px;font-size:15px;font-weight:500;color:var(--ink2)}
+.facthd{display:none}
+.facthd:has(.tag:not([hidden])){display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.strip dt abbr{text-decoration:underline dotted var(--b1);text-underline-offset:3px;cursor:help}
+.lpg svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.lpg .gt{font-size:13px;fill:var(--ink2)}
+:root[data-theme=dark] .dlab.w,:root[data-theme=dark] .headline .dbadge[style*="west"]{color:#10131c}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]) .dlab.w,:root:not([data-theme=light]) .headline .dbadge[style*="west"]{color:#10131c}
+}
+#lod .pgin{position:absolute;top:-8px;z-index:3;height:16px;padding:0 5px;border-radius:3px;background:var(--amber);color:#fff;font:600 11px/16px var(--sans);letter-spacing:.02em}
+:root[data-theme=dark] #lod .pgin{color:#1b1c1f}
+.dbh b{font-size:15px;font-weight:600;color:var(--ink)}
+.rec .kpil{margin-top:2px;font-size:13px;color:var(--ink2)}
+.db .dbl.hi{font-weight:700}
+.pairs>div{display:flex;flex-direction:column;gap:1px}
+.pairs .pv{font-size:15px;color:var(--ink2)}
+.pairs .pv b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.pairs .pl{line-height:1.25;font-size:13px;color:var(--ink2)}
+.topbar{height:56px;box-shadow:0 1px 0 var(--line);margin-bottom:0}
+.brand svg{width:24px;height:24px;color:var(--ink)}
+@media (max-width:600px){
+  main{display:flex;flex-direction:column}
+  .cell[data-p=tl]{order:1}
+  .cell[data-p=rec]{order:2}
+  .cell[data-p=hero]{order:3}
+  .cell[data-p=v3d]{order:4}
+  .tl{grid-template-columns:64px minmax(0,1fr);grid-template-rows:34px 20px 28px max(var(--swh,24px),32px) var(--r18,0px) 96px}
+  .tl.noev{grid-template-columns:64px minmax(0,1fr);grid-template-rows:34px 0 28px max(var(--swh,24px),32px) var(--r18,0px) 96px}
+  .hl{font-size:13px;line-height:1.2}
+  .hl small{display:none}
+  .hl[style*="grid-row:6"]{justify-content:flex-start!important}
+  .pairs{grid-template-columns:1fr}
+}
+.expl{margin:6px 0 0;line-height:1.4;margin-top:8px;font-size:18px;color:var(--ink)}
+.hero .strip dd{overflow:visible!important;text-overflow:clip!important;white-space:nowrap}
+#ev .pgb{top:auto;bottom:-3px;height:7px;border-width:2px}
+:root[data-theme=dark] #ev .pgl{color:#1b1c1f}
+.nowt{position:absolute;bottom:3px;font:600 13px/1 var(--sans);color:var(--ink);display:none}
+.hl[style*="grid-row:6"]{align-items:flex-start}
+.lpg .base.calm{stroke:var(--risk);stroke-opacity:.7}
+.pairs .pv b.of{color:var(--inaa-ink)}
+.lwd .nowpt{fill:var(--ink)}
+.tarr{display:inline-block;width:1.15em;height:.8em;margin:0 .3em;vertical-align:-.05em;fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.map .lead{stroke:var(--ink2);stroke-width:1}
+@media (max-width:899px){
+  .expl{font-size:15px}
+  .hero .strip>div:first-child{grid-column:1/-1;padding-bottom:10px}
+  .hero .strip>div:nth-child(2){padding-left:0;border-left:0}
+}
+@media (max-width:600px){
+  .tl,.tl.noev{grid-template-columns:64px minmax(0,1fr);grid-template-rows:34px var(--evh,0px) 32px var(--swh,40px) var(--r18,0px) 96px}
+  .lpg .gt{display:none}
+}
+.pf3 span{font-size:13px;color:var(--ink2)}
+.strip dt small{font-size:13px;color:var(--ink3)}
+.acch small{font-weight:400;display:inline;white-space:nowrap}
+.acch .k{display:inline-flex;align-items:center;gap:4px}
+.acch i{vertical-align:middle;display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.acch i.ko{background:var(--amber)}
+.dbh{flex-wrap:wrap;gap:4px 12px;margin-top:6px;display:flex;justify-content:space-between;align-items:center}
+.dbu{font-size:13px;color:var(--ink2)}
+.dbk{display:flex;gap:16px;margin-top:2px;color:var(--ink2);font-size:13px}
+@media (max-width:899px){
+  .lbl.acch{flex-wrap:wrap;height:auto;row-gap:2px;white-space:normal}
+  .acch small{display:block;flex-basis:100%;white-space:normal;margin-left:0}
+  .acch .sep{display:none}
+  .hero .strip dt{white-space:normal}
+}
+.disagree{margin:8px 0 0;align-items:center;gap:10px;line-height:1.4;margin-top:6px;display:block;color:var(--ink);font-size:15px}
+.disagree::before{content:"";flex:none;border-top:2px solid var(--amber);width:8px;height:8px;border-radius:50%;background:var(--amber);border:0;display:none}
+.disagree .ofn{font-weight:400;color:var(--inaa-ink);text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;cursor:help}
+.hl{grid-column:1;display:flex;flex-direction:column;padding:2px 8px 0 0;white-space:normal;font-size:13px;font-weight:500;line-height:1.3;justify-content:center;padding-top:0}
+.bands{position:absolute;left:0;right:0;top:32px;bottom:0;pointer-events:none;z-index:4}
+#ev .pgl{top:-1px;bottom:auto;height:14px;padding:0 4px;border-radius:3px;background:var(--amber);color:#fff;font:600 11px/14px var(--sans);letter-spacing:.03em;transform:none}
+.hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);grid-template-rows:1fr;column-gap:32px;display:flex;flex-direction:column;justify-content:center;padding:12px 24px;align-self:stretch}
+.hero .strip dd small{font-size:15px;font-weight:400;color:var(--ink2)}
+.rec .pairs .pv b{font-size:15px}
+.accsub .k{display:inline-flex;align-items:center;gap:4px}
+.accsub i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.accsub i.ko{background:var(--amber)}
+.accsub .nw{margin-left:auto}
+.db .dbax{stroke:rgb(var(--ink-rgb) / .18);stroke-width:1}
+.db .dbt.sub{font-size:11px}
+@media (max-width:899px){
+  .accsub .nw{margin-left:0}
+  .accsub{flex-wrap:wrap;gap:4px 12px}
+}
+.hero .strip{border-bottom:0;padding:0;justify-content:start;column-gap:0;grid-template-columns:auto auto auto}
+.pf1 span{font-weight:500;opacity:1;color:var(--ink2);font-size:18px}
+.pf3 b.of{color:var(--inaa-ink);font-size:15px;font-weight:600}
+.rec .lbl small{font-size:13px}
+.db .abbr{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
+.pairs{display:grid;margin-top:2px;padding-top:4px;border-top:1px solid var(--line);grid-template-columns:1fr!important;gap:2px!important}
+.pairs .pl1 b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.pairs .pl1 .of{color:var(--inaa-ink)}
+@media (max-width:899px){
+  .upd{display:block;font-size:13px}
+  .hero .strip{grid-template-columns:1fr}
+  .hero .strip>div{padding-left:0;border-left:0;padding-bottom:8px}
+}
+.lede-l{flex:1 1 auto;min-width:0;padding:0 6px}
+.pf2{line-height:1.35;font-weight:500;font-size:15px;margin-top:12px}
+.tfoot{display:flex;flex-direction:row!important;align-items:center;gap:16px;margin-top:14px;padding:12px 0 0;border-top:1px solid var(--line);background:none;box-shadow:none;border-radius:0}
+.tfoot .facthd{flex:none;width:112px;justify-content:flex-end;margin:0;display:flex}
+.hl small{align-items:center;gap:4px;font-size:13px;font-weight:400;color:var(--ink2);display:block}
+.accsub{display:flex;align-items:center;gap:14px;font-size:13px;color:var(--ink2);margin-top:2px;justify-content:flex-start}
+.dbcap{margin-top:0;font-size:13px;line-height:1.3;color:var(--ink2)}
+.rec .pairs{margin-top:0;padding-top:3px!important}
+.pairs .pl1{display:block!important;font-size:13px;color:var(--ink2);line-height:1.4}
+@media (max-width:899px){
+  .tfoot{flex-direction:column;align-items:stretch}
+  .tfoot .strip{grid-template-columns:1fr}
+  .tfoot .facthd{width:auto;justify-content:flex-start}
+}
+.tlc .tlf{margin-bottom:8px}
+.pfe{margin:0 0 2px;font-size:15px;font-weight:500;color:var(--ink2);line-height:20.3px}
+.pf1{display:flex;height:auto;line-height:1.1;align-items:baseline;gap:0;margin-top:0}
+.pf1 b{letter-spacing:-.02em;font-weight:600;font-size:36px;line-height:44px}
+.db .dbt.unit{font-size:11px;fill:var(--ink2)}
+@media (max-width:899px){
+  .lbl.acct{height:auto;row-gap:2px;white-space:normal;margin-bottom:6px}
+}
+.db .dbph{font-size:13px;font-weight:400;fill:var(--ink2)}
+@media (max-width:899px){
+  .proof .pf3:last-child{margin-top:4px}
+}
+@media (max-width:479px){
+  .hl small{display:none}
+  #lod,#lpg,#lwd{margin-top:20px}
+  .lpg .gt{display:inline;font-size:11px}
+}
+.tlc{display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 24px;justify-content:flex-start;will-change:transform}
+@media (max-width:479px){
+  .tfoot .strip{grid-template-columns:1fr 1fr}
+}
+.acct{flex-wrap:wrap;display:flex;align-items:baseline}
+.acct .accsub{display:inline-flex;margin:0 0 0 8px;gap:12px;font-weight:400;margin-left:auto!important;font-size:13px}
+.db .dbi circle{fill:none;stroke:var(--ink2);stroke-width:1}
+.db .dbi{cursor:help}
+.db .dbt.hd{font-weight:500;fill:var(--ink)}
+@media (max-width:899px){
+  .acct .accsub{margin-left:0!important}
+}
+.proof .pf2{margin-top:12px!important}
+.pfm{font-size:15px;color:var(--ink);margin-top:4px}
+.pfbars{margin-top:12px;display:grid;gap:5px;max-width:360px}
+@media (min-width:900px) and (max-height:830px){
+  .pfbars{margin-top:8px;gap:3px}
+  .proof .pf2{margin-top:8px!important}
+  .lede{padding-top:16px}
+}
+.pfr{display:grid;grid-template-columns:58px minmax(0,1fr) 64px;align-items:center;gap:8px;font-size:13px}
+.pfn{color:var(--ink2)}
+.pft{position:relative;height:6px;border-radius:3px;background:rgb(var(--ink-rgb) / .07)}
+.pft i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--east)}
+.pft i.o{background:var(--amber)}
+.pfv{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.pfv.of{color:var(--inaa-ink)}
+.eof{white-space:nowrap;font-weight:400;color:var(--ink2)} /* "(end of forecast)": secondary, never split */
+@media (max-width:479px){.eof{display:block}.eofs{display:none}} /* phones: the phrase on its own line, no leading separator */
+.pfm .pfo,.pfm .pfo b{color:var(--inaa-ink);cursor:help}
+.pfs{padding-left:66px;font-size:11px;color:var(--ink3)}
+.pfsx{display:flex;justify-content:space-between}
+.pfsx b{font-weight:400}
+#lod .pgline{position:absolute;top:0;height:3px;z-index:3;background:var(--amber);pointer-events:auto}
+.pgbsw{border-bottom:0;align-self:center;width:14px;height:10px;border:0;border-top:3px solid var(--amber);background:var(--east);border-radius:2px}
+#hlsw{justify-content:flex-end;padding-top:0}
+@media (max-width:479px){
+  #hlsw{justify-content:flex-start}
+  .tfoot .strip>div{padding:0 0 8px;border:0}
+  .pfr{grid-template-columns:54px minmax(0,1fr) 60px}
+}
+@media (min-width:900px){
+  .c3d .mhd{grid-column:1/-1}
+}
+.subhead{margin:4px 0 0;color:var(--ink);line-height:1.25;margin-top:10px;font-size:24px;font-weight:500}
+.lede .subhead,.lede .expl,.lede .disagree{max-width:60ch;text-wrap:pretty}
+.accsub2{display:flex;align-items:baseline;gap:12px;margin:0 0 2px;font-size:13px;color:var(--ink2)}
+.accsub2>span:first-child{flex:1;min-width:0}
+.accsub2 i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.accsub2 i.ko{background:var(--amber)}
+.db .dbpill{fill:rgb(var(--ink-rgb) / .08)}
+.db .dbpt{font-size:11px;fill:var(--ink2)}
+.rec .dbcap{margin:0 0 2px;font-size:13px;color:var(--ink2);display:none}
+.upd i{background:var(--green);width:8px;height:8px;border-radius:50%;flex:none}
+.upd i.ok{background:var(--green)}
+.upd i.old{background:var(--b1)}
+.upd .age{color:var(--ink2)}
+.tfoot .strip{flex:1;display:grid;padding:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+.tfoot .strip dd{overflow:visible;white-space:nowrap;font-size:15px}
+.ruler .d.d0{top:auto;bottom:4px;font-weight:600}
+.tlc .tfoot{margin-top:12px;padding-top:10px}
+.tfoot .strip dd .status{font-size:15px}
+.tfoot .strip dd small{display:block;font-size:13px;white-space:nowrap}
+.pfoot{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--ink2);padding:0 24px 2px;padding-bottom:24px}
+.pissued{display:none}
+@media (max-width:899px){
+  .topbar .upd .uh{display:none}
+  .pissued .uh{display:none}
+  .pissued{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px;color:var(--ink2)}
+  .pissued i{width:7px;height:7px;border-radius:50%}
+  .pissued i.ok{background:var(--green)}
+  .pissued i.old{background:var(--b1)}
+  .pissued .iss{font-weight:500;color:var(--ink)}
+  .pissued .age{white-space:nowrap}
+  .accsub2{flex-wrap:wrap}
+  .accsub2>span:first-child{flex-basis:100%}
+}
+.ruler .nowtag{position:absolute;z-index:2;height:14px;padding:0 5px;border-radius:3px;transform:translateX(-100%);background:var(--ink);color:var(--on-ink);font:600 11px/14px var(--sans);top:auto;bottom:3px}
+@media (max-width:479px){
+  .hl{align-self:start;position:relative;pointer-events:none;font-size:13px;white-space:nowrap;grid-column:2/-1;width:max-content;padding:0 6px 0 8px;z-index:6}
+  .pfe{white-space:normal}
+}
+.lpg .gtr{fill:var(--ink3)}
+.lpg .grid{stroke-width:1;stroke:rgb(var(--ink-rgb) / .07)}
+.lpg .pgwash,.pgwash{fill:rgba(224,138,0,.09)}
+:root[data-theme=dark] .lod .e.lo{background:color-mix(in srgb,var(--east) 40%,var(--ink))!important;opacity:1!important;filter:none;box-shadow:none} /* dark: the direction toward the text colour, >= 3:1 against card and confident bar (check.mjs) */
+:root[data-theme=dark] .lod .w.lo{background:color-mix(in srgb,var(--west) 40%,var(--ink))!important;opacity:1!important;filter:none;box-shadow:none}
+.tlf .losw{opacity:1;background:linear-gradient(90deg,color-mix(in srgb,var(--east) 38%,var(--card)) 50%,color-mix(in srgb,var(--west) 38%,var(--card)) 50%)!important} /* split: navy tint and teal tint */
+:root[data-theme=dark] .tlf .losw{opacity:1;background:linear-gradient(90deg,color-mix(in srgb,var(--east) 40%,var(--ink)) 50%,color-mix(in srgb,var(--west) 40%,var(--ink)) 50%)!important;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+@media (min-width:900px){
+  .c3d .mlg span{align-items:flex-start;white-space:nowrap}
+}
+.hd #zoom{margin-left:auto}
+.hdsel:not(:has(.tag:not([hidden])))+#zoom{margin-left:auto!important}
+.hdsel:not(:has(.tag:not([hidden]))){display:none}
+.ruler .d.off{opacity:0}
+.db .dbt.cap{font-size:11px;fill:var(--ink3)}
+.proof .pfe{margin-bottom:2px}
+.proof .pfe,.proof .pf1,.proof .pfm{margin:0}
+.lede .subhead,.lede .disagree{max-width:60ch}
+.tlf i{width:10px;height:10px;border-radius:3px;opacity:1}
+:root[data-theme=dark] .lpg .pgwash{fill:rgba(240,150,40,.09)}
+@media (max-width:899px){
+  .proof .pf3{text-wrap:balance;margin-top:8px}
+}
+.db .dbt.tk{font-size:11px;fill:var(--ink3)}
+.expl .sm{display:none}
+.lede{flex:none;gap:32px;justify-content:flex-start;padding:24px 18px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;padding-right:24px;align-items:start!important}
+.proof{color:var(--ink);align-items:flex-start;text-align:left;border-left:1px solid var(--line);margin-left:28px;flex:none;margin-top:0;margin:0 0 0 6px;padding:0 0 0 22px;justify-content:flex-start;display:flex;flex-direction:column;padding-top:0;align-self:start;gap:0;min-width:0}
+.proof .pf1{margin-top:6px}
+.proof .pfm{margin-top:2px}
+.proof .pf3{font-size:15px;color:var(--ink);line-height:1.4;margin-top:12px;text-wrap:balance}
+.lede-l .eyebrow,.proof .pfe{line-height:20px}
+@media (max-width:899px){
+  .lede-l{flex:1 1 auto;padding:0;display:flex;flex-direction:column}
+  .lede-l .eyebrow{order:0}
+  .lede-l .headline{order:1}
+  .lede-l .pissued{order:2;margin:6px 0 2px}
+  .expl .lg{display:none}
+  .expl .sm{display:inline}
+  .proof{align-items:flex-start;text-align:left;margin-top:14px;border-top:1px solid var(--line);padding-top:12px;margin-left:0;margin:14px -6px 0;padding:14px 16px;border:0;border-left:0;background:var(--card);border-radius:16px;box-shadow:inset 0 0 0 1px rgba(27,28,30,.04)}
+  .lede{align-items:stretch;gap:0;flex-direction:column;padding:12px 16px 12px;display:flex;border-bottom:0}
+}
+.hdsel.on{display:flex!important}
+.hdsel small{font-variant-numeric:tabular-nums;font-size:13px!important;min-width:0;text-align:right;color:var(--ink);white-space:nowrap}
+.hdsel{align-items:center;margin-left:auto;white-space:nowrap;display:none!important;gap:8px!important}
+.hdsel .back{margin-left:0;white-space:nowrap;font-size:13px}
+.db .dbf{font-size:13px;font-weight:400!important;fill:var(--ink2)!important;font-variant-numeric:tabular-nums}
+.db .dbfc{fill:rgb(var(--ink-rgb) / .04);display:none}
+.accsub2 .k{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;margin-right:6px}
+.tlf .pgbsw{width:16px;height:9px;border:0;border-radius:2px;background:var(--amber)}
+main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing:border-box;width:100%}
+@media (max-width:899px){
+  .topbar{flex-wrap:wrap;display:grid;align-items:center;gap:10px 12px;padding:12px 16px;height:auto;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-areas:"brand thm tz" "nav nav upd"!important;column-gap:8px!important}
+  .topbar .upd{display:flex;flex-wrap:nowrap;font-size:13px;white-space:nowrap;justify-self:end;grid-area:upd}
+  .hdsel small{min-width:0;white-space:normal;text-align:left}
+  .hd{flex-wrap:wrap}
+  .hdsel.on{order:9;flex-basis:100%;flex-wrap:wrap}
+}
+.acchd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.acchd .lbl{flex:0 1 auto;min-width:0}
+.acck{display:inline-flex;gap:12px;flex:none;font-size:13px;color:var(--ink2);white-space:nowrap}
+.acck .k{display:inline-flex;align-items:center;gap:6px}
+.acck i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.acck i.ko{background:var(--amber)}
+.accsub3{margin:0 0 4px;font-size:13px;color:var(--ink2)}
+.db .dbrule{stroke:rgb(var(--ink-rgb) / .06);stroke-width:1}
+.db .dbtag{fill:rgb(var(--ink-rgb) / .07)}
+.db .dbplan{font-size:11px;font-weight:400;fill:var(--ink2)}
+.db .dbhi{fill:rgb(var(--ink-rgb) / .06)}
+.db .dbacc{fill:var(--east)}
+.db .dbl{fill:var(--ink);font-size:13px;font-weight:600}
+.db .dbi text{font-weight:700;fill:var(--ink2);font-size:11px;font-style:normal}
+.readout .ro b{font-weight:600;color:var(--ink)}
+.readout .rback{flex:none;transition:background-color .15s var(--ease);height:28px;padding:0 12px;border-radius:8px;background:var(--fill);box-shadow:none;font-size:13px;font-weight:500;color:var(--ink);line-height:28px;margin-left:0} /* inline right after the readout, as in 3D */
+.readout .rback:hover{background:var(--hover);color:var(--ink)}
+.readout .rback[hidden]{display:none}
+.tl,.tl.noev{min-height:0;flex:0 0 auto;row-gap:0;grid-template-rows:34px var(--evh,0px) calc(16px + var(--dirh,36px)) calc(12px + var(--swh,44px)) var(--r18row,0px) calc(24px + var(--hwh,70px));margin-top:8px}
+#ruler{grid-row:1}
+#ev{grid-row:2}
+#lod{grid-row:3}
+#lpg{grid-row:4}
+#l18{grid-row:5}
+#lwd{grid-row:6}
+.tl .ln,.tl .hl{margin-top:16px}
+@media (min-width:480px){.tl .hl[style*="grid-row:3"]{margin-top:20px}} /* centred on the bar, not on the bar plus the tag band */
+.lwd{display:block;margin-top:16px}
+.ph{position:absolute;left:0;width:0;z-index:3;pointer-events:none;will-change:transform;top:0;bottom:0}
+.ph::before{content:"";position:absolute;bottom:0;border-radius:1px;background:var(--ink);top:var(--lt,32px);width:1.5px;left:-.75px}
+.ruler .h.off,.ruler .nowtag.off,.lpg .pk.off,.lwd .limt.off{opacity:0}
+.ruler .d.dend{left:auto}
+.ruler .t.dd{height:100%;background:rgb(var(--ink-rgb) / .14)}
+@media (max-width:479px){
+  .tl .ln,.lwd{margin-top:36px!important}
+  .tl .hl{margin-top:12px;height:16px;line-height:16px}
+  .tfoot .strip>div:first-child,.tfoot .strip>div:nth-child(2){grid-column:auto;padding-bottom:0}
+  .tfoot .strip>div:nth-child(3){grid-column:1/-1}
+  .tfoot .strip dd{white-space:normal}
+}
+.mids{position:absolute;left:0;right:0;top:32px;z-index:0;pointer-events:none}
+.mids .mid{position:absolute;top:0;bottom:0;width:1px;background:rgb(var(--ink-rgb) / .14)}
+.lpg .pk text{font-size:11px;fill:var(--ink2)}
+.lpg .pkbg{fill:var(--card)}
+.lpg i.pkb{filter:brightness(.75)}
+.lpg .pkt{font:500 11px var(--sans);fill:var(--ink2)}
+:root[data-theme=dark] .lpg i.pkb{filter:brightness(1.1)} /* one graphite step up, not white */
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .lpg i.pkb{filter:brightness(1.1)}}
+.ruler .d{position:absolute;top:0;font:600 13px/1 var(--sans);white-space:nowrap;transition:opacity .15s;background:var(--card);padding:0 3px;margin-left:-3px;z-index:1}
+.nowtag{cursor:help}
+:root[data-theme=dark] .map .area{fill:rgb(var(--ink-rgb) / .07)!important}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]) .map .area{fill:rgb(var(--ink-rgb) / .07)}
+}
+@media (max-width:479px){
+  #hdsel.readout{font-size:11px;line-height:16px;white-space:normal;align-items:flex-start;margin-top:8px;min-height:32px;height:auto}
+  .readout .ro{white-space:normal;overflow:visible;text-overflow:clip}
+}
+.upd .frs{color:var(--ink2);font-variant-numeric:tabular-nums}
+.upd .frs b{font-weight:600;color:var(--ink2)}
+.lwd .limt.gutter{fill:var(--ink2)!important;font-weight:400!important}
+.pf3 a.beat:hover{text-decoration-color:currentColor}
+#rec.flash{animation:recflash 1.4s var(--ease)}
+@keyframes recflash{0%,60%{box-shadow:0 0 0 3px var(--east-line)}100%{box-shadow:inset 0 0 0 1px rgba(27,28,30,.04)}}
+@media (max-width:480px){
+  .topbar .seg button{font-size:11px;padding:0 8px}
+  .lwd .limt.gutter{display:none}
+}
+#hdsel.readout{display:flex;align-items:center;gap:16px;margin:2px 0 0;font-size:13px;color:var(--ink2);white-space:nowrap;min-width:0;overflow:visible;justify-content:flex-start;height:28px;line-height:28px}
+.readout .ro{min-width:0;overflow:hidden;text-overflow:ellipsis;line-height:20px}
+.pf3 a.beat span{font-size:inherit;color:inherit}
+.tlf{display:flex;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--ink2);white-space:nowrap;flex:none;gap:4px 8px;margin-top:16px;margin-bottom:0}
+@media (min-width:480px){
+  .tl,.tl.noev{grid-template-columns:136px minmax(0,1fr);flex:1 1 auto;grid-template-rows:40px var(--evh,0px) calc(20px + 36px) minmax(calc(12px + 58px),1fr) var(--r18row,0px) calc(12px + 66px);margin-top:4px}
+  .ruler .d{top:0}
+  .ph::before{top:var(--lt,20px)}
+}
+.pf3 a.beat .u{text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:4px;font-weight:400;color:inherit}
+.pf3 a.beat .ar{color:var(--east-line)} /* only the arrow carries colour */
+.pf3 a.beat:hover .u{text-decoration-color:currentColor}
+.pf3 a.beat .ar{text-decoration:none}
+@media (max-width:480px){
+  .upd .fw{display:none}
+  .lede .headline .ff{display:none}
+  .lede .eyebrow::before{content:"Frankfurt · "}
+}
+.lpg .pk{font-weight:400;transition:opacity .15s var(--ease);font-size:11px;fill:var(--ink2)}
+@media (min-width:480px){
+  #lpg{margin-top:12px}
+  #hlsw{margin-top:12px;justify-content:center} /* centred on the 0-20 % plot */
+}
+.lwd .limt.kn{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+.c3d .mlg span,.c3d .mlg .tk{gap:6px}
+.lede .proof .pfm{margin-top:4px}
+.lede .proof .pf3{margin-top:4px}
+.pf3 a.beat{text-decoration-color:var(--b2);text-decoration:none;text-underline-offset:4px;display:inline;font-size:inherit;color:inherit}
+.lpg>div.hov i{background:var(--ink)!important;opacity:1!important}
+.lwd .hdot{fill:var(--ink);stroke:var(--card);stroke-width:1.5}
+.lpg .pkc{fill:var(--ink2)}
+.pf3{margin-top:4px;color:var(--ink2);font-size:18px}
+.pf3 b.of,.pfm b.of{font-weight:600}
+:root[data-theme=dark] .lpg .pgwash,:root[data-theme=dark] .pgwash{fill:rgba(255,165,50,.08)!important} /* translucent: the bars stay visible (>= 2:1, check.mjs) */
+.map svg.nb .app,.map svg.nb .arw,.map svg.nb .dep{opacity:.25}
+.rec .db{margin-top:0;flex:1 1 auto;min-height:0}
+.rec .accst{margin-top:6px}
+.map .area{stroke-linejoin:round;fill:rgb(var(--ink-rgb) / .05);stroke:rgb(var(--ink-rgb) / .3);stroke-width:.75} /* a hairline outline on a light surface */
+.lpg .gt,.lwd .ax{font-size:11px;fill:var(--ink3)}
+#lod .pgtag.ra::after{content:'';position:absolute;left:var(--tk);bottom:-4px;width:1px;height:4px;background:inherit}
+#lod .pgtag{position:absolute;top:-14px;z-index:7;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 11px/14px var(--sans);letter-spacing:.02em;white-space:nowrap;background:var(--inaa-ink);color:#fff}
+:root[data-theme=dark] #lod .pgtag{background:#f0a030;color:#1b1c1f} /* siteui.STYLE.tag_bg, the same on the 3D view */
+.db .dbv.o{font-weight:400;fill:var(--inaa-ink)}
+.db .dbv,.db .dbt.tk{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round} /* the gridlines stop behind the labels */
+@media (min-width:900px){
+  .lede .lede-l{display:contents}
+  .lede-l .eyebrow{grid-area:1/1}
+  .lede #answer{grid-area:2/1;align-self:start}
+  .lede .proof .pfm{margin-top:12px}
+  .lede .proof .pf3{margin-top:4px}
+  .lede .pinl{display:none}
+  .ldiv{grid-area:1/2/span 5/3;width:1px;display:none}
+}
+@media (max-width:899px){
+  .ldiv{display:none}
+}
+.lede .disagree[hidden]{display:none!important}
+@media (min-width:900px){
+  .lede .expl{grid-area:4/1;align-self:last baseline;font-size:15px;line-height:1.4;margin-top:12px}
+  .lede .disagree{grid-area:5/1;margin-top:4px}
+  .lede .subhead{grid-area:3/1;margin-top:16px}
+}
+.map .rwhalo{fill:var(--card)}
+.map .gapp{fill:none;stroke:var(--west-line);stroke-width:2;stroke-dasharray:6 4;opacity:.85}
+.mlg #mlggh[hidden]{display:none!important}
+.mlg .ghk{width:18px;height:0;border-top:1.5px dashed var(--west-line);opacity:.8;display:inline-block}
+.map .rwld{fill:none;stroke:rgb(var(--ink-rgb) / .5);stroke-width:1}
+.map .rwldd{fill:rgb(var(--ink-rgb) / .5)}
+.map .tnum{fill:var(--east-line);stroke:var(--card);stroke-width:6;paint-order:stroke} /* a 3 px card-colour halo: the line visibly breaks around the disc */
+.map .tnumt{font:600 11px var(--sans);fill:var(--card)}
+.mlgt{display:inline-flex;align-items:center;flex-wrap:wrap;gap:16px}
+.mlgt .tk{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.mlgt i{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--east-line);color:var(--card);font:600 11px/1 var(--sans);font-style:normal}
+.accst dd .vs{font-size:13px;font-weight:400;color:var(--ink2)}
+.accst dd .vs .of{font-weight:600;color:var(--inaa-ink)}
+.c3d .mlg{align-self:center;font-size:13px;color:var(--ink2)}
+.lwd .limt{transition:opacity .15s var(--ease);font-weight:500;font-size:11px;fill:var(--red)!important}
+@media (min-width:900px){
+  .lede.lede{display:grid;grid-template-rows:auto auto auto auto auto;row-gap:0;align-items:start!important;padding-left:18px;padding-right:18px;grid-template-columns:minmax(0,14fr) 0 minmax(0,10fr)!important;column-gap:0!important;padding-top:14px}
+  .lede .proof.proof{grid-area:1/3/span 5/4;display:flex;flex-direction:column;align-self:start!important;padding-left:32px;margin-left:-33px;margin:0 0 0 6px!important;padding:0 0 0 22px!important;border:0;border-left:1px solid var(--line)}
+  .lede .proof .pf1{margin:0;display:block}
+  .lede .proof .pfe{margin:var(--pfb,0px) 0 4px!important} /* the eyebrow travels with the number: just above it */
+  .lede .proof .pf1 b{font-weight:600;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;font-size:36px;line-height:1.1}
+}
+.lanes:focus{outline:none}
+.lanes:focus-visible{outline-offset:6px;border-radius:8px;outline:2px solid rgb(var(--ink-rgb) / .3)}
+.ph b{position:absolute;left:0;border-radius:4px;white-space:nowrap;height:18px;padding:0 6px;font:600 11px/18px var(--sans);transform:translateX(0);background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);display:inline-flex;align-items:center;gap:3px;top:0}
+.ph.pin b{background:var(--ink)!important;color:var(--on-ink)!important;box-shadow:none!important}
+.ph.pin::before{width:2px!important;left:-1px!important}
+.ph::before{-webkit-mask:var(--mk,none);mask:var(--mk,none)}
+.ph .pinG{width:10px;height:10px}
+.upd .iss{display:inline-block;border-radius:8px;font-size:15px;line-height:20px;padding:0;background:none;color:var(--ink);font-weight:400!important}
+.db .dbg{stroke:rgb(var(--ink-rgb) / .1);stroke-width:1}
+.lwd .nowv{font-size:13px;fill:var(--ink2);paint-order:stroke;stroke:var(--card);stroke-width:4px;display:none}
+@media (max-width:479px){
+  .c3d .mhd{flex-wrap:wrap}
+  .c3d .mhd .lbl{flex-wrap:wrap;height:auto;row-gap:0}
+  .c3d .mhd .lbl small{flex-basis:100%;order:3;margin:0}
+  .tfoot .strip,.tfoot .strip.strip{display:grid;column-gap:16px;row-gap:12px;grid-template-columns:1fr}
+  .tfoot .strip>div:first-child,.tfoot .strip>div:nth-child(2),.tfoot .strip>div:nth-child(3){grid-column:auto}
+}
+@media (min-width:480px){
+  #lwd{margin-top:12px}
+  .tl .hl[style*="grid-row:6"]{margin-top:12px}
+}
+.lwd .zone{fill:rgba(216,57,46,.14)}
+:root[data-theme=dark] .lwd .zone{fill:rgba(239,91,79,.2)}
+.lwd .zero{stroke:var(--ink2);stroke-width:1;stroke-dasharray:none}
+.status.open::before{background:none;width:12px;height:12px;border-radius:0;font-size:13px;line-height:12px;color:var(--ink2);text-align:center;content:none!important;display:none!important}
+.status .ck,.badge .ck{width:14px;height:14px;margin-right:4px;vertical-align:-2px;color:var(--ink2)}
+.map .rwp{fill:#55575d;stroke:var(--card);stroke-width:2;paint-order:stroke}
+.map .rwt{font:600 13px/1 var(--sans);fill:#fff}
+.map .rwt.rwt11{font-size:11px}
+.map .river{stroke-linejoin:round;stroke-linecap:round;fill:none!important;stroke:#8fb3d1!important;stroke-width:1.5!important}
+.map .scl path{fill:none;stroke:var(--ink3);stroke-width:1}
+.map .scl text{fill:var(--ink3);font-size:13px}
+.mlg .mscl{margin-left:auto;gap:4px;color:var(--ink2);align-items:baseline!important}
+.mlg .mscl svg{align-self:baseline}
+.mlg .mscl[hidden]{display:none!important}
+.mlg .mscl svg{width:auto;height:5px}
+.mlg .msb{display:inline-flex;flex-direction:column;align-items:center;gap:1px}
+.mlg .msb b{font-weight:400;font-size:11px;line-height:12px}
+.mlg .mscl path{fill:none;stroke:var(--ink2);stroke-width:1}
+.nowl{position:absolute;bottom:0;z-index:4;width:1.5px;margin-left:-.75px;opacity:1;top:-6px;background:#4b4d53}
+:root[data-theme=dark] .nowl{background:var(--ink)}
+@media (min-width:900px){
+  .proof{margin:0 0 0 6px;padding-left:22px;justify-self:stretch;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start;padding-top:0;margin-top:0}
+}
+@media (max-width:479px){
+  .lede .headline{text-wrap:balance;font-size:36px!important;line-height:1.1}
+  .lede .headline .dbadge{font-size:24px!important;height:40px!important;min-width:52px!important}
+  .lede .headline .arr{width:30px;height:22px}
+  .tl,.tl.noev{grid-template-rows:34px var(--evh,0px) calc(36px + var(--dirh,44px) + var(--lgh,0px)) calc(36px + min(var(--swh,76px), 96px)) var(--r18row,0px) calc(36px + min(var(--hwh,72px), 96px));grid-template-columns:28px minmax(0,1fr)}
+}
+.tfoot .strip>div{padding-right:16px;min-width:0}
+.tfoot .strip dd,.tfoot .strip dd small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]){--risk:#9a9a9a}
+}
+:root[data-theme=dark]{color-scheme:dark;--risk:#9a9a9a;--risk-w:#c4c4c4}
+.pinl{display:none;margin:4px 0 0;font-size:15px;color:var(--ink)}
+.pinl .of{font-weight:600;color:var(--inaa-ink)}
+.pinl .pl1,.pinl .pl2{display:block}
+.pinl .pn{font-size:24px;font-weight:600;line-height:1.2}
+.pinl .pl2{margin-top:2px;font-weight:500;color:var(--ink);text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:4px}
+.pinl .nw{white-space:nowrap}
+.ccell{cursor:pointer;border-radius:8px;transition:background .15s}
+.ccell:hover{background:var(--hover)}
+.ccell:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.lede .expl{text-wrap:pretty;max-width:60ch;line-height:1.35;font-size:15px;color:var(--ink2);margin-top:12px}
+@media (min-width:900px){
+  .lede{grid-template-columns:minmax(0,14fr) minmax(0,10fr);column-gap:0;align-items:stretch;padding-top:8px;padding-bottom:6px}
+  .pfoot{padding-bottom:8px}
+}
+.lede .disagree{margin-top:6px}
+@media (max-width:899px){
+  .lede .subhead{font-size:18px;font-weight:600;white-space:normal;margin-top:16px}
+  .lede-l .pinl{order:3}
+  .lede-l .subhead{order:3}
+  .lede-l .expl{order:4}
+  .lede-l .disagree{order:5}
+}
+@media (max-width:479px){
+  .pinl{display:block}
+  .proof{margin:12px 0 0;padding:12px 0 0;display:none}
+  .lede .expl{font-size:15px}
+}
+.accst{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:2px 0 0;padding-top:6px;border-top:1px solid var(--line);align-items:start}
+.rec .accst.accst{margin-top:13px} /* 16 px from the axis labels to the divider (the plot keeps 3 px under its labels) */
+@media (max-width:479px){.rec .accst.accst{margin-top:16px}}
+.accst dd{font-size:24px!important;line-height:1.15}
+@media (max-width:479px){.accst dt{white-space:normal!important}}
+@media (max-width:479px){#answer .dbadge{height:36px!important;min-height:36px!important}} /* the 07 badge on the 36 px step */
+@media (max-width:479px){#hdsel.readout{flex-wrap:wrap;height:auto;row-gap:4px} #hdsel .ro{flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} #hdsel .rback{margin-left:0}} /* phones: "Back to now" on its own row; the readout keeps one line */
+.accst .nw{white-space:nowrap}
+.accst dt.ofl{font-size:13px;color:var(--ink2)}
+.accst>div{display:flex;flex-direction:column;gap:0;min-width:0}
+.accst dd{align-items:baseline;gap:6px;margin:0;font-weight:600;color:var(--ink);white-space:normal;display:block;font-size:18px;line-height:1.2}
+.accst dd .of{font-size:15px;font-weight:500;color:var(--inaa-ink)}
+.accst dt{font-size:13px;line-height:1.25;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .accsub3{margin-bottom:0}
+.db{margin-top:5px;position:relative}
+.dbib{position:absolute;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--ink2);font:600 11px/14px var(--sans);color:var(--ink2);text-align:center;cursor:help}
+.dbib:hover,.dbib[aria-expanded=true]{background:var(--ink);color:var(--on-ink);box-shadow:none}
+.dbpop{position:absolute;right:0;top:4px;z-index:20;width:260px;padding:8px 12px;border-radius:8px;background:var(--card);box-shadow:var(--shadow);font-size:13px;line-height:1.45;color:var(--ink2);white-space:normal}
+.rec{display:flex;flex-direction:column;padding:16px 22px 16px;padding-top:12px;padding-bottom:12px;overflow:visible}
+.cell[data-p=rec]>.card{overflow:visible}
+.eyebrow,.pfe{white-space:normal}
+@media (min-width:900px){
+  .c3d{grid-template-columns:minmax(0,1fr) var(--keyw,140px);grid-template-rows:auto minmax(0,1fr);column-gap:10px;display:flex;flex-direction:column;position:relative}
+  .c3d .map{grid-column:1;grid-row:2;flex:1 1 auto;margin-top:2px}
+  .c3d .mlg{grid-column:2;grid-row:2;justify-content:center;white-space:normal;line-height:1.3;flex-wrap:nowrap;margin-top:6px;position:absolute;left:16px;right:auto;top:auto;bottom:10px;flex-direction:row;align-items:center;z-index:3;margin:0;padding:4px 8px;border-radius:6px;background:color-mix(in srgb,var(--card) 88%,transparent);font-size:11px;gap:2px 10px;right:16px;flex-wrap:wrap}
+  .c3d .mlg span,.c3d .mlg .tk{gap:6px}
+  .c3d .mlg .mscl{gap:4px}
+  .c3d .mlgt{flex-wrap:nowrap;gap:10px}
+  .c3d .mlg svg{width:18px}
+  .c3d .mlg .mscl svg{width:auto}
+  .c3d .mlg svg{flex:none;margin-top:0;width:18px}
+}
+@media (max-width:899px){
+  .headline{display:block;flex-wrap:wrap;font-size:24px;gap:10px}
+  .headline .dbadge{vertical-align:4px;margin-right:6px;font-size:18px;height:30px;min-width:40px}
+  .headline .arr{vertical-align:-1px;margin-left:6px;width:26px;height:18px}
+}
+@media (min-width:480px){
+  #lod{margin-top:20px}
+}
+@media (min-width:900px) and (max-height:860px){
+  .lede .subhead{font-size:18px;margin-top:16px}
+  .lede .expl{margin-top:8px}
+}
+.upd .fi{display:none}
+@media (max-width:480px){
+  .upd .fi{display:inline}
+  .eyebrow .ebl{display:none}
+}
+@media (min-width:900px) and (max-height:860px){
+  .lede .proof .pf1 b{font-size:36px}
+}
+.lpg .pkl{fill:none;stroke:var(--ink2);stroke-width:1}
+@media (min-width:900px){ /* every desktop canvas is ~810 px high after the zoom */
+  .lede.lede{padding-top:8px;padding-bottom:0}
+  .lede #subhead{margin-top:8px!important}
+  .lede #expl{margin-top:16px!important} /* tiers: outlook, 16, problem, 8, official */
+  .lede #disagree{margin-top:8px!important;line-height:18px;text-wrap:pretty} /* room for a two-line official sentence */
+  .lede #expl{line-height:18px;max-width:60ch} /* never wider than the headline */
+}
+@media (min-width:900px){
+  .lede .lede-l>*{padding-left:6px;padding-right:24px}
+}
+@media (min-width:480px){
+  .hl{font-size:13px}
+}
+.lpg .pk.off{opacity:0}
+.db .dbfn{font-weight:600;fill:var(--ink)}
+:root[data-theme=dark] .night{background:rgba(0,0,0,.22)} /* dark: a shade darker than the plot, never lighter */
+@media (max-width:479px){
+  .ruler .h.h0{display:none}
+}
+@media (max-width:899px){
+  .topbar .seg button,#tz button{height:26px!important;font-size:12px!important;padding:0 8px!important}
+}
+@media (min-width:900px) and (max-height:860px){
+  .tlc{padding-top:12px;padding-bottom:12px}
+}
+.accst dt .of{font-weight:600;color:var(--inaa-ink)}
+@media (min-width:480px){
+  #hlsw,.hl{white-space:nowrap}
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]) .night{background:rgba(0,0,0,.22)}
+}
+.accst .ofl{color:var(--ink2)}
+.map .rvl{font:italic 400 11px var(--sans);fill:#5f88ab}
+@media (max-width:479px){
+  .accst dt:not(.ofl){overflow:visible;white-space:nowrap;min-height:0}
+}
+:root[data-theme=dark] .map .river{stroke:#4f7394!important}
+.lpg .pkd{fill:var(--ink)}
+.lpg .grid.half{stroke:rgb(var(--ink-rgb) / .14);stroke-dasharray:2 3} /* the dotted mid gridline */
+.ruler .h.tagged{visibility:hidden}
+.pfb{margin-top:4px;font-size:13px;color:var(--ink3)}
+@media (min-width:900px){
+  .topbar{padding-left:max(24px, calc((100% - 1360px) / 2 + 24px))!important;padding-right:max(24px, calc((100% - 1360px) / 2 + 24px))!important}
+}
 """
+
 
 JS = r"""
 const $ = id => document.getElementById(id), D = JSON.parse($('data').textContent), H0 = D.hours;
@@ -494,28 +1403,40 @@ let tz = store.get('fra-tz') === 'utc' ? 'UTC' : 'Europe/Berlin', span = 48, off
 // ---- formatting (Local = Frankfurt time; the night ban and traffic profile are always Frankfurt hours)
 const fmt = o => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', ...o });
 const hm = t => fmt({ hour: '2-digit', minute: '2-digit' }).format(new Date(t));
-const dhm = t => fmt({ weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(t));
+const dhm = t => fmt({ weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(t)); // Fri 6 Nov, 19:00 everywhere
 const dayf = t => fmt({ weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(t));
 const hourOf = t => +fmt({ hour: '2-digit' }).format(new Date(t));
 const fraHour = t => +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', hourCycle: 'h23' }).format(new Date(t));
 const plus1h = t => new Date(new Date(t).getTime() + 3600e3);
-const pct = p => (p >= 0.995 ? '>99%' : p < 0.005 ? '<1%' : `${Math.round(p * 100)}%`);
-const word = od => (od === 25 ? 'Westbound' : 'Eastbound');
+const pct = p => (p >= 0.995 ? '>99\u202f%' : p < 0.005 ? '<1\u202f%' : `${Math.round(p * 100)}\u202f%`); // the one probability format
+const word = od => (od === 25 ? 'West' : 'East'); // one wording on both pages: the plate (07 / 25) and East / West
 const two = od => (od === 25 ? '25' : '07');
 const col = od => (od === 25 ? 'var(--west)' : 'var(--east)');
 const sw = od => `<i class="sw" style="background:${col(od)}"></i>`;
+const rw = od => `<b>${two(od)}</b>`;
 const hoursFrom = t => Math.round((new Date(t) - new Date(D.issue)) / 3600e3);
+const compass = d => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((d % 360) + 360) % 360 / 45) % 8];
 const comp = (h, hdg) => -h.ws * Math.cos((h.wd - hdg) * Math.PI / 180); // + = tailwind on that heading
 const night = t => { const h = fraHour(t); return h >= 23 || h < 5; };
 const prog = h => (h.pg === undefined ? null : h.pg >= 0.75 ? 25 : h.pg <= 0.25 ? 7 : 0); // 0 = mixed / change possible
 const pOf = (h, od) => (od === 25 ? h.p25 : 1 - h.p25);
 const idxOf = t => H.findIndex(h => Date.parse(h.t) === Date.parse(t));
+try { if (innerWidth >= 480) document.getElementById('tzl').textContent = `Local (${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value})`; } catch {}
+document.addEventListener('click', e => { // "How this works" opens a popover, so the card never clips it
+  { const a = e.target.closest('a.beat'); if (a) { e.preventDefault(); const c = $('rec'); c.scrollIntoView({ behavior: still.matches ? 'auto' : 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); return; } } // the proof's claim links to its evidence
+  { const dp = document.getElementById('dbpop'); if (dp && !e.target.closest('#dbib,#dbpop')) { dp.hidden = true; document.getElementById('dbib')?.setAttribute('aria-expanded', 'false'); } } // the (i) popover closes on a tap elsewhere
+  const b = e.target.closest('.howbtn'), p = $('howpop');
+  if (b) { const r = b.getBoundingClientRect(), z = zoom(); p.hidden = !p.hidden; p.style.left = `${r.left / z}px`; p.style.top = `${(r.bottom + 6) / z}px`; return; }
+  if (!e.target.closest('#howpop')) p.hidden = true;
+});
+const nowIdx = () => Math.max(0, Math.min(H.length - 1, Math.floor((Date.now() - Date.parse(H[0].t)) / 36e5))); // the hour we are in
 
 // ---- events = timeline markers: the predicted direction change, Runway 18 closures
 function events() {
   const ev = [];
-  if (D.change) { const i = idxOf(D.change.t); if (i >= 0) ev.push({ i, kind: 'od', label: `⇄ ${two(D.od_now === 25 ? 7 : 25)}` }); }
-  H.forEach((h, i) => { if (h.p18 < 0.5 && (i === 0 || H[i - 1].p18 >= 0.5)) ev.push({ i, kind: 'r18', label: '18 ✕' }); });
+  // the switch itself: its chip sits on the tag band (renderTimeline)
+  H.forEach((h, i) => { if (h.p18 < 0.5 && (i === 0 || H[i - 1].p18 >= 0.5)) ev.push({ i, kind: 'r18', label: '18 closed' }); });
+  const pg = pgDiff(); // the one disagreement worth seeing: marked where it happens
   return ev.sort((a, b) => a.i - b.i);
 }
 function r18Windows() { // [start, end] index ranges where Runway 18 is predicted not usable
@@ -526,42 +1447,79 @@ function r18Windows() { // [start, end] index ranges where Runway 18 is predicte
 
 // ---- summary: the shown hour (now = the flown direction)
 function renderOD() {
-  const now = sel < 0, h = now ? H[0] : H[sel], od = now ? D.od_now : h.od;
-  $('odtag').textContent = now ? 'Now' : dhm(h.t);
+  const now = sel < 0, h = now ? H[nowIdx()] : H[sel], od = now ? D.od_now : h.od;
+  $('odtag').textContent = ''; $('odtag').hidden = true; // the date sits on the axis pill only
+  $('hdsel').classList.toggle('on', !now);
   $('odtag').classList.toggle('later', !now);
-  $('back').hidden = now;
-  $('odnum').textContent = two(od);
-  $('odword').innerHTML = `${sw(od)}${word(od)}`;
-  $('oddesc').textContent = `Take-offs and landings toward ${od === 25 ? '250' : '070'}°`;
-  const wind = h.ws === undefined ? '–' : `${String(h.wd).padStart(3, '0')}° ${Math.round(h.ws)} kt`;
-  const since = D.since ? (dayf(D.since) === dayf(D.issue) ? hm(D.since) : dhm(D.since)) : '–';
-  const facts = now ? [['In use since', since], ['Confidence (6 h)', pct(D.conf6)], ['Wind', wind]]
-    : [['Ahead', `${hoursFrom(h.t)} h`], ['Probability', pct(pOf(h, od))], ['Wind', wind]];
-  $('odfacts').innerHTML = facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  $('back').style.visibility = pin >= 0 && pin !== nowIdx() && sel === pin ? 'visible' : 'hidden'; // only once a click has pinned an hour // in the DOM always: no layout shift
+  $('odnum').textContent = two(od); $('odnum').style.setProperty('--dc', col(od));
+  $('odword').textContent = word(od);
+  $('oddesc').innerHTML = `All take-offs and landings toward the ${od === 25 ? 'west' : 'east'} (heading ${od === 25 ? '250' : '070'}°); landings over ${od === 25 ? 'Offenbach' : 'Flörsheim, Raunheim and Rüsselsheim'}.`;
+  const hrs = D.since ? Math.max(0, Math.round((Date.now() - Date.parse(D.since)) / 36e5)) : null;
+  const dur = hrs === null ? 'n/a' : hrs >= 48 ? `${Math.round(hrs / 24)} days` : `${hrs}\u202fh`;
+  // one definition on both pages: the component of the forecast wind (unrounded) along the runway in use, rounded once
+  const tw = h.ws === undefined ? null : Math.round(comp(h, od === 25 ? 249 : 69));
+  const twS = h.ws === undefined ? 'n/a' : `${Math.round(h.ws)}\u202fkt from ${compass(h.wd)} (${String(h.wd).padStart(3, '0')}°)`;
+  const ok = h.p18 >= 0.5, r18 = [`Runway 18 West${now ? '' : ` at ${hm(h.t)}`}`, `<span class="status ${ok ? 'open' : 'closed'}">${ok ? 'Open' : 'Closed'}</span><span class="dd2">take-offs to the south only</span>`, `Closure chance ${now ? 'now' : `at ${hm(h.t)}`}: ${pct(1 - h.p18)}. It closes when the wind across it is too strong.`];
+  const windT = 'The official rule switches direction when the tailwind stays above 1\u202fkt for more than 30 minutes, or at once from 10\u202fkt';
+  const twS2 = h.ws === undefined ? 'n/a' : `${tw === null ? '' : `${Math.abs(tw)}\u202fkt ${tw > 0 ? 'tailwind' : 'headwind'} on ${two(od)}`} <small>wind ${compass(h.wd)} ${Math.round(h.ws)}\u202fkt</small>`;
+  const oth = x => Math.min(x.p25, 1 - x.p25), pkH = H.slice(nowIdx()).reduce((a, x) => (oth(x) > oth(a) ? x : a), H[nowIdx()]);
+  void twS2; void windT;
+  const facts = [['Last switch', D.since ? `${dayf(D.since)}, ${hm(D.since)} <small>flown ${D.od_now === 25 ? 'West' : 'East'} for ${dur}</small>` : 'n/a', 'The last change of the operating direction actually flown (radar tracks)'],
+    (() => { if (!now) { if (h.ws === undefined) return [`Wind at ${dayf(h.t).split(' ')[0]} ${hm(h.t)}`, 'n/a']; // hovered or pinned: the wind for that hour
+        return [`Wind at ${dayf(h.t).split(' ')[0]} ${hm(h.t)} <small>(forecast)</small>`, `${Math.abs(tw)}\u202fkt ${tw > 0 ? 'tailwind' : 'headwind'} on ${two(od)} <small>${compass(h.wd)} ${Math.round(h.ws)}\u202fkt · ${String(Math.round(h.wd)).padStart(3, '0')}°</small>`, `ECMWF forecast for this hour. ${windT}`]; }
+      const h2 = H[Math.min(H.length - 1, nowIdx() + 24)]; if (!h2 || h2.ws === undefined) return ['Wind in 24\u202fh', 'n/a'];
+      const t2 = Math.round(comp(h2, h2.od === 25 ? 249 : 69));
+      const h0 = H[nowIdx()], t0 = h0 && h0.ws !== undefined ? Math.round(comp(h0, h0.od === 25 ? 249 : 69)) : null; // the second line: what changes against now (real forecast values)
+      return ['Wind in 24\u202fh <small>(forecast)</small>', `${Math.abs(t2)}\u202fkt ${t2 > 0 ? 'tailwind' : 'headwind'} on ${two(h2.od)} <small>${compass(h2.wd)} ${Math.round(h2.ws)}\u202fkt · ${String(Math.round(h2.wd)).padStart(3, '0')}°</small>`, 'ECMWF forecast for 24 hours from now']; })(),
+    !D.change && (() => { const n0 = nowIdx(); return H.slice(n0).some(x => Math.min(x.p25, 1 - x.p25) >= 0.2); })() ? (() => { // a possible switch named in the hero: here, how long the current direction is safe
+      const n0 = nowIdx(); let k = n0; while (k + 1 < H.length && pOf(H[k + 1], D.od_now) >= 0.9) k++;
+      return [`Steady ${word(D.od_now)}`, `until at least ${dayf(H[k].t).split(' ')[0]} ${hm(plus1h(H[k].t))} <small>each hour ≥90\u202f% sure</small>`, 'The last hour up to which every forecast hour is at least 90 % sure of the current direction']; })() :
+    D.change ? [T.nextsw, `${dhm(D.change.t)} <small>to ${word(D.od_now === 25 ? 7 : 25)} · ≈${Math.max(0, Math.round((Date.parse(D.change.t) - Date.now()) / 36e5))}\u202fh from now</small>`, 'From the forecast for each hour. Runway 18 is on the map and in the 3D view.'] : (() => { // no switch expected: the closest call, the same operating-hours peak as the chart's "Highest" note
+      const n0 = nowIdx(), ci = H.reduce((m, x, k) => (k >= n0 && !night(x.t) && (m < 0 || oth(x) > oth(H[m])) ? k : m), -1); if (ci < 0) return [T.nextsw, 'none within 48\u202fh'];
+      return ['Closest call', `${dayf(H[ci].t).split(' ')[0]} ${hm(H[ci].t)} <small>${pct(oth(H[ci]))} ${word(D.od_now === 25 ? 7 : 25)} · ${ci >= H.length - 1 ? 'last hour of forecast' : `in ${ci - n0}\u202fh`}</small>`, 'The operating hour (outside the 23:00 to 05:00 night ban) with the highest chance of a switch: no switch is expected within 48 h. Click to show it.', ` class="ccell" role="button" tabindex="0" data-i="${ci}"`]; })(),
+  ];
+  if ($('eyebrow')) $('eyebrow').innerHTML = D.since ? `<span class="ebl">Runway direction now · </span><span class="nw">since ${dayf(D.since)}<span class="ebl">, ${hm(D.since)}</span></span>` : 'Runway direction now';
+  { const twH = h.ws === undefined ? null : Math.round(-comp(h, od === 25 ? 249 : 69)), osw = Math.min(h.p25, 1 - h.p25);
+    // the readout under the card title: the hour under the cursor (or now), always the same four facts
+    const nb = !now && night(h.t), nk = nb ? H.findIndex((x, k) => k > sel && !night(x.t)) : -1;
+    const ph2 = matchMedia('(max-width:479px)').matches, tlab = t => (ph2 ? `${dayf(t).split(' ')[0]} ${hm(t)}` : dhm(t)); // phones: the weekday and the time
+    if (nb) $('oduse').innerHTML = `<b>${tlab(h.t)}</b> · ${nk >= 0 ? T.night_next.replace('{od}', two(H[nk].od)).replace('{t}', hm(H[nk].t)).replace(/^N/, 'n') : 'night ban'}`; else // the shared night phrase (siteui.COPY.night_next) // the night ban: what happens next, not a direction nobody flies
+    $('oduse').innerHTML = `<b>${now ? `Now, ${hm(h.t)}` : tlab(h.t)}</b> · ${now ? `${pct(pOf(h, od))} ${word(od)}` : `${pct(pOf(h, D.od_now === 25 ? 7 : 25))} chance of ${word(D.od_now === 25 ? 7 : 25)}`}${twH === null ? '' : ` · ${twH >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(twH)}\u202fkt`}`; } // headwind on phones too, as in 3D
+  $('odfacts').innerHTML = facts.map(([k, v, tt, at]) => `<div${tt ? ` title="${tt}"` : ''}${at || ''}><dt>${k}</dt><dd>${v}</dd></div>`).join('');
 }
 function renderR18() {
-  const now = sel < 0, h = now ? H[0] : H[sel], ok = h.p18 >= 0.5, day1 = H.slice(0, 24);
+  const now = sel < 0, h = now ? H[nowIdx()] : H[sel], ok = h.p18 >= 0.5, day1 = H.slice(nowIdx());
   let sub;
-  if (!now) sub = `${pct(ok ? h.p18 : 1 - h.p18)} likely`;
-  else if (ok) sub = day1.every(x => x.p18 >= 0.5) ? `At least ${pct(Math.min(...day1.map(x => x.p18)))} usable over the next 24 h` : `${pct(h.p18)} likely`;
-  else { const back = H.findIndex(x => x.p18 >= 0.5); sub = back < 0 ? 'Not expected back within 48 h' : `Likely usable again ${dhm(H[back].t)}`; }
-  $('r18val').innerHTML = `<div class="big"><i class="dot" style="background:var(--${ok ? 'green' : 'red'})"></i>${ok ? 'Usable' : 'Not usable'}`
-    + `${now ? '' : `<small>at ${hm(h.t)}</small>`}</div><div class="sub">${sub}</div>`;
+  if (!now) sub = `Closure chance at ${hm(h.t)}: ${pct(1 - h.p18)}`;
+  else if (ok) sub = day1.every(x => x.p18 >= 0.5) ? `Closure chance under ${Math.max(5, Math.ceil(Math.max(...day1.map(x => 1 - x.p18)) * 100 / 5) * 5)}\u202f% per hour` : `Closure chance now: ${pct(1 - h.p18)}`;
+  else { const back = H.findIndex(x => x.p18 >= 0.5); sub = back < 0 ? 'Not expected back within 48\u202fh' : `Likely usable again ${dhm(H[back].t)}`; }
+  const most = D.traffic ? Math.max(...D.traffic.perHour.map(n => Math.round(n / 2 * (D.traffic.share18 || 0)))) : 0;
+  const what = `<div class="quiet">Take-offs to the south only. If it closes, they move to the Centre runway${most ? ` (up to about ${most} an hour)` : ''}.</div>`;
   const W = r18Windows(), dep18 = D.traffic ? D.traffic.share18 : null;
   if (W.length) {
     const [a, b] = W.find(([, e]) => e >= Math.max(0, sel)) || W[0], win = H.slice(a, b + 1);
     const tw = Math.max(-99, ...win.filter(x => x.ws !== undefined).map(x => comp(x, 180)));
     const moved = dep18 ? Math.max(...win.map(x => Math.round(D.traffic.perHour[fraHour(x.t)] / 2 * dep18))) : 0;
-    $('r18foot').innerHTML = `<div class="alert"><b>Not usable ${dhm(win[0].t)}–${hm(plus1h(win[win.length - 1].t))}</b>`
-      + `<span>${moved > 0 ? `~${moved} departures/h move to the Centre runway` : 'Inside the night ban, no departures affected'}`
-      + `${tw >= 5 ? `, tailwind up to ${Math.round(tw)} kt` : ''}</span></div>`;
-  } else $('r18foot').innerHTML = '<div class="quiet">No closure expected within 48 h</div>';
+    $('r18foot').innerHTML = `<div class="alert"><b>Not usable ${dhm(win[0].t)} to ${hm(plus1h(win[win.length - 1].t))}</b>`
+      + `<span>${moved > 0 ? `About ${moved} departures an hour move to the Centre runway` : 'Inside the night ban, so no departures move'}`
+      + `${tw >= 5 ? `, tailwind up to ${Math.round(tw)}\u202fkt` : ''}</span></div>`;
+  } else $('r18foot').innerHTML = '';
 }
 function impact(t) {
-  if (night(t)) return 'Night ban (23–05), no scheduled traffic';
+  if (night(t)) return 'Night ban from 23:00 to 05:00, no scheduled traffic';
   if (!D.traffic) return '';
   const n = D.traffic.perHour[fraHour(t)];
-  return `${n >= 60 ? '<b>Busy hour</b>' : n >= 35 ? 'Moderate traffic' : 'Quiet hour'}, ~${n} movements/h`;
+  return `${n >= 60 ? '<b>Busy hour</b>' : n >= 35 ? 'Moderate traffic' : 'Quiet hour'}, about ${n} movements an hour`;
+}
+function pgDiff() { // the hours where the published INAA prognosis disagrees with us, and our chance for them
+  if (!H.some(h => h.pg !== undefined)) return null;
+  const dis = []; // the windows computed once in Python (official_windows): every hour inside them
+  H.forEach((h, i) => { const t = Date.parse(h.t); if ((D.pgwin || []).some(w => t >= Date.parse(w.start) && t < Date.parse(w.end))) dis.push(i); });
+  if (!dis.length) return { agree: true };
+  const x = dis.map(i => ({ h: H[i], s: prog(H[i]) })), m = Math.min(...x.map(y => pOf(y.h, y.h.od)));
+  return { idx: dis, what: x.some(y => y.s === 0) ? 'possible switch' : `switch to ${two(x[0].s)}`,
+    span: `${dhm(H[dis[0]].t)} to ${hm(plus1h(H[dis[dis.length - 1]].t))}`, ours: pct(1 - m) };
 }
 function progNote() { // where the published Umwelthaus prognosis differs from us
   if (!H.some(h => h.pg !== undefined)) return '';
@@ -572,11 +1530,11 @@ function progNote() { // where the published Umwelthaus prognosis differs from u
     // a definite prognosis against ours, or "mixed" where we are sure and see no change nearby
     if ((s && s !== h.od) || (s === 0 && pOf(h, h.od) >= 0.9 && Math.abs(i - ci) > 3)) dis.push(i);
   });
-  const span_ = ix => `${dhm(H[ix[0]].t)}–${hm(plus1h(H[ix[ix.length - 1]].t))}`;
-  if (!dis.length) return mixed.length ? `Published prognosis <b>agrees</b> (change possible ${span_(mixed)})` : 'Published prognosis <b>agrees</b> for all 48 h';
-  const x = dis.map(i => ({ h: H[i], s: prog(H[i]) })), what = x.some(y => y.s === 0) ? 'a possible change' : `OD ${two(x[0].s)}`;
+  const span_ = ix => `${dhm(H[ix[0]].t)} to ${hm(plus1h(H[ix[ix.length - 1]].t))}`;
+  if (!dis.length) return mixed.length ? `The published prognosis <b>agrees</b>. It marks ${span_(mixed)} as a possible switch, like our uncertain hours.` : 'The published prognosis <b>agrees</b> for all 48\u202fh.';
+  const x = dis.map(i => ({ h: H[i], s: prog(H[i]) })), what = x.some(y => y.s === 0) ? 'a possible switch' : `a switch to ${two(x[0].s)}`;
   const m = Math.min(...x.map(y => pOf(y.h, y.h.od)));
-  return `Published prognosis expects <b>${what}</b> ${span_(dis)}; we expect ${two(x[0].h.od)} (${m >= 0.995 ? '' : 'at least '}${pct(m)} sure)`;
+  return `The published prognosis expects <b>${what}</b> ${span_(dis)}. We give a switch then a ${pct(1 - m)} chance.`;
 }
 function renderChange() {
   const to = D.od_now === 25 ? 7 : 25, p = D.p_change ?? 0;
@@ -584,55 +1542,156 @@ function renderChange() {
   const notes = [D.change ? impact(D.change.t) : '', progNote()].filter(Boolean).map(n => `<div>${n}</div>`).join('');
   if (D.change) {
     const i = idxOf(D.change.t);
-    $('chgval').innerHTML = `<div class="big"><button id="gochg" title="Show on the timeline">${dhm(D.change.t)}</button><small>in ${hoursFrom(D.change.t)} h</small></div>`
-      + `<div class="flow">${sw(D.od_now)}<b>${two(D.od_now)}</b> ${word(D.od_now)} →&nbsp;${sw(to)}<b>${two(to)}</b> ${word(to)}</div>`;
-    $('chgfoot').innerHTML = `<dl class="facts"><div><dt>Probability</dt><dd>${meter}</dd></div>`
-      + (p < 0.75 ? `<div><dt>Likely window</dt><dd>${hm(D.change.start)}–${hm(plus1h(D.change.end))}</dd></div>` : '') + `</dl><div class="notes">${notes}</div>`;
+    $('chgval').innerHTML = `<div class="big"><button id="gochg" title="Show on the timeline">${dhm(D.change.t)}</button><small>in ${hoursFrom(D.change.t)}\u202fh</small></div>`
+      + `<div class="flow">${rw(D.od_now)} ${word(D.od_now)} to ${rw(to)} ${word(to)}</div>`;
+    $('chgfoot').innerHTML = `<dl class="facts"><div><dt>Chance</dt><dd>${meter}</dd></div>`
+      + (p < 0.75 ? `<div><dt>Likely window</dt><dd>${hm(D.change.start)} to ${hm(plus1h(D.change.end))}</dd></div>` : '') + `</dl><div class="notes">${notes}</div>`;
     $('gochg').onclick = () => { setPlaying(0); go(i); };
+    const wd = t => `${dayf(t).split(' ')[0]} ${hm(t)}`;
+    $('answer').innerHTML = `${badge(D.od_now)}<span><span class="ff">Frankfurt </span>flies ${word(D.od_now)}</span>${arrow(D.od_now)}`;
+    $('subhead').innerHTML = T.out_expected.replace('{to}', word(to)).replace('{t}', wd(D.change.t)) + (H.length - 1 - idxOf(D.change.t) <= 1 ? T.out_edge : '');
+    $('disagree').hidden = true;
   } else {
-    $('chgval').innerHTML = `<div class="big">None<small>within 48 h</small></div><div class="flow">${sw(D.od_now)}<b>${two(D.od_now)}</b> ${word(D.od_now)} holds</div>`;
-    $('chgfoot').innerHTML = `<dl class="facts"><div><dt>Chance of a change</dt><dd>${meter}</dd></div></dl><div class="notes">${notes}</div>`;
+    const pg = pgDiff(), end = dhm(plus1h(H[H.length - 1].t));
+    const stay = D.p_change === null || D.p_change === undefined ? null : 1 - D.p_change;
+    const oth = h => Math.min(h.p25, 1 - h.p25), from = nowIdx(), hw = H.slice(from).reduce((a, h) => (oth(h) > oth(a) ? h : a), H[from]);
+    const days = [...new Set(H.slice(from).filter(h => !night(h.t) && oth(h) < 0.02).map(h => dayf(h.t).split(' ')[0]))];
+    // the headline is the direction; a small risk is the subline (a risk headline only from 20%)
+    const big = oth(hw) >= 0.2, pgT = pg && !pg.agree ? pg.span.replace(/^(\w+) \d+ \w+,/, '$1') : null;
+    const endT = plus1h(H[H.length - 1].t), wd = t => `${dayf(t).split(' ')[0]}\u00a0${hm(t)}`;
+    $('answer').innerHTML = `${badge(D.od_now)}<span><span class="ff">Frankfurt </span>flies ${word(D.od_now)}</span>${arrow(D.od_now)}`;
+    const atEnd = H.length - 1 - H.indexOf(hw) <= 2, whenPk = (atEnd ? T.out_when_end : T.out_when_mid).replace('{t}', wd(hw.t)); // the possible-switch tier names its number, not a sustained switch // a peak in the horizon's last 3 h may only be the start of a rise
+    $('subhead').innerHTML = big ? T.out_possible.replace('{p}', pct(oth(hw))).replace('{to}', word(D.od_now === 25 ? 7 : 25)).replace('{when}', whenPk) : T.out_none; // siteui.COPY, shared with the 3D panel // the model's own 48 h number (p_change_48h)
+    $('subhead').title = D.p_change === null || D.p_change === undefined ? '' : `Calibrated chance of any switch in 48 h: ${pct(D.p_change)}\nThe hourly bars are uncalibrated model probabilities.`;
+    // the official forecast against ours, framed on purpose: they disagree about the same evening
+    const pgA = pg && !pg.agree ? H[pg.idx[0]].t : null, pgB = pg && !pg.agree ? plus1h(H[pg.idx[pg.idx.length - 1]].t) : null;
+    const wday = t => dayf(t).split(' ')[0];
+    const part = t => { const v = hourOf(t); return v >= 23 || v < 5 ? 'night' : v < 12 ? 'morning' : v < 17 ? 'afternoon' : 'evening'; };
+    const pgShort = pgA ? `${wday(pgA)} ${hm(pgA)}–${hm(pgB)}` : null; // what it flags is in the comparison above
+    $('chgval').innerHTML = big ? `<div class="sub">Possible switch to ${two(D.od_now === 25 ? 7 : 25)} ${whenPk}, ${pct(oth(hw))} chance at that hour.</div>` : '';
+    // one hero line, only when the two forecasts disagree (the one statement of it on the page)
+    $('disagree').hidden = !(pgA && !big);
+    const part2 = t => { const v = hourOf(t); return v >= 23 || v < 5 ? 'night' : v < 11 ? 'morning' : v < 14 ? 'midday' : v < 17 ? 'afternoon' : 'evening'; };
+    const when = (a, b) => { const e = new Date(Date.parse(b) - 36e5), sameNight = wday(e) === wday(a) || (Date.parse(b) - Date.parse(a) <= 18 * 36e5 && hourOf(e) < 5); return sameNight ? `${wday(a)}\u00a0${part2(a)}` : `from ${wday(a)}\u00a0${part2(a)} to ${wday(b)}\u00a0${part2(b)}`; }; // the window as words (siteui.COPY.disagree)
+    $('disagree').innerHTML = pgA && !big ? T.disagree.replace('{of}', `<b class="ofn" tabindex="0" title="INAA (Umwelthaus), the official forecast">${T.of_name}</b>`).replace('{when}', when(pgA, pgB)) : '';
+    // the outlook as a compact table; the peak is said here once (the chart marks it), the end of the forecast is on the chart
+    $('chgfoot').innerHTML = `<dl class="strip ostrip"><div><dt>${T.nextsw}</dt><dd>${big ? wd(hw.t) : 'none in 48\u202fh'}</dd></div>`
+      + `<div><dt>${T.peak}</dt><dd>${pct(oth(hw))} · ${wd(hw.t)}</dd></div>`
+      + `<div${pg ? ` title="${esc(progNote().replace(/<[^>]+>/g, ''))}"` : ''}><dt>${T.inaa}</dt><dd>${pgShort ? `<i class="pgbsw"></i>${pgShort}` : (pg ? 'agrees, no switch' : 'n/a')}</dd></div></dl>`;
   }
+}
+const arr = od => `<svg class="tarr" viewBox="0 0 34 24" aria-hidden="true"><path d="${ST.arrow[od === 25 ? 'w' : 'e']}"/></svg>`; // the headline's arrow, at text size
+const badge = od => `<span class="rw dbadge" style="--dc:${col(od)}">${two(od)}</span>`;
+const arrow = od => `<svg class="arr" viewBox="0 0 34 24" aria-hidden="true"><path d="${od === 25 ? 'M31 12H4M12 4l-8 8 8 8' : 'M3 12h27M22 4l8 8-8 8'}"/></svg>`;
+const INAA = 'the <abbr title="INAA: the official operating-direction forecast published by the Umwelthaus (Forum Flughafen und Region)">official forecast (INAA)</abbr>';
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function renderProof(R, hasP, per) { // the claim next to the answer: hours right over all lead times, against the official forecast
+  const el = $('proof'); if (!el) return;
+  if (!R.length) { el.innerHTML = ''; return; }
+  const p = v => Math.round(v * 100), rng = a => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? `${lo}` : `${lo}–${hi}`; };
+  const beats = hasP && R.every(r => r.acc > r.prog), L = R.map(r => r.lead);
+  el.innerHTML = `<div class="pfe">Accuracy</div><div class="pf1"><b>${rng(R.map(r => p(r.acc)))} %</b></div>`
+    + `<div class="pfm">of hours correct, ${Math.min(...L)}–${Math.max(...L)}\u202fh ahead${hasP ? ` · <span class="pfo" title="INAA / Umwelthaus">official forecast: <b class="of">${rng(R.map(r => p(r.prog)))}\u202f%</b></span>` : ''}</div>`
+    + (hasP && beats ? `<div class="pf3"><a class="beat" href="#rec"><span class="u">${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f% fewer wrong hours</span><span class="ar"> →</span></a></div>` : '') + `${((D.quality || {}).test_info || {}).days ? `<div class="pfb">Backtest: ${Math.round(D.quality.test_info.days / 30.4)} months, walk-forward</div>` : ''}`; // the gain, linked to the accuracy card
+  if ($('pinl')) $('pinl').innerHTML = `<span class="pl1"><span class="nw"><b class="pn">${rng(R.map(r => p(r.acc)))}\u202f%</b> right</span>${hasP ? `<span class="nw"> · official <b class="of">${rng(R.map(r => p(r.prog)))}\u202f%</b></span>` : ''}</span>${hasP && beats ? `<a class="pl2 beat" href="#rec"><span class="nw">${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f%</span> fewer wrong hours\u00a0→</a>` : ''}`; // phones: two lines, the number first
+}
+function renderRecord() { // walk-forward backtest of the official forecast: hours right per lead time, next to the official forecast (INAA)
+  const Q = D.quality || {}, R = (Q.od25 || []).filter(r => r.acc !== null && r.acc !== undefined), el = $('rec');
+  if (!R.length) { el.innerHTML = '<div class="lbl">Track record</div><div class="quiet">No backtest available.</div>'; return; }
+  const p = v => Math.round(v * 100), r24 = R.find(r => r.lead === 24) || R[R.length - 1], hasP = R.every(r => r.prog !== null && r.prog !== undefined);
+  const beats = hasP && R.every(r => r.acc > r.prog), ti = Q.test_info, S = Q.switch;
+  const a = ti && new Date(ti.start), b = ti && new Date(a.getTime() + ti.days * 864e5);
+  const per = ti ? `${MON[a.getUTCMonth()]}–\u2060${MON[b.getUTCMonth()]}\u00a0${b.getUTCFullYear()}` : ''; // kept on one line
+  const NB = ' ', er = v => (1 - v) * 100, fewer = r => Math.round((1 - er(r.acc) / er(r.prog)) * 100), sw = S && S.model && S.prog;
+  const mon = per.replace(/ \d{4}$/, '');
+  const beatsR = hasP && R.every(r => r.acc > r.prog);
+  el.innerHTML = `<div class="acchd"><div class="lbl">Accuracy by lead time</div>${hasP ? '<span class="acck"><span class="k"><i class="km"></i>ours</span><span class="k"><i class="ko"></i>official</span></span>' : ''}</div>`
+    + (hasP && beatsR ? '' : '')
+    + `<div class="db" id="db"></div>`
+    + (sw ? `<dl class="accst" title="Backtest over ${ti ? Math.round(ti.days / 30.4) : ''} months (${mon})"><div><dd>${S.model.fa}</dd><dt><span class="nw">false switch alarms</span> <span class="nw">in ${ti ? Math.round(ti.days / 30.4) : ''}${NB}months</span></dt><dt class="ofl">official: <b class="of">${S.prog.fa}</b> alarms</dt></div>`
+      + `<div><dd>${p(S.model.hit)}${NB}%</dd><dt title="A real switch counts as caught when the forecast puts it within 3 hours of when it actually happened (fra/scoring.py)"><span class="nw">of switches predicted</span> <span class="nw">within ±3${NB}h</span></dt><dt class="ofl">official: <b class="of">${p(S.prog.hit)}${NB}%</b></dt></div></dl>` : ''); // per cell: the number, one caption, the official line
+  { // columns: lead | dot plot (capped) | fewer errors | the 24 h tag, right-aligned; every row the same height, faint rules between
+    const box = $('db'), W0 = box.clientWidth || 400, narrow = W0 < 380;
+    const ctx = renderRecord.cx || (renderRecord.cx = document.createElement('canvas').getContext('2d'));
+    ctx.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; const lw = Math.max(ctx.measureText('Ahead').width, ...R.map(r => ctx.measureText(`${r.lead}${NB}h`).width));
+    const w24 = ctx.measureText(`${r24.lead}${NB}h`).width; ctx.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; const PLAN = narrow ? '' : ' · planning horizon', tagW = 0; // the 24 h row says why it matters, in its own cell
+    const lwP = Math.max(lw, w24 + ctx.measureText(PLAN).width);
+    ctx.font = '400 13px "IBM Plex Sans", system-ui, sans-serif'; const fwm = Math.ceil(Math.max(...R.map(r => ctx.measureText(`${Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)}${NB}%`).width), ctx.measureText('Fewer errors').width + 16)) + 4;
+    const L = Math.ceil(lwP) + 16, OV = 28, /* the 100 % line stays clear of the Fewer errors column */ FW = narrow ? Math.max(60, fwm) : 72, /* desktop: the column as wide as its numbers; the header reaches left over the plot's header row */ TG = tagW ? 12 + tagW : 0; // 40 px for the official values left of their dots, 36 for ours on the right
+    const AX = Math.max(80, Math.min(9999, W0 - L - OV - (FW ? 8 + FW : 0) - TG)), FX = L + AX + OV + (FW ? 8 + FW : 0), W = Math.min(W0, FX + TG), top = 22;
+    const lo = 86, hi = 100, X = v => L + (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * AX;
+    const RH = narrow ? 26 : Math.max(20, Math.min(30, Math.floor(((box.clientHeight || 0) - 22 - 17) / R.length))), Y0 = R.map((_, k) => top + k * RH), yB = top + R.length * RH, H = yB + 15;
+    let g = '';
+    R.forEach((r, k) => { if (k) g += `<line x1="0" x2="${W}" y1="${Y0[k] + 0.5}" y2="${Y0[k] + 0.5}" class="dbrule"/>`; });
+    ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif'; const pcW = ctx.measureText('% of hours correct').width; ctx.font = '500 12px "IBM Plex Sans", system-ui, sans-serif';
+    const HD = 'Fewer errors'; void pcW; // one short header at every width, with its (i)
+    g += `<text x="0" y="${top - 8}" class="dbt">Ahead</text><text x="${L + AX / 2}" y="${top - 8}" text-anchor="middle" class="dbt">% of hours correct</text>`; // centred over the plot
+    for (const v of [88, 92, 96, 100]) /* one 86-100 domain at every width, across the whole middle column; a faint line at every labelled tick, on the pixel grid */ g += `<line x1="${Math.round(X(v)) + 0.5}" x2="${Math.round(X(v)) + 0.5}" y1="${top}" y2="${yB}" class="dbg"/><text x="${X(v)}" y="${yB + 4 + 9}" text-anchor="middle" class="dbt tk">${v}${NB}%</text>`;
+    g += `<line x1="${L}" x2="${L + AX}" y1="${yB + 0.5}" y2="${yB + 0.5}" class="dbax"/>`; // the axis spans exactly the rows' x-range
+    if (FW) g += `<text x="${FX - 15}" y="${top - 8}" text-anchor="end" class="dbt hd">${HD}</text>`;
+    R.forEach((r, k) => {
+      const y = Y0[k] + RH / 2, a = p(r.acc), o = hasP ? p(r.prog) : null;
+      g += `<text x="0" y="${y + 4}" class="dbl">${r.lead}${NB}h${r === r24 ? `<tspan class="dbplan">${PLAN}</tspan>` : ''}</text>`;
+      if (o !== null) g += `<line x1="${X(o)}" x2="${X(a)}" y1="${y}" y2="${y}" class="dbs"/><circle cx="${X(o)}" cy="${y}" r="5" class="dbo"/><text x="${X(o) - 11}" y="${y + 4}" text-anchor="end" class="dbv o">${o}${NB}%</text>`;
+      g += `<circle cx="${X(a)}" cy="${y}" r="5.5" class="dbm"/><text x="${X(a) + 11.5}" y="${y + 4}" class="dbv">${a}${NB}%</text>`;
+      if (o !== null && FW) g += `<text x="${FX}" y="${y + 4}" text-anchor="end" class="dbf"><title>${fewer(r)}${NB}% fewer wrong hours than the official forecast, ${r.lead}${NB}h ahead</title><tspan class="dbfn">${fewer(r)}${NB}%</tspan></text>`;
+    });
+    box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hours correct per lead time, ours against the official forecast">${g}</svg>`
+      + (FW ? `<button class="dbib" id="dbib" style="left:${FX - 12}px;top:${top - 18}px" aria-label="What fewer errors than official means" aria-expanded="false" aria-controls="dbpop">i</button>`
+      + `<div class="dbpop" id="dbpop" role="tooltip" hidden style="top:${top + 2}px">Share of the official forecast\u2019s wrong hours we avoid. ${fewer(r24)}\u202f% fewer = ${fewer(r24)} of every 100 errors gone (${r24.lead}\u202fh ahead).</div>` : '');
+    const ib = $('dbib'), pop = $('dbpop'); // a real popover: hover, focus and tap
+    if (ib) { const show = on => { pop.hidden = !on; ib.setAttribute('aria-expanded', on); };
+      ib.onmouseenter = () => show(true); ib.onmouseleave = () => { if (document.activeElement !== ib) show(false); };
+      ib.onfocus = () => show(true); ib.onblur = () => show(false); ib.onclick = e => { e.stopPropagation(); show(pop.hidden); }; }
+  }
+  renderProof(R, hasP, per);
+  el.title = `Backtest${per ? `, ${per}` : ''}: each week is forecast by a model trained only on earlier data.\n`
+    + R.map(r => `${r.lead}\u202fh ahead: ${p(r.acc)}\u202f% right (official forecast ${p(r.prog)}\u202f%, no change ${p(r.pers)}\u202f%)`).join('\n');
 }
 
 // ---- live operation: alerts (fra.alerts) and the record of the forecasts issued live each hour (fra.scoring)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const pc1 = p => (p === null || p === undefined ? '–' : `${(p * 100).toFixed(1)}%`);
+const pc1 = p => (p === null || p === undefined ? 'n/a' : `${(p * 100).toFixed(1)}\u202f%`);
 function renderAlerts() {
+  if (!$('alerts')) return; // panel removed from the page
   const A = D.alerts || [], iss = D.alerts_issue || D.issue, age = (Date.now() - Date.parse(iss)) / 36e5;
   if (D.alerts_stale || age > 2) { // fra.alerts.STALE_H: no alerts from a forecast that is no longer current
     $('alerts').classList.remove('on');
     $('alerts').innerHTML = `<div class="al stale"><i></i><b>Alerts paused</b><span>${esc(D.alerts_stale && D.alerts_msg ? D.alerts_msg
-      : `No current forecast: the newest was issued ${dhm(iss)} (${Math.round(age)} h ago). Alerts resume with the next forecast.`)}</span></div>`;
+      : `No current forecast. The newest one was issued ${dhm(iss)}, ${Math.round(age)}\u202fh ago. Alerts resume with the next forecast.`)}</span></div>`;
     return;
   }
   $('alerts').classList.toggle('on', A.length > 0);
   $('alerts').innerHTML = A.length ? A.map(a => {
     const [title, when] = a.kind === 'od_switch'
-      ? [`Direction change ${two(a.od_from)} → ${two(a.od_to)} ${a.lead_h ? `in ${a.lead_h} h` : 'this hour'}`,
-        `around ${dhm(a.t)}${a.start && a.end ? `, window ${hm(a.start)}–${hm(plus1h(a.end))}` : ''} · ${pct(a.p)} at that hour`]
-      : ['Runway 18 West closure risk', `${dhm(a.start)}–${hm(plus1h(a.end))} · lowest ${pct(a.p_min)} usable`];
+      ? [`Direction change from ${rw(a.od_from)} to ${rw(a.od_to)} ${a.lead_h ? `in ${a.lead_h}\u202fh` : 'this hour'}`,
+        `around ${dhm(a.t)}${a.start && a.end ? `, likely between ${hm(a.start)} and ${hm(plus1h(a.end))}` : ''}, ${pct(a.p)} likely at that hour`]
+      : ['Runway 18 West closure risk', `${dhm(a.start)} to ${hm(plus1h(a.end))}, at worst ${pct(a.p_min)} usable`];
     return `<div class="al ${a.level}" title="${esc(a.text)}"><i></i><b>${title}</b><span>${when}</span></div>`;
-  }).join('') : '<div class="al ok"><i></i><b>No alerts</b><span>No direction change expected within 12 h · Runway 18 usable over the next 24 h</span></div>';
+  }).join('') : '<div class="al ok"><i></i><b>No alerts</b><span>No direction change expected within 12\u202fh, and Runway 18 stays usable over the next 24\u202fh</span></div>';
 }
 function renderLiveRecord() {
+  if (!$('lrec')) return; // panel removed from the page
   const L = D.live || {}, w = (L.windows || {})['30d'], od = (w && w.od) || {};
   const leads = ['1', '6', '24', '48'].filter(k => od[k] && od[k].n);
   const since = L.start ? `${dayf(L.start)}, ${hm(L.start)}` : null;
   // the live record is the independent test: forecasts issued before the outcome exists; issue times from
   // holdout_from (1 Nov 2026 00 UTC) form the locked holdout that decides between the model variants
   const ho = (L.windows || {}).holdout, hoN = (ho && ho.n_scored_issues) || 0;
-  const tipL = esc('Each hourly forecast is archived before the outcome is known and scored against the direction flown (radar, ~3 h delay).'
-    + (L.holdout_from ? ` Forecasts issued from ${dayf(L.holdout_from)} ${hm(L.holdout_from)} (${tz === 'UTC' ? 'UTC' : 'local'}) form the locked holdout: the independent test of the model.` : ''));
+  const tipL = esc('We archive every hourly forecast before the outcome is known, then score it against the direction actually flown, which radar shows about 3\u202fh later.'
+    + (L.holdout_from ? ` Forecasts issued from ${dayf(L.holdout_from)} ${hm(L.holdout_from)} ${tz === 'UTC' ? 'UTC' : 'local time'} on form the locked holdout, the independent test of the model.` : ''));
   if (!leads.length) {
-    $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${since ? `Collecting since ${since}` : 'Collecting from the first live forecast'}</small></div>`
-      + `<div class="lq" title="${tipL}">First scores ~3 h after<br>each forecast hour is flown</div>`;
+    $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record</div>`
+      + `<div class="lq" title="${tipL}">${since ? `Collecting since ${since}` : 'Collecting from the first live forecast'}. The first scores arrive about 3\u202fh after each forecast hour.</div>`;
     return;
   }
   const old = Date.now() - Date.parse(L.start) > (L.rolling_days || 30) * 864e5;
   const miss = (w.coverage || {}).missing || 0;
-  $('lrec').innerHTML = `<div class="lh" title="${tipL}">Live record<small>${w.n_scored_issues} forecasts · ${old ? `last ${L.rolling_days || 30} days` : `since ${dayf(L.start)}`}${hoN ? ` · ${hoN} in the holdout` : ''}${miss ? ` · ${miss} h not issued` : ''}</small></div>`
-    + `<dl>${leads.map(k => `<div title="${od[k].n} hours scored, ${k} h ahead · official rules ${pc1(od[k].rule)} · published prognosis ${pc1(od[k].prog)} · no change ${pc1(od[k].pers)}"><dt>${k} h</dt><dd>${pc1(od[k].acc)}</dd></div>`).join('')}</dl>`;
+  const tipN = esc(`${w.n_scored_issues} forecasts scored ${old ? `over the last ${L.rolling_days || 30} days` : `since ${dayf(L.start)}`}${hoN ? `, ${hoN} of them in the holdout` : ''}. ${miss ? `${miss} hours had no forecast. ` : ''}`) + tipL;
+  $('lrec').innerHTML = `<div class="lh" title="${tipN}">Live record</div>`
+    + `<table><thead><tr><th>Ahead</th><th>Right</th><th title="The official rules, scored the same way">Rules</th></tr></thead><tbody>`
+    + leads.map(k => `<tr title="${k}\u202fh ahead, ${od[k].n} hours scored. For comparison, the official rules scored ${pc1(od[k].rule)}, the published prognosis ${pc1(od[k].prog)} and no change ${pc1(od[k].pers)}."><td>${k}\u202fh</td><td class="v">${pc1(od[k].acc)}</td><td>${pc1(od[k].rule)}</td></tr>`).join('')
+    + '</tbody></table>';
 }
 async function pollOps() { // alerts.json (fra.alerts) and live_record.json (fra.scoring) are refreshed every hour
   const get = async f => { try { const r = await fetch(f, { cache: 'no-store' }); return r.ok ? await r.json() : null; } catch { return null; } };
@@ -651,33 +1710,152 @@ function idxAt(e) { // from the on-screen rect, so it stays right when fit() zoo
   const r = $('lod').getBoundingClientRect();
   return Math.max(0, Math.min(H.length - 1, off + Math.floor(((e.clientX - r.left) / r.width) * span)));
 }
+const peakNote = (p, t) => `Highest: ${pct(p)} at ${dhm(t).replace(/ \d+ \w+,/, '')}`; // outside the night ban (the tooltip says so) // one formatter for the panel and the charts
+const otherName = () => (D.od_now === 25 ? 'East' : 'West'); // the bars: p(the other direction than the one flown now), whatever the forecast does later // what the bars measure: p(the other direction) that hour
+function swScale(peak) { // the shared switch-chance scale (fra.siteui.SWITCH, the same in the 3D view)
+  const S = ST.switch;
+  const top = Math.min(1, Math.max(S.nice_min, Math.ceil(peak / S.nice_step - 1e-9) * S.nice_step)); // a nice top: the peak rounded up to 10 %, 20 % to 100 % (siteui.SWITCH, the same in 3D)
+  return { top, h: peak >= S.real ? S.real_h : S.calm_h, grid: top / 2 }; // the 10 % gridline gives the headroom
+}
+function fitTag(tg, xa, lim) { // shared with 3D: the tag never runs into the switch chip; the text steps down "Official: Fri 19h → Sat 13h", "Official → Sat 13h", "Official"
+  const tl0 = tg.offsetLeft, tr0 = tl0 + tg.offsetWidth; if (tr0 <= lim) return;
+  for (const t of [tg.dataset.l, tg.dataset.m, 'Official']) { if (!t) continue; tg.textContent = t; if (xa + tg.offsetWidth <= lim) { tg.style.right = 'auto'; tg.style.left = `${xa}px`; tg.classList.remove('ra'); return; } }
+  tg.textContent = 'Official'; tg.style.left = `${Math.max(0, lim - tg.offsetWidth)}px`; tg.style.right = 'auto'; tg.classList.remove('ra'); }
+function pgTag(xa, Wl, ta, tb) { // the official window: as much of "Official: switch Fri 19:00–Sat 10:00" as fits, the full text in the title
+  const d = t => dayf(t).split(' ')[0], hh = t => String(hourOf(t)).padStart(2, '0'), full = `Official: switch ${d(ta)} ${hh(ta)}:00–${d(tb)} ${hh(tb)}:00`;
+  const ctx = pgTag.cx || (pgTag.cx = document.createElement('canvas').getContext('2d')); ctx.font = '500 11px "IBM Plex Sans", system-ui, sans-serif';
+  const ph = matchMedia('(max-width:479px)').matches, room = Wl - xa, mid = ST.pgtag.long.replace('{da}', d(ta)).replace('{ha}', hh(ta)).replace('{db}', d(tb)).replace('{hb}', hh(tb)), wd = q => ctx.measureText(q).width + 12;
+  const fit = [mid].find(q => wd(q) <= room), txt = fit || (ph ? mid : 'Official'), /* one wording on both pages (siteui.STYLE.pgtag) */ w = wd(txt), ra = !fit; // left-aligned at the window start when it fits up to the plot edge; else right-aligned at the plot edge with a tick at the window start
+  const m2 = (ST.pgtag.mid || 'Official').replace('{db}', d(tb)).replace('{hb}', hh(tb));
+  return `<span data-l="${mid}" data-m="${m2}" data-x="${xa}" class="pgtag${ra ? ' ra' : ''}" style="${ra ? `right:0;--tk:${Math.max(0, Math.round(w - (Wl - xa)))}px` : `left:${xa}px`}" title="Official forecast (INAA): possible switch ${d(ta)} ${hh(ta)}:00 to ${d(tb)} ${hh(tb)}:00">${txt}</span>`;
+}
+function pgRunsOf() { // shown-hour index ranges where the official INAA forecast flags a possible switch
+  const I = [...((pgDiff() || {}).idx || [])].filter(i => i >= off && i < off + span).map(i => i - off).sort((a, b) => a - b);
+  return I.reduce((r, i) => { const l = r[r.length - 1]; if (l && l[1] === i - 1) l[1] = i; else r.push([i, i]); return r; }, []);
+}
+{ let rq = 0; const ro = new ResizeObserver(() => { cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { for (const id of ['lpg', 'lwd']) { const e = document.getElementById(id), sv = e && e.querySelector(':scope > svg, svg'); if (e && sv && Math.abs((+sv.getAttribute('height') || 0) - e.clientHeight) > 1) { renderTimeline(); return; } } }); });
+  addEventListener('DOMContentLoaded', () => ['lpg', 'lwd'].forEach(id => document.getElementById(id) && ro.observe(document.getElementById(id)))); } // a row that grows after layout is redrawn at its real height
 function renderTimeline() {
+  $('dirkey').innerHTML = '';
+  $('tlh').textContent = `Next ${span} hours`;
   off = Math.max(0, Math.min(off, H.length - span));
   const hs = H.slice(off, off + span), { g, cw } = geom(), x = i => i * (cw + g);
-  const every = span === 48 ? 6 : span === 24 ? 3 : 2, num = span === 48 ? 3 : span === 24 ? 2 : 1;
+  const every = span === 48 ? 6 : span === 24 ? 3 : 2;
   lanes.style.setProperty('--g', `${g}px`);
   let ru = '';
-  const mid = hs.findIndex((h, i) => i > 0 && hourOf(h.t) === 0); // first midnight: no first-day label right before it
+  // two lines: the date on top at midnight (it replaces 00:00), 06 / 12 / 18 below at every width, the horizon's end top right
+  const step = every * (cw + g), hf = hr => (innerWidth >= ST.axis.short_below && step >= ST.axis.long_px ? `${String(hr).padStart(2, '0')}:00` : String(hr).padStart(2, '0')); // the shared axis rule: 18:00, or 18 where it is tight
+  const W0 = $('lod').clientWidth;
+  // the date row (dates, and "Now" as a tag on the now line) above the time row (every 6 h, never in the last 3 h: the same end at every width)
+  const ctx = renderTimeline.cx || (renderTimeline.cx = document.createElement('canvas').getContext('2d')), ni = nowIdx();
+  ctx.font = '600 12px "IBM Plex Sans", system-ui, sans-serif';
+  let nowX = -1e9;
+  if (ni >= off && ni < off + span) { const nx = x(ni - off) - g / 2; ru += `<span class="nowtag" style="left:${nx}px" title="Current hour; forecast issued ${hm(D.issue)}">Now</span>`; nowX = nx; } // on the hour row, at the now line
+  ctx.font = '600 11px "IBM Plex Sans", system-ui, sans-serif'; const nowW = ctx.measureText('Now').width + 10; ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif';
   hs.forEach((h, i) => {
-    const hr = hourOf(h.t), c = x(i) + cw / 2;
-    if (i === 0 && (mid < 0 || x(mid) > 84)) ru += `<span class="d" data-x="34" style="left:0">${dayf(h.t)}</span>`;
-    else if (hr === 0) ru += `<i class="t dd" style="left:${x(i) - g / 2}px"></i><span class="d" data-x="${x(i) + 39}" style="left:${x(i) + 5}px">${dayf(h.t)}</span>`;
-    if (hr % every === 0 && hr !== 0) {
-      ru += `<i class="t" style="left:${c}px"></i>`;
-      if (c > 84) ru += `<span class="h" data-x="${c}" style="left:${c}px">${String(hr).padStart(2, '0')}:00</span>`;
-    }
+    const hr = hourOf(h.t), c = x(i) - g / 2; // the hour starts at its cell's left edge, like the night bands
+    const lw = ctx.measureText(hf(hr)).width / 2, nearNow = false; void lw; void nowW; void nowX; // the Now collision is measured on the real boxes after layout (below)
+    if (hr === 0) ru += `<i class="t dd" style="left:${c}px"></i>${c + 4 + ctx.measureText(dayf(h.t)).width <= W0 ? `<span class="d" style="left:${c + 4}px">${dayf(h.t)}</span>` : `<span class="d dend" style="right:0">${dayf(h.t)}</span>`}`; // every midnight gets its day; near the end it is right-aligned to the plot edge
+    else if (hr % every === 0 && i <= hs.length - 4) ru += `<i class="t" style="left:${c}px"></i><span class="h" data-x="${c}" style="left:${c}px">${hf(hr)}</span>`; // a tick too close to the Now chip goes with its mark (as in 3D)
   });
+  // Now alone at the start: the readout carries the date, day labels sit at midnights only
   $('ruler').innerHTML = ru;
+  { const nt = $('ruler').querySelector('.nowtag'); if (nt) { const q = nt.getBoundingClientRect(), m = 6 * zoom(); $('ruler').querySelectorAll('.h').forEach(l => { const r = l.getBoundingClientRect(); if (r.right > q.left - m && r.left < q.right + m) { const mk = l.previousElementSibling; if (mk && mk.classList.contains('t')) mk.remove(); l.remove(); } }); } } // an hour label whose real box comes within 6 px of the Now chip goes, with its mark
+  requestAnimationFrame(() => { const tags = [...$('lod').querySelectorAll('.pgtag')].map(t => t.getBoundingClientRect()); $('ruler').querySelectorAll('.h').forEach(l => { const r = l.getBoundingClientRect(); l.classList.toggle('tagged', tags.some(q => r.right > q.left - 4 && r.left < q.right + 4 && r.bottom > q.top - 2 && r.top < q.bottom + 2)); }); }); // a tick label under the Official tag steps aside
   const ev = events();
+  const pgR = pgRunsOf(hs);
+  $('tl').style.setProperty('--evh', ev.length ? '20px' : '0px');
   $('tl').classList.toggle('noev', !ev.length);
   $('ev').innerHTML = ev.filter(e => e.i >= off && e.i < off + span)
-    .map(e => `<button class="mk ${e.kind}" data-i="${e.i}" style="left:${x(e.i - off) + cw / 2}px" title="Show ${dhm(H[e.i].t)}">${e.label}</button>`).join('');
-  const hOD = $('lod').clientHeight, h18 = $('l18').clientHeight; // whole pixels: no hairline slivers for ~0%
-  $('lod').innerHTML = hs.map(h => `<div><i style="height:${Math.round(h.p25 * hOD)}px"></i></div>`).join('');
-  $('lpg').innerHTML = hs.map(h => { const s = prog(h); return `<div class="${s === null ? '' : s === 0 ? 'm' : s === 25 ? 'w' : 'e'}"></div>`; }).join('');
-  $('l18').innerHTML = hs.map(h => `<div><i style="height:${Math.round((1 - h.p18) * h18)}px"></i></div>`).join('');
-  $('lwd').innerHTML = hs.map((h, i) => (h.ws === undefined ? '<div></div>'
-    : `<div><span style="display:block;transform:rotate(${h.wd + 180}deg);opacity:${Math.min(1, 0.4 + h.ws / 14)}">${ICON.up}</span>${(off + i) % num === 0 ? `<small>${Math.round(h.ws)}</small>` : ''}</div>`)).join('');
+    .map(e => `<button class="mk ${e.kind}" data-i="${e.i}" style="left:${e.kind === 'pg' ? x(Math.min(e.end, off + span - 1) - off) + cw : x(e.i - off) + cw / 2}px${e.od ? `;--dc:${col(e.od)}` : ''}" title="Show ${dhm(H[e.i].t)}">${e.label}</button>`).join('');
+  const sure = h => Math.max(h.p25, 1 - h.p25) >= 0.75, differs = h => { const s = prog(h); return s === null ? '' : s === 0 ? (sure(h) ? 'm' : '') : s !== h.od ? (s === 25 ? 'w' : 'e') : ''; };
+  const small = h => Math.min(h.p25, 1 - h.p25) >= 0.1; // below 90% confidence: faded
+  const pgI = new Set((pgDiff() || {}).idx || []);
+  const pgRuns = pgRunsOf(hs);
+  // INAA flags a possible switch here: an orange bracket above the strip (a comparison, not an alarm)
+  const segL = []; { let i = 0; while (i < hs.length) { let j = i; while (j + 1 < hs.length && hs[j + 1].od === hs[i].od) j++;
+    let a = i; while (a <= j && night(hs[a].t)) a++; let b = a; while (b + 1 <= j && !night(hs[b + 1].t)) b++;
+    if (a <= j && b - a >= 4) segL.push(`<span class="dlab ${hs[i].od === 25 ? 'w' : 'e'}" style="left:${Math.max(x(a), nowX) + 8}px">${hs[i].od === 25 ? `${arr(25)}25 West` : `07 East${arr(7)}`}</span>`); i = j + 1; } }
+  $('lod').innerHTML = pgR.map(([a, b]) => `<span class="pgline" style="left:${x(a)}px;width:${x(b) - x(a) + cw}px" title="Official forecast (INAA): possible switch"></span>${pgTag(x(a), $('lod').clientWidth, hs[a].t, plus1h(hs[b].t))}`).join('') + segL.join('') + hs.map(h => `<div class="${h.p25 >= 0.5 ? 'w' : 'e'}${night(h.t) ? ' n' : small(h) ? ' lo' : ''}" title="${night(h.t) ? 'Night ban, no scheduled flights' : `${pct(Math.min(h.p25, 1 - h.p25))} chance of the other direction`}"></div>`).join('');
+  { // the predicted switch (one rule on both pages, siteui.STYLE.switch_tab_min): its segment at least 24 px wide (into the 24 px kept free
+    // right of every row), faded like any hour under 90 % sure, and always its "to 25" chip on the tag band's baseline
+    lanes.querySelectorAll(':scope > .swchip').forEach(c => c.remove());
+    const Wl = $('lod').clientWidth, TMIN = ST.switch_tab_min || 24, odS = D.od_now === 25 ? 7 : 25, ci = D.change ? (k => (k < 0 ? -1 : k))(hs.findIndex(h => h.od === odS)) : -1; // the first hour in the other direction
+    if (ci > 0 && ci < hs.length) { let e2 = ci; while (e2 + 1 < hs.length && hs[e2 + 1].od === hs[ci].od) e2++;
+      const segW = x(e2) + cw - x(ci), w2 = Math.max(TMIN, segW), lo = hs.slice(ci, e2 + 1).some(h => small(h)), od2 = odS;
+      if (segW < TMIN) $('lod').insertAdjacentHTML('beforeend', `<i class="swtab ${od2 === 25 ? 'w' : 'e'}${lo ? ' lo' : ''}" style="left:${Math.min(x(ci), Wl - TMIN)}px;width:${Math.min(w2, Wl)}px;background:${col(od2)}" title="The switch to ${two(od2)} starts here; the forecast ends ${dhm(plus1h(hs[hs.length - 1].t))}"></i>`);
+      $('lod').insertAdjacentHTML('beforeend', `<span class="swchip" style="left:${x(ci)}px;--dc:${col(od2)}" data-i="${ci + off}">to ${two(od2)}</span>`);
+      const chip = $('lod').querySelector('.swchip'), cwid = chip.offsetWidth, cl = Math.max(0, Math.min(x(ci), Wl - cwid)); /* inside the axis, like the segment */ chip.style.left = `${cl}px`;
+      { const lod = $('lod'); lanes.querySelectorAll(':scope > .swchip').forEach(c => c.remove()); lanes.appendChild(chip); chip.style.left = `${lod.offsetLeft + cl}px`; chip.style.top = `${lod.offsetTop - 14}px`; } // in the lanes, above the cursor line: a solid chip the line never splits
+      for (const tg of $('lod').querySelectorAll('.pgtag')) fitTag(tg, +tg.dataset.x, cl - 4); } } // the tag steps down its ladder and ends 4 px before the chip: one row, one baseline
+  { // switch chance per hour: a 40 px row on 0 to 20% while the peak is small (same scale as the 3D view), 80 px on 0 to 100% when a real switch is in view
+    const oth = h => (D.od_now === 25 ? 1 - h.p25 : h.p25) /* one meaning across the window: p(the direction other than the one flown at its start), never min(p, 1-p) */, W = $('lod').clientWidth, peak = Math.max(...H.map(oth)), SC = swScale(peak), TOP = SC.top;
+    $('tl').style.setProperty('--swh', `${SC.h}px`);
+    const LH = $('lpg').clientHeight || SC.h, LS = 0, PH = LH - LS, pk = hs.reduce((m, h, i) => (!night(h.t) && (night(hs[m].t) || oth(h) > oth(hs[m])) ? i : m), 0), yv = v => LH - Math.min(1, v / TOP) * PH, gy = Math.max(LS + 0.5, yv(SC.grid));
+    const bar = o => (o < ST.switch.min_bar ? 0 : Math.max(2, Math.min(1, o / TOP) * PH)); // under 1 % (siteui.SWITCH.min_bar, both pages): only the baseline
+    const IN = matchMedia('(max-width:479px)').matches, tX = IN ? 3 : -4, tA = IN ? 'start' : 'end'; // phones: the ticks inside the plot's left edge
+    let ov = `<text x="${tX}" y="${LH - 3}" text-anchor="${tA}" class="gt halo">0</text><line x1="0" x2="${W}" y1="${gy}" y2="${gy}" class="grid half"/>` /* the mid gridline, dotted and unlabelled: only 0 and the top carry values */
+      + (TOP > SC.grid + 1e-9 ? `<line x1="0" x2="${W}" y1="${LS + 0.5}" y2="${LS + 0.5}" class="grid half"/><text x="${tX}" y="${LS + (IN ? 12 : 6)}" text-anchor="${tA}" class="gt halo">${Math.round(TOP * 100)}\u202f%</text>` : '') /* the scale's top: a faint line and its value */
+      + `<line x1="0" x2="${W}" y1="${LH - 0.5}" y2="${LH - 0.5}" class="base calm"/>`;
+    const n0c = nowIdx(), cci = D.change ? -1 : H.reduce((m, x2, k) => (k >= n0c && !night(x2.t) && (m < 0 || oth(x2) > oth(H[m])) ? k : m), -1); // the footer's closest call
+    if (oth(hs[pk]) >= 0.01 && H.indexOf(hs[pk]) === cci) { const px = x(pk) + cw / 2, py = LH - bar(oth(hs[pk])) - 2, ty = py - 6; // the footer names the hour: here just "peak 20 %" on its dot
+      if (ty - 9 >= LS + 1) ov += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2" class="pkd"/><text x="${Math.min(W, px + 3).toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="end" class="pkt halo">peak ${pct(oth(hs[pk]))}</text>`; } // no room above the bar: the darker bar alone
+    else if (oth(hs[pk]) >= 0.01) { // the peak, annotated clear of the gridline
+      // just above the tallest bar, centred on it, always inside its own row
+      const t = peakNote(oth(hs[pk]), hs[pk].t, false);
+      const lx = x(pk) + cw / 2, by = LH - bar(oth(hs[pk])), ty = -3 /* the baseline just above the axis top: never on a bar */, ctx4 = renderTimeline.cx; ctx4.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; const tw4 = ctx4.measureText(t).width, flip = lx - 8 - tw4 < 4;
+      ov += `<g class="pk" id="pkl" data-x="${W - 60}" data-w="120"><title>Highest hourly chance outside the night ban (23:00 to 05:00, no flights). The 48 h figure in the outlook tooltip is calibrated on past switches, so it can be lower.</title><path d="M${(lx + (flip ? 4 : -4)).toFixed(1)} ${ty - 4}L${lx.toFixed(1)} ${ty - 4}L${lx.toFixed(1)} ${(by - 3).toFixed(1)}" class="pkl"/><circle cx="${lx.toFixed(1)}" cy="${(by - 2).toFixed(1)}" r="2" class="pkd"/><text x="${(lx + (flip ? 8 : -8)).toFixed(1)}" y="${ty}" text-anchor="${flip ? 'start' : 'end'}" class="halo">${t}</text></g>`; // a leader from the note down to a dot on the peak bar
+    }
+    const wash = pgRunsOf(hs).map(([a, b]) => `<rect x="${x(a)}" y="${LS}" width="${x(b) - x(a) + cw}" height="${PH}" class="pgwash"/>`).join('');
+    ov = wash + ov;
+    const oname = otherName(hs); $('hlsw').innerHTML = `${T.switch} ${oname}`;
+    $('lpg').innerHTML = hs.map(h => { const o = oth(h); return `<div title="${dhm(h.t)}: ${pct(o)} chance of ${oname} that hour"><i style="height:${(bar(o) || 1).toFixed(1)}px;${bar(o) ? '' : 'opacity:.3!important;'}background:${night(h.t) ? 'color-mix(in srgb,var(--risk) 45%,var(--card))' : pgI.has(H.indexOf(h)) ? 'var(--risk-w,var(--risk))' : 'var(--risk)'};opacity:${night(h.t) ? 1 : o >= 0.2 || h === hs[pk] ? 1 : 0.85}"${h === hs[pk] ? ' class="pkb"' : night(h.t) ? ' class="nt"' : ''}></i></div>`; }).join('') // neutral graphite: not a direction colour, not INAA orange, not the tailwind red (same in 3D)
+      + `<span><svg width="${W}" height="${LH}" aria-hidden="true">${ov}</svg></span>`;
+  }
+
+  $('l18').innerHTML = hs.map(h => `<div class="${h.p18 < 0.5 ? 'x' : h.p18 < 0.9 ? 'r' : ''}${night(h.t) ? ' n' : ''}"></div>`).join('');
+  { // tailwind on the runways in use against the official rule: above 1\u202fkt sustained = switch, from 10\u202fkt = switch at once
+    const hw = $('lwd').clientHeight, W = $('lod').clientWidth, have = hs.filter(h => h.ws !== undefined);
+    if (!have.length) $('lwd').innerHTML = '';
+    else {
+      const hw_ = h => -comp(h, h.od === 25 ? 249 : 69), vals = have.map(hw_); // + = headwind (fine), - = tailwind
+      const hi = Math.max(12, Math.ceil(Math.max(...vals))), lo = Math.min(-4, Math.floor(Math.min(...vals) - 1)); // about -4 to 12 kt: the tailwind zone (-1 to -4) gets ~11 px
+      const top = 6, bot = hw - 2, y0 = bot - 22, y = v => (v >= 0 ? top + (hi - Math.min(hi, v)) / hi * (y0 - top) : y0 + Math.min(1.1, -v) * 13); // the limit (-1 kt) 13 px under the 0 line // headwind above 0 to scale; tailwind below 0 at 10 px per kt (the limit 10 px under 0), clipped at 2 kt
+      renderTimeline.hwY = i => (hs[i] && hs[i].ws !== undefined ? y(hw_(hs[i])) : null);
+      let d = '', pen = false;
+      hs.forEach((h, i) => { if (h.ws === undefined) { pen = false; return; } d += `${pen ? 'L' : 'M'}${(x(i) + cw / 2).toFixed(1)} ${y(hw_(h)).toFixed(1)}`; pen = true; });
+      const step = hi - lo > 24 ? 10 : 5, ticks = [];
+      for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) if (v === 0 || v === 10) ticks.push(v); // 0 and 10
+      const band = '';
+      // tailwind beyond the switch limit: shaded, so the side of the line that matters is obvious
+      $('lwd').innerHTML = `<svg width="${W}" height="${hw}" viewBox="0 0 ${W} ${hw}" aria-hidden="true">${band}`
+        + `<rect x="0" y="${y(-1)}" width="${W}" height="4" class="zone"/>` /* a 4 px red band under the limit: drawn on purpose, not a stray line */
+        + ticks.map(v => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="${v ? 'grid' : 'zero'}"/>`).join('')
+
+        + (matchMedia('(max-width:479px)').matches ? `<line x1="0" x2="${W - 32}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="${W}" y="${(y(-1) + 4).toFixed(1)}" text-anchor="end" class="limt kn" id="limt" data-x="${W - 14}" data-w="28">limit</text>`
+          : `<line x1="0" x2="${W}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="-5" y="${(y(-1) + 4).toFixed(1)}" text-anchor="end" class="limt kn" id="limt" data-x="-99" data-w="0">limit</text>`) // desktop: in the tick column, like the other values // the dashed line ends where its label starts: never on top of each other
+        + `<path class="ln-w" d="${d}"/>`
+        + (() => { const ni = nowIdx() - off; if (ni < 0 || ni >= hs.length || hs[ni].ws === undefined) return ''; const px = x(ni) + cw / 2, py = y(hw_(hs[ni]));
+          return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" class="nowpt"/>`; })() // the dot at Now; its value is in the readout
+        + ticks.map(v => `<text x="${matchMedia('(max-width:479px)').matches ? 3 : -5}" y="${y(v) + (matchMedia('(max-width:479px)').matches ? -3 : 4)}" text-anchor="${matchMedia('(max-width:479px)').matches ? 'start' : 'end'}" class="ax halo">${v ? Math.abs(v) : '0'}</text>`).join('') + '</svg>'; // the scale in the gutter, outside the plot
+    }
+    const r18 = hs.some(h => !night(h.t) && h.p18 < 0.9);
+    $('tl').style.setProperty('--r18row', r18 ? '36px' : '0px'); $('hl18').style.display = r18 ? '' : 'none'; $('l18').style.display = r18 ? '' : 'none'; // rows are placed explicitly, so a hidden row leaves no gap
+  }
+  { // legend: only what the shown hours contain
+    const L = [];
+    [7, 25].forEach(o => L.push([`<i style="background:${col(o)}"></i>`, `${two(o)} ${o === 25 ? 'West' : 'East'}`, '', o === 25 ? 'west' : 'east'])); // both, always (same legend set as the 3D view)
+    if (hs.some(h => !night(h.t) && small(h))) L.push(['<i class="losw" style="background:var(--east)"></i>', T.faded, '', 'faded']);
+    if (pgRuns.length) L.push(['<i class="pgbsw"></i>', T.inaa_flag, '', 'official']);
+    if (hs.some(h => h.p18 < 0.5)) L.push(['<i style="background:var(--red)"></i>', 'Runway 18 closed', '', 'r18closed']);
+    if (hs.some(h => h.p18 >= 0.5 && h.p18 < 0.9)) L.push(['<i class="risksw"></i>', 'Runway 18, 10 to 50\u202f% closure chance', '', 'r18risk']);
+    if (hs.some(h => night(h.t))) L.push(['<i style="background:var(--hatch-bg),var(--east)"></i>', T.night, '', 'night']);
+    if (hs.some(h => h.ws !== undefined) && !NARROW.matches) L.push(['<i class="limsw"></i>', T.limit, T.limit_tip, 'limit']); // phones: the in-plot "limit" label explains it
+    { const ORD = ST.legend_order || []; L.sort((a, b) => ORD.indexOf(a[3]) - ORD.indexOf(b[3])); } // one order on both pages (siteui.STYLE.legend_order)
+    $('tlf').innerHTML = L.map(([i, s, tt]) => `<span${tt ? ` title="${tt}"` : ''}>${i}${s}</span>`).join('');
+    { const tl = $('tl'), lg = $('tlf'); if (NARROW.matches) { if (lg.parentElement !== tl) tl.appendChild(lg); lg.classList.add('inbar'); const lod = $('lod'); lg.style.top = `${lod.offsetTop + lod.offsetHeight + 8}px`; tl.style.setProperty('--lgh', `${lg.offsetHeight + 10}px`); } // phones: the legend right under the direction bar
+      else { if (lg.parentElement === tl) tl.after(lg); lg.classList.remove('inbar'); lg.style.top = ''; tl.style.setProperty('--lgh', '0px'); } }
+  }
   let bands = '', a = -1;
   hs.forEach((h, i) => {
     if (night(h.t) && a < 0) a = i;
@@ -686,7 +1864,10 @@ function renderTimeline() {
       bands += `<div class="night" style="left:${x(a) - g / 2}px;width:${x(b) - x(a) + cw + g}px"></div>`; a = -1;
     }
   });
+  if (nowIdx() >= off && nowIdx() < off + span) bands += `<div class="nowl" style="left:${x(nowIdx() - off) - g / 2}px"></div>`; // over every row (z-index above the lanes)
   $('bands').innerHTML = bands;
+  $('mids').innerHTML = hs.map((h, i) => (i && hourOf(h.t) === 0 ? `<div class="mid" style="left:${x(i) - g / 2}px"></div>` : '')).join(''); // midnight: one hairline behind every row (labels mask it; same alpha as the 3D view)
+  { const b = $('bands'), lw = $('lwd'); b.style.bottom = 'auto'; b.style.height = `${Math.max(0, lw.offsetTop + lw.offsetHeight - b.offsetTop)}px`; $('mids').style.height = b.style.height; } // the now line ends with the last row
   lanes.querySelectorAll('.mk').forEach(m => {
     m.addEventListener('pointerdown', e => { e.stopPropagation(); setPlaying(0); go(+m.dataset.i); }); // respond on press
     m.addEventListener('click', e => { if (!e.detail) { setPlaying(0); go(+m.dataset.i); } }); // keyboard
@@ -700,9 +1881,20 @@ const head = { x: 0, v: 0, to: 0, raf: 0, on: false };
 function paintHead() {
   const W = $('lod').clientWidth, b = $('phl'), w = b.offsetWidth;
   $('ph').style.transform = `translateX(${head.x}px)`;
-  b.style.transform = `translateX(${Math.min(-w / 2, W - head.x - w)}px)`;
-  const show = !$('ph').hidden; // ruler labels under the time label step aside
-  $('ruler').querySelectorAll('[data-x]').forEach(l => l.classList.toggle('off', show && Math.abs(+l.dataset.x - head.x) < w / 2 + 30));
+  b.style.transform = `translateX(${Math.max(-head.x, Math.min(-w / 2, W - head.x - w))}px)`; // clamped inside the plot
+  const show = !$('ph').hidden; // the pill sits on the tick row: only the tick labels it lands on step aside
+  { const br = b.getBoundingClientRect(), rr = $('ruler').getBoundingClientRect(), z = zoom();
+    $('ruler').querySelectorAll('.d,.h,.nowtag').forEach(l => { l.style.translate = ''; l.style.opacity = ''; if (!show) return; const r = l.getBoundingClientRect(); const lx = $('ph').getBoundingClientRect().left; if (!((r.right > br.left - 6 && r.left < br.right + 6 && r.bottom > br.top - 2 && r.top < br.bottom + 2) || (l.classList.contains('h') && r.left - 2 < lx && r.right + 2 > lx))) return; /* 3D's rule: 6 px around the pill, and the tick label under the cursor line */
+      if (l.classList.contains('d')) { const right = br.right + 8 - r.left; // only to the right, past the pill (never back over the day before); hidden when that leaves the plot
+        if (right > 0 && right / z <= 60 && r.right + right <= rr.right) { /* a nudge over 60 px would lose its divider: hidden instead */ l.style.translate = `${(right / z).toFixed(1)}px 0`; return; } }
+      l.style.opacity = '0'; }); } // ticks under the pill hide; a day label moves aside, hidden only when there is no room
+  { const ph = $('ph'), z = zoom(), pr = ph.getBoundingClientRect(), lt = parseFloat(getComputedStyle(ph).getPropertyValue('--lt')) || 0; // the cursor breaks behind the in-bar label ("07 East →") and, on phones, behind every row title it crosses
+    const boxes = show ? [...$('lod').querySelectorAll('.dlab'), ...(NARROW.matches ? document.querySelectorAll('#tl .hl') : [])].map(l => l.getBoundingClientRect()).filter(r => r.width && pr.left > r.left - 3 && pr.left < r.right + 3) : [];
+    const gaps = boxes.map(r => [(r.top - pr.top) / z - lt - 2, (r.bottom - pr.top) / z - lt + 2]).sort((a, b) => a[0] - b[0]);
+    ph.style.setProperty('--mk', gaps.length ? `linear-gradient(${gaps.map(([a, b]) => `#000 ${a.toFixed(1)}px,transparent ${a.toFixed(1)}px,transparent ${b.toFixed(1)}px,#000 ${b.toFixed(1)}px`).join(',')})` : 'none'); }
+  { const lod = $('lod'), cx0 = $('ph').getBoundingClientRect().left, over = show && [...lod.querySelectorAll('.pgtag'), ...lanes.querySelectorAll('.swchip')].some(t => { const r = t.getBoundingClientRect(); return cx0 > r.left - 3 && cx0 < r.right + 3; }); // the shared tag-gap rule: under the Official tag or the switch chip the line starts below the tag band
+    $('ph').style.setProperty('--lt', `${over ? lod.offsetTop : 20}px`); } // the line starts under the Official tag when it would cross it
+  for (const id of ['pkl', 'limt']) { const pk = document.getElementById(id); if (pk) pk.classList.toggle('off', show && (id === 'pkl' || Math.abs(+pk.dataset.x - head.x) < +pk.dataset.w / 2 + 8)); } // the peak label steps out while a flag is shown // in-plot labels never sit under the cursor
 }
 function moveHead(x, glide) {
   head.to = x;
@@ -723,7 +1915,12 @@ function moveHead(x, glide) {
 function drawHead(glide = false) {
   const show = sel >= off && sel < off + span;
   $('ph').hidden = !show;
-  if (show) { $('phl').textContent = dhm(H[sel].t); moveHead(xOf(sel), glide); } else paintHead();
+  { const k = show ? sel - off : -1; [...$('lpg').children].forEach((d, i) => d.classList && d.classList.toggle('hov', i === k)); // the hovered bar, darker
+    const sv = $('lwd').querySelector('svg'); let dt = $('hdot'); const yy = show && renderTimeline.hwY ? renderTimeline.hwY(sel - off) : null;
+    if (sv) { if (!dt) { dt = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); dt.id = 'hdot'; dt.setAttribute('r', '4'); dt.setAttribute('class', 'hdot'); sv.appendChild(dt); }
+      dt.style.display = yy === null ? 'none' : ''; if (yy !== null) { dt.setAttribute('cx', xOf(sel).toFixed(1)); dt.setAttribute('cy', yy.toFixed(1)); } } } // a dot on the headwind line at the cursor
+  const pinned = show && pin >= 0 && sel === pin; $('ph').classList.toggle('pin', pinned); // a click pins: 2 px line, filled chip with a pin
+  if (show) { $('phl').innerHTML = `${pinned ? ICON.pin : ''}${dayf(H[sel].t).split(' ')[0]} ${hm(H[sel].t)}`; moveHead(xOf(sel), glide); } else paintHead(); // the full date is in the readout
   head.on = show;
   lanes.setAttribute('aria-valuenow', sel + 1);
   lanes.setAttribute('aria-valuetext', sel < 0 ? 'Now' : dhm(H[sel].t));
@@ -733,9 +1930,10 @@ function select(i, { glide = false, hold = false } = {}) {
   if (hold) pin = sel;
   if (sel >= 0 && (sel < off || sel >= off + span)) { off = Math.max(0, Math.min(H.length - span, sel - Math.floor(span / 2))); renderTimeline(); }
   else drawHead(glide);
-  renderOD(); renderR18(); sync3d();
+  renderOD(); renderR18(); renderMap();
 }
 const go = i => select(i, { glide: true, hold: true });
+document.addEventListener('click', e => { const b = e.target.closest('.ccell, .swchip'); if (b) go(+b.dataset.i); }); document.addEventListener('keydown', e => { const b = e.target.closest?.('.ccell'); if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(+b.dataset.i); } }); // the closest call pins its hour (the whole cell)
 function step(d) { go((sel < 0 ? (d > 0 ? -1 : 0) : sel) + d); }
 function jumpEvent(dir) {
   const ev = events(), cur = sel;
@@ -744,7 +1942,7 @@ function jumpEvent(dir) {
 }
 function setPlaying(dir) {
   playing = dir;
-  $('play').innerHTML = dir ? ICON.pause : ICON.play;
+  $('play').innerHTML = dir ? `${ICON.pause}<span>Pause</span>` : `${ICON.play}<span>Play 48\u202fh</span>`;
   $('play').setAttribute('aria-label', dir ? 'Pause' : 'Play the next 48 hours');
   clearInterval(setPlaying.t);
   if (!dir) return;
@@ -753,7 +1951,7 @@ function setPlaying(dir) {
 }
 lanes.addEventListener('pointerdown', e => {
   if (e.button) return;
-  lanes.setPointerCapture(e.pointerId); dragging = true; setPlaying(0); lanes.focus({ preventScroll: true });
+  lanes.setPointerCapture(e.pointerId); dragging = true; setPlaying(0);
   select(idxAt(e), { hold: true });
 });
 lanes.addEventListener('pointermove', e => {
@@ -793,13 +1991,20 @@ document.querySelectorAll('#zoom button').forEach(b => b.addEventListener('click
   renderTimeline();
 }));
 
-// ---- header: live feed, briefing, time zone
+// ---- header: live feed, time zone
 let live = null;
 function renderUpdated() {
   const stale = live && (Date.now() - Date.parse(live.generated)) / 1000 > 120;
   $('upd').className = `upd${stale ? ' stale' : ''}`;
-  $('upd').innerHTML = live ? `<i></i>Updated ${hm(live.generated)}` : `Issued ${dayf(D.issue)}, ${hm(D.issue)}`; // dot only when live
+  const age = Math.max(0, Math.round((Date.now() - Date.parse(D.issue)) / 6e4)), ageS = age < 60 ? `${age}\u202fmin ago` : age < 48 * 60 ? `${Math.round(age / 60)}\u202fh ago` : `${Math.round(age / 1440)} days ago`;
+  const today = dayf(D.issue) === dayf(new Date());
+  const nx = new Date(Math.ceil((Date.now() - 18e5 + 1) / 36e5) * 36e5 + 18e5); // the archive job runs every hour at :30 (fra-archive.timer)
+  $('upd').title = `Forecast run issued ${hm(D.issue)}; the next run is published around ${hm(nx)}`;
+  $('upd').innerHTML = `<i class="${age < 90 ? 'ok' : 'old'}"></i><span class="frs"><span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `${dayf(D.issue)}, `}${hm(D.issue)}</b><span class="fw"> · next <b>${hm(nx)}</b>${age < 90 ? ' · live' : ''}</span></span>`; // one template on both pages // the age in the tooltip, refreshed every minute
+  void ageS;
 }
+setInterval(renderUpdated, 60000);
+const _ru = renderUpdated; renderUpdated = function () { _ru(); if ($('pissued')) $('pissued').innerHTML = $('upd').innerHTML; }; // phones: the issue time under the eyebrow
 async function pollLive() {
   try {
     const r = await fetch('live.json', { cache: 'no-store' });
@@ -823,75 +2028,348 @@ async function pollLive() {
   } catch {}
   renderUpdated();
 }
-function briefing() {
-  const L = [], to = D.od_now === 25 ? 7 : 25;
-  L.push(`FRA runway operations · forecast issued ${dayf(D.issue)} ${hm(D.issue)} (${tz === 'UTC' ? 'UTC' : 'local'})`);
-  L.push(`Now: OD ${two(D.od_now)} ${word(D.od_now)}${D.since ? ` since ${dhm(D.since)}` : ''} · confidence next 6 h ${pct(D.conf6)}`);
-  L.push(D.change ? `Next direction change: ${two(D.od_now)} -> ${two(to)} at ${dhm(D.change.t)} (in ${hoursFrom(D.change.t)} h, probability ${pct(D.p_change ?? 0)})`
-    + `${(D.p_change ?? 0) < 0.75 ? `, window ${hm(D.change.start)}-${hm(plus1h(D.change.end))}` : ''}. ${impact(D.change.t).replace(/<[^>]+>/g, '')}`
-    : `Next direction change: none expected within 48 h (chance ${pct(D.p_change ?? 0)}).`);
-  const pn = progNote().replace(/<[^>]+>/g, ''); if (pn) L.push(pn + '.');
-  const W = r18Windows();
-  L.push(W.length ? `Runway 18 West: NOT usable ${W.map(([a, b]) => `${dhm(H[a].t)}-${hm(plus1h(H[b].t))}`).join(', ')}; departures via Centre runway.`
-    : `Runway 18 West: usable all 48 h (min ${pct(Math.min(...H.map(h => h.p18)))}).`);
-  if (!D.alerts_stale && (D.alerts || []).length) L.push(`Alerts: ${D.alerts.map(a => a.title).join('; ')}.`);
-  const lw = D.live?.windows?.['30d']?.od?.['24'];
-  if (lw?.n) L.push(`Live record (forecasts issued live since ${dayf(D.live.start)}): direction right ${pc1(lw.acc)} at 24 h ahead, n = ${lw.n} h (official rules ${pc1(lw.rule)}).`);
-  const Q = D.quality, q24 = Q?.od25.find(x => x.lead === 24), S = Q?.switch;
-  if (q24) L.push(`Backtest (walk-forward, 1 Jun-30 Oct 2026; settings chosen on the same period, so optimistic): direction right ${(q24.acc * 100).toFixed(1)}% at 24 h ahead (official rules ${(q24.rule * 100).toFixed(1)}%)`
-    + (S ? `; changes called within ±3 h ${Math.round(S.model.hit * 100)}%, ${S.model.fa} false alarms (rules ${S.rule.fa}).` : '.')
-    + (D.live?.holdout_from ? ` The independent test is the live record from ${dayf(D.live.holdout_from)}.` : ''));
-  return L.join('\n');
-}
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 1800); }
-$('brief').onclick = async () => {
-  const txt = briefing();
-  try { await navigator.clipboard.writeText(txt); }
-  catch { const a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); }
-  toast('Briefing copied');
-};
 document.querySelectorAll('#tz button').forEach(b => b.addEventListener('click', () => {
-  tz = b.dataset.v === 'utc' ? 'UTC' : 'Europe/Berlin'; store.set('fra-tz', b.dataset.v); renderAll(); post3d({ fra: 'tz', value: tz });
+  tz = b.dataset.v === 'utc' ? 'UTC' : 'Europe/Berlin'; store.set('fra-tz', b.dataset.v); renderAll();
 }));
 
-// ---- 3D view: an iframe that follows the playhead (now = live aircraft, a selected hour = simulated traffic)
-const f3d = $('f3d');
-let ready3d = false;
-const post3d = m => { if (ready3d) f3d.contentWindow.postMessage(m, '*'); };
-const sync3d = () => post3d(sel < 0 ? { fra: 'view', live: true } : { fra: 'view', live: false, t: H[sel].t });
-f3d.src = `airport3d.html?run=${encodeURIComponent(D.run)}&theme=light&embed=card`;
-addEventListener('message', e => {
-  if (e.source !== f3d.contentWindow || !e.data) return;
-  if (e.data.fra === 'ready') { ready3d = true; post3d({ fra: 'tz', value: tz }); sync3d(); }
-  if (e.data.fra === 'exit-fs' && fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-});
-const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
-$('fs3d').onclick = () => { const r = f3d.requestFullscreen || f3d.webkitRequestFullscreen; if (r) r.call(f3d); };
-const onFs = () => { // zoom on <body> would scale the full-screen iframe too: undo it while full screen
-  const on = fsEl() === f3d;
-  if (on) document.body.style.zoom = 1; else fit();
-  post3d({ fra: 'fs', on });
-};
-document.addEventListener('fullscreenchange', onFs);
-document.addEventListener('webkitfullscreenchange', onFs);
+// ---- paths map: a 2D schematic of the runways and the landing / take-off paths at the shown hour (the 3D view has the rest)
+const TOWNS = [['Flörsheim', 50.0136, 8.428, 'sw'], ['Raunheim', 50.0098, 8.4535, 'e'], ['Rüsselsheim', 49.9899, 8.4225, 'e'], ['Offenbach', 50.0956, 8.7761, 'n'],
+  ['Kelsterbach', 50.0613, 8.53, 'n'], ['Frankfurt', 50.1109, 8.6821, 'n'], ['Neu-Isenburg', 50.0531, 8.6947, 's'], ['Mainz', 49.9929, 8.2473, 's'], ['Groß-Gerau', 49.9214, 8.485, 's']]
+  .map(([n, la, lo, side]) => ({ n, side, p: [(lo - 8.5706) * 71503, (la - 50.0333) * 111320] }));
+const RIVER = [[50.108, 8.78], [50.104, 8.74], [50.106, 8.69], [50.103, 8.65], [50.1, 8.58], [50.092, 8.545], [50.063, 8.53], [50.04, 8.5], [50.012, 8.47], [50.003, 8.44], [50.008, 8.4], [50.007, 8.33], [50.003, 8.275]]
+  .map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]);
+const CLIMB = 400, APP = od => (od === 25 ? 14000 : 9000); // metres drawn: final approach (to Offenbach for 25, the towns west of the field for 07) and climb-out
+function mapPaths(od, r18) { // runways in their designators for od, approach / take-off segments in metres
+  const G = D.geo, out = { rw: [], seg: [] };
+  for (const r of G.runways) {
+    const n18 = r.ref === '18', [w, e] = r.a[0] < r.b[0] ? [r.a, r.b] : [r.b, r.a], [nn, ss] = r.a[1] > r.b[1] ? [r.a, r.b] : [r.b, r.a];
+    const L = Math.hypot(e[0] - w[0], e[1] - w[1]), u = [(e[0] - w[0]) / L, (e[1] - w[1]) / L], [d07, d25] = r.ref.split('/');
+    // Runway 18's plate: beside its south end, clear of the centre runway's plate
+    if (n18) { out.rw.push({ a: nn, b: ss, des: '18', at: [ss[0], ss[1] + 250], side: [-1, 0], out: null, closed: !r18 }); if (r18) out.seg.push({ kind: 'dep', a: ss, b: [ss[0], ss[1] - 900] }); continue; }
+    const thr = od === 25 ? e : w, s = od === 25 ? -1 : 1, des = od === 25 ? d25 : d07;
+    // plates off the strokes, at the runway end no path uses: landing runways at their far end, the centre runway behind its take-off start
+    const land = !/C/.test(r.ref), pe = od === 25 ? w : e, sg = pe === e ? 1 : -1;
+    out.rw.push(land ? { a: w, b: e, des, at: pe, out: [u[0] * sg, u[1] * sg] } : { a: w, b: e, des, at: [(w[0] + e[0]) / 2, (w[1] + e[1]) / 2], out: null, side: [u[1], -u[0]] }); // the centre runway: beside its middle, off the 18 junction
+    if (/C/.test(r.ref)) { const end = od === 25 ? w : e; let t = 0; while (t < 4000 && inPoly([end[0] + u[0] * t * s, end[1] + u[1] * t * s], G.area)) t += 50; // to the outline
+      if (od === 25) { const r18 = G.runways.find(q => q.ref === '18'); if (r18) { const x18 = Math.min(r18.a[0], r18.b[0]); t = Math.max(t, (end[0] - (x18 - 1500)) / Math.abs(u[0] || 1) - CLIMB); } } // 25: the take-off arrow starts past runway 18, never on it
+      out.seg.push({ kind: 'dep', a: [end[0], end[1]], b: [end[0] + u[0] * (t + CLIMB) * s, end[1] + u[1] * (t + CLIMB) * s] }); } // from the runway end, on its centreline
+    else { // the approach drawn to about 1.5 km beyond the farthest town under it
+      const back = [-u[0] * s, -u[1] * s], along = TOWNS.map(t => { const dx = t.p[0] - thr[0], dy = t.p[1] - thr[1], f = dx * back[0] + dy * back[1]; return f > 0 && f < APP(od) && Math.abs(dx * back[1] - dy * back[0]) < 1500 ? f : 0; });
+      const len = Math.min(APP(od), Math.max(5000, Math.max(...along) + 1500));
+      out.seg.push({ kind: 'app', a: [thr[0] + back[0] * len, thr[1] + back[1] * len], b: thr, des }); // to about 1.5 km beyond the farthest town under it
+    }
+  }
+  return out;
+}
+function inPoly(p, poly) { // ray casting
+  let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) c = !c; }
+  return c;
+}
+function hull(P) { // convex hull (monotone chain) of [x, y] points
+  const p = [...P].sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of [...p].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+function renderMap() {
+  const el = $('map'); if (!el || !D.geo) return;
+  const now = sel < 0, h = now ? H[nowIdx()] : H[sel], od = now ? D.od_now : h.od, r18 = h.p18 >= 0.5, M = mapPaths(od, r18);
+  const nbm = !now && night(h.t); $('mapwhen').textContent = nbm ? `${dhm(h.t)} · night ban, no flights` : `${now ? 'now' : dhm(h.t)} · landings from the ${od === 25 ? 'east' : 'west'}`; // 07: approaches come in from the west
+  $('mlgapp').setAttribute('stroke', `var(--${od === 25 ? 'west' : 'east'}-line)`);
+  const near = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
+  const towns = TOWNS.map(t => ({ ...t, under: M.seg.some(g => g.kind === 'app' && near(t.p, g.a, g.b) < 1500) })).filter(t => t.under); // only the towns flown over
+  // fit everything drawn (the approaches to their faded ends, runways, take-off arrows, the towns) to the card with 24 px padding
+  const PAD = 16; // runways, take-offs, towns: 16 px padding on every side
+  const feet = towns.map(t => { let best = null; for (const g of M.seg.filter(q => q.kind === 'app')) { const vx = g.b[0] - g.a[0], vy = g.b[1] - g.a[1], q = Math.max(0, Math.min(1, ((t.p[0] - g.a[0]) * vx + (t.p[1] - g.a[1]) * vy) / (vx * vx + vy * vy))), f = [g.a[0] + q * vx, g.a[1] + q * vy], d = Math.hypot(t.p[0] - f[0], t.p[1] - f[1]); if (!best || d < best[1]) best = [f, d]; } return best ? best[0] : t.p; }); // the landing path drawn to each town (both directions)
+  const pts = [...feet, ...M.seg.filter(g => g.kind === 'dep').flatMap(g => [g.a, g.b]), /* runways, take-offs and towns: the airport large; the approach tails run off the edge */ ...M.rw.flatMap(r => [r.a, r.b]), ...(D.geo.area || []), ...towns.map(t => t.p)]; // the core: airport, take-offs, towns
+  { const kx = Math.min((el.clientWidth - 32) / (Math.max(...pts.map(q => q[0])) - Math.min(...pts.map(q => q[0]))), (el.clientHeight - 32) / (Math.max(...pts.map(q => q[1])) - Math.min(...pts.map(q => q[1]))));
+    const wt = towns.reduce((a, t) => (t.p[0] < a.p[0] ? t : a), towns[0] || { p: [0, 0] }); void wt; void kx; } // room for the westernmost town's name
+  { // desktop: the key column takes whatever width the drawing does not need, so the drawing area has the content's proportions
+    const card = el.closest('.c3d'), asp = (Math.max(...pts.map(q => q[0])) - Math.min(...pts.map(q => q[0]))) / (Math.max(...pts.map(q => q[1])) - Math.min(...pts.map(q => q[1])));
+     } // drawn again at the new size
+  const W = el.clientWidth, Hh = el.clientHeight; if (!W || !Hh) return;
+  const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0])), y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
+  const PV = 16, KH = NARROW.matches ? PV : Math.max(8, (el.closest('.c3d')?.querySelector('.mlg')?.offsetHeight || 0) + 12), /* the key row at the bottom stays clear */ k = Math.min((W - 2 * PAD) / (x1 - x0), (Hh - PV - KH) / (y1 - y0)), /* the legend row stays clear */ /* a 10 % larger drawing collides with the key at 1280: kept at 24 px */ ox = (W - (x1 - x0) * k) / 2, /* the airport ends at the right padding; the approaches run on to the left */ /* desktop: the airport at the right edge, the approaches fill the left */ oy = PV + (Hh - PV - KH - (y1 - y0) * k) / 2;
+  const X = p => ox + (p[0] - x0) * k, Y = p => oy + (y1 - p[1]) * k, Xinv = (sx, sy) => [x0 + (sx - ox) / k, y1 - (sy - oy) / k], xy = p => `${X(p).toFixed(1)} ${Y(p).toFixed(1)}`;
+  const KB = (() => { const kb = el.closest('.c3d')?.querySelector('.mlg'); if (!kb || NARROW.matches) return null; const z = zoom(), a = kb.getBoundingClientRect(), m = el.getBoundingClientRect(); return [(a.left - m.left) / z - 10, (a.top - m.top) / z - 10, (a.right - m.left) / z + 10, (a.bottom - m.top) / z + 10]; })();
+  for (const sg of M.seg) if (sg.kind === 'app') { // draw each approach on until it meets the padding edge (left or bottom), so the lines fill the card without being cut
+    const ux = sg.a[0] - sg.b[0], uy = sg.a[1] - sg.b[1], L0 = Math.hypot(ux, uy), dx = ux / L0, dy = uy / L0;
+    const sx = X(sg.a), sy = Y(sg.a), ex = dx * k, ey = -dy * k; // screen px per metre along the line
+    let t = 1e9; const IN = 0; /* on to the card edge, clipped there */ if (ex < 0) t = Math.min(t, (IN - sx) / ex); if (ex > 0) t = Math.min(t, (W - IN - sx) / ex); if (ey < 0) t = Math.min(t, (IN - sy) / ey);  // both lines end 24 px inside the card
+    if (t > 0 && t < 1e9) { const L0p = Math.hypot(X(sg.a) - X(sg.b), Y(sg.a) - Y(sg.b)), Ltot = L0p + t * k, keep = Ltot; sg.a = [sg.b[0] + (sg.a[0] - sg.b[0]) * keep / L0p, sg.b[1] + (sg.a[1] - sg.b[1]) * keep / L0p]; } // a quarter shorter than the run to the edge (they fade out there)
+    if (KB) { const L1 = Math.hypot(sg.a[0] - sg.b[0], sg.a[1] - sg.b[1]); let q = 0; // stop before the key
+      const SB = [W - 16 - 2000 * k - 44, KB[1] - 30, W, KB[1]]; for (; q < L1; q += 20) { const px = X(sg.b) + (X(sg.a) - X(sg.b)) * q / L1, py = Y(sg.b) + (Y(sg.a) - Y(sg.b)) * q / L1; if ((px > KB[0] && px < KB[2] && py > KB[1] && py < KB[3]) || (px > SB[0] && px < SB[2] && py > SB[1] && py < SB[3])) break; } // stop before the key and the scale
+      if (q < L1) sg.a = [sg.b[0] + (sg.a[0] - sg.b[0]) * q / L1, sg.b[1] + (sg.a[1] - sg.b[1]) * q / L1]; }
+  }
+  const c = `var(--${od === 25 ? 'west' : 'east'}-line)`;
+  let g = '', SCL = null;
+  if (D.geo.area.length) { // the airport as one smooth outline: the convex hull, corners rounded (curves through the edge midpoints)
+    const dp = (P, tol) => { if (P.length < 3) return P; const [a, b] = [P[0], P[P.length - 1]]; let im = 0, dm = 0; // Douglas-Peucker
+      for (let i = 1; i < P.length - 1; i++) { const d = ptSeg0(P[i], a, b); if (d > dm) { dm = d; im = i; } }
+      return dm > tol ? [...dp(P.slice(0, im + 1), tol).slice(0, -1), ...dp(P.slice(im), tol)] : [a, b]; };
+    const ptSeg0 = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], f = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(p[0] - a[0] - vx * f, p[1] - a[1] - vy * f); };
+    const hp0 = D.geo.area.map(q => [X(q), Y(q)]), hp = dp([...hp0, hp0[0]], 2.5).slice(0, -1); // the true outline, small jogs removed (1.5 px tolerance)
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], n = hp.length;
+    const d = 'M' + hp.map(q => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join('L'); void mid; void n; // straight edges, round joins: the true outline, fewer corners
+    g = `${(() => { // the label where nothing else is: away from the paths, the towns and the airport
+      const lines2 = M.seg.map(g => [X(g.a), Y(g.a), X(g.b), Y(g.b)]), tw = towns.map(t => [X(t.p), Y(t.p)]), RP = RIVER.map(r => [X(r), Y(r)]);
+      const dseg = (px, py, [ax, ay, bx, by]) => { const vx = bx - ax, vy = by - ay, f = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(px - ax - vx * f, py - ay - vy * f); };
+      let best = null;
+      for (let k2 = 0; k2 < RP.length - 1; k2++) for (let f = 0; f <= 1; f += 0.25) { const qx = RP[k2][0] + (RP[k2 + 1][0] - RP[k2][0]) * f, qy = RP[k2][1] + (RP[k2 + 1][1] - RP[k2][1]) * f + 12;
+        if (qx < 20 || qx > Math.min(...M.rw.flatMap(r => [X(r.a), X(r.b)])) - 70 || qy < 14 || qy > Hh - 40 || (D.geo.area.length && inPoly(Xinv(qx, qy), D.geo.area))) continue;
+        const c = Math.min(...lines2.map(l => dseg(qx + 12, qy - 4, l)), ...tw.map(([tx, ty]) => Math.hypot(tx - qx - 12, ty - qy + 4)));
+        if (!best || c > best.c) best = { qx, qy, c }; }
+      return `<path class="river" d="M${RIVER.map(q => xy(q)).join('L')}"/>` + (best && best.c > 16 ? `<text class="rvl" x="${best.qx.toFixed(1)}" y="${best.qy.toFixed(1)}">Main</text>` : ''); })()}` + g + `<path class="area" d="${d}Z"/>`; // the Main at every size (clipped by the frame), its label where it fits; then the airport outline
+    { const KM = [1, 2, 3, 5, 10].find(v => v * 1000 * k >= 40) || 10, km2 = Math.round(KM * 1000 * k), sc = $('mscl'); /* a bar of at least 40 px */ if (sc) sc.innerHTML = `<span>N\u00a0↑</span><span class="msb"><b>${KM}\u00a0km</b><svg width="${km2 + 2}" height="5" viewBox="0 0 ${km2 + 2} 5" aria-hidden="true"><path d="M1 4h${km2}M1 1v3M${km2 + 1} 1v3"/></svg></span>`; /* the distance over its bar: narrow enough for the key row */ let inRow = true; if (sc) { sc.hidden = false; const k0 = sc.parentElement.firstElementChild; inRow = false; void k0; sc.hidden = true; /* the scale sits in the drawing's bottom-right corner, never squeezed into the key row */ }
+      if (!inRow) { const sx = W - 8 - km2, sy = (KB ? KB[1] + 10 : Hh) - 8; g += `<g class="scl"><path d="M${sx} ${sy}h${km2}M${sx} ${sy - 3}v3M${sx + km2} ${sy - 3}v3"/><text x="${sx - 6}" y="${sy}" text-anchor="end">N ↑  ${KM} km</text></g>`; } /* no room in the key row with 10 px gaps: at the map's bottom-right instead */ } // north and the scale: the key row's right end
+  }
+  const SEG = []; // every stroke on screen, for the label pass
+  // town markers at their place, at least 22 px apart (pushed apart along the line between them)
+  const R = 5.5, MK = towns.map(t => ({ t, x: X(t.p), y: Y(t.p) }));
+  for (const m of MK) for (const sg of M.seg.filter(g => g.kind === 'app')) { const ax = X(sg.a), ay = Y(sg.a), bx = X(sg.b), by = Y(sg.b), vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy || 1, f = Math.max(0, Math.min(1, ((m.x - ax) * vx + (m.y - ay) * vy) / L2)), px = ax + vx * f, py = ay + vy * f, d = Math.hypot(m.x - px, m.y - py);
+    if (d < 6) { const nx = -vy / Math.sqrt(L2), ny = vx / Math.sqrt(L2), sgn = ((m.x - px) * nx + (m.y - py) * ny) >= 0 ? 1 : -1, mv = Math.min(4, 6 - d); m.x += nx * sgn * mv; m.y += ny * sgn * mv; } } // a marker on a landing line moves at most 4 px off it; its card-colour halo breaks the line around the disc
+  // markers stay at the towns' true positions (same lat/lon and projection as the 3D view); only the names move
+  for (let i = 0; i < MK.length; i++) for (let j = i + 1; j < MK.length; j++) { const a2 = MK[i], b2 = MK[j], dx = b2.x - a2.x, dy = b2.y - a2.y, d = Math.hypot(dx, dy) || 1, mv = Math.min(4, Math.max(0, (19 - d) / 2)); if (mv > 0) { a2.x -= dx / d * mv; a2.y -= dy / d * mv; b2.x += dx / d * mv; b2.y += dy / d * mv; } } // two close markers step apart, at most 4 px each
+  { const oth25 = od === 25 ? 7 : 25, i0 = now ? nowIdx() : sel, show = H.slice(i0).some(x => x.od === oth25) || H.slice(i0).some(x => (od === 25 ? x.p25 : 1 - x.p25) <= 0.8); // the other direction's landings, faint: only when a switch away from the shown direction is expected or possible (>= 20 %)
+    const kg = el.closest('.c3d')?.querySelector('#mlggh'); if (kg) { kg.hidden = !show; kg.querySelector('path').setAttribute('stroke', `var(--${oth25 === 25 ? 'west' : 'east'}-line)`); kg.lastChild.textContent = `${oth25 === 25 ? 'West' : 'East'} approaches (if switched)`; } // never the same sample as "Landings"
+    if (show) for (const sg of mapPaths(oth25, r18).seg.filter(q => q.kind === 'app')) { const ux = sg.a[0] - sg.b[0], uy = sg.a[1] - sg.b[1], L0 = Math.hypot(ux, uy), far = [sg.b[0] + ux / L0 * 3500, sg.b[1] + uy / L0 * 3500]; g += `<path class="gapp" style="stroke:var(--${oth25 === 25 ? 'west' : 'east'}-line)" d="M${xy(far)}L${xy(sg.b)}"/>`; } }
+  for (const s of M.seg) { // chevrons: landings point at the runway, take-offs away from it
+    const ax = X(s.a), ay = Y(s.a), bx = X(s.b), by = Y(s.b), L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
+    // landing chevrons where the path is farthest from any town (their names go near the towns)
+    const f0 = 0.2; // chevrons on the solid part
+    const n = 8; // 11 px chevrons
+    const at = s.kind === 'app' ? 0.86 : 1, cx = ax + (bx - ax) * at - (s.kind === 'app' ? 0 : ux), cy = ay + (by - ay) * at - (s.kind === 'app' ? 0 : uy); // one chevron per path: near the landing threshold, at the end of a take-off
+    const chev = `M${(cx - ux * n - uy * n).toFixed(1)} ${(cy - uy * n + ux * n).toFixed(1)}L${cx.toFixed(1)} ${cy.toFixed(1)}L${(cx - ux * n + uy * n).toFixed(1)} ${(cy - uy * n - ux * n).toFixed(1)}`;
+    const gid = `mf${SEG.length}`; // each approach fades in over its outer 20 %
+    g += s.kind === 'app' ? `<defs><linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}"><stop offset="0" stop-color="${c}" stop-opacity="1"/><stop offset="1" stop-color="${c}" stop-opacity="1"/></linearGradient></defs><path class="app" stroke="url(#${gid})" d="M${xy(s.a)}L${xy(s.b)}"/><path class="arw" stroke="${c}" d="${chev}"/>`
+      : `<path class="dep" d="M${(() => { if (!D.geo.area.length) return xy(s.a); let t0 = 0; for (let q = 0; q <= 1; q += 0.02) { const p = [s.a[0] + (s.b[0] - s.a[0]) * q, s.a[1] + (s.b[1] - s.a[1]) * q]; if (!inPoly(p, D.geo.area)) { t0 = q; break; } } return xy([s.a[0] + (s.b[0] - s.a[0]) * t0, s.a[1] + (s.b[1] - s.a[1]) * t0]); })()}L${xy(s.b)}"/><path class="arw" stroke="var(--ink)" d="${chev}"/>`; // the take-off line starts outside the airport outline
+    SEG.push([ax, ay, bx, by, s.kind === 'app' ? ux : null, s.kind === 'app' ? uy : null]);
+    SEG.push([cx - ux * n - uy * n, cy - uy * n + ux * n, cx, cy, null, null], [cx - ux * n + uy * n, cy - uy * n - ux * n, cx, cy, null, null]); // the chevron's arms
+  }
+  for (const r of M.rw) { g += `<line data-des="${r.des}" class="rwy${r.closed ? ' closed' : ''}" x1="${X(r.a)}" y1="${Y(r.a)}" x2="${X(r.b)}" y2="${Y(r.b)}"/>`; SEG.push([X(r.a), Y(r.a), X(r.b), Y(r.b), null, null, 4]); }
+  const placed = []; let gp = ''; if (SCL) placed.push(SCL);
+  { const kb = el.closest('.c3d')?.querySelector('.mlg'); if (kb && !NARROW.matches) { const z = zoom(), a = kb.getBoundingClientRect(), m = el.getBoundingClientRect(); placed.push([(a.left - m.left) / z - 4, (a.top - m.top) / z - 4, (a.right - m.left) / z + 4, (a.bottom - m.top) / z + 4]); } } // the key overlay: no plate or name under it
+  const ov = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+  const ptBox = (x, y, q) => Math.hypot(Math.max(q[0] - x, 0, x - q[2]), Math.max(q[1] - y, 0, y - q[3]));
+  const ptSeg = (x, y, ax, ay, bx, by) => { const vx = bx - ax, vy = by - ay, f = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(x - ax - vx * f, y - ay - vy * f); };
+  const segHit = (ax, ay, bx, by, q) => { // does the segment pass through the box (Liang-Barsky)
+    let t0 = 0, t1 = 1; const dx = bx - ax, dy = by - ay;
+    for (const [p, r] of [[-dx, ax - q[0]], [dx, q[2] - ax], [-dy, ay - q[1]], [dy, q[3] - ay]]) { if (!p) { if (r < 0) return false; } else { const t = r / p; if (p < 0) t0 = Math.max(t0, t); else t1 = Math.min(t1, t); } }
+    return t0 <= t1;
+  };
+  const segBox = (sg, q) => { // exact distance between a stroke (minus its half width) and a box
+    const [ax, ay, bx, by] = sg;
+    const d = segHit(ax, ay, bx, by, q) ? 0 : Math.min(ptBox(ax, ay, q), ptBox(bx, by, q), ...[[q[0], q[1]], [q[2], q[1]], [q[0], q[3]], [q[2], q[3]]].map(([x, y]) => ptSeg(x, y, ax, ay, bx, by)));
+    return d - (sg[6] || 1.5);
+  };
+  const PAR = M.rw.filter(r => r.des !== '18'), thrOf = r => { const ax = X(r.a), ay = Y(r.a), bx = X(r.b), by = Y(r.b), af = od === 25 ? ax >= bx : ax <= bx; return af ? [ax, ay] : [bx, by]; };
+  const PT = PAR.map(r => ({ r, t: thrOf(r) })).sort((p1, p2) => p1.t[1] - p2.t[1]);
+  const grouped = PT.length === 3 && PT.slice(1).some((q, i) => Math.hypot(q.t[0] - PT[i].t[0], q.t[1] - PT[i].t[1]) < 24); // the parallel thresholds too close for three badges
+  if (grouped) { // one stacked chip "07L / 07C / 07R" (top to bottom, as the runways lie) beside the thresholds, a bracket spanning the three runway ends
+    const cw = 32, ch = 40, low = PT[2].t, apps = M.seg.filter(g => g.kind === 'app').map(g => [X(g.a), Y(g.a), X(g.b), Y(g.b)]);
+    const lineY = x => Math.max(-1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : -1e9))); // the lowest landing path at x
+    let bestC = null;
+    const lineT = x => Math.min(1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : 1e9))); // the highest landing path at x
+    for (const side of [-1, 1]) for (let dx = -110; dx <= 10; dx += 6) for (let dy = 0; dy <= 70; dy += 4) { // below the lowest landing path (else above the highest), near the thresholds, clear of every stroke and marker
+      const cx0 = low[0] + dx - cw, cy0 = side > 0 ? Math.max(lineY(cx0), lineY(cx0 + cw)) + 8 + dy : Math.min(lineT(cx0), lineT(cx0 + cw)) - 8 - ch - dy, q = [cx0, cy0, cx0 + cw, cy0 + ch];
+      if (!isFinite(cy0)) continue;
+      if (q[0] < 8 || q[2] > W - 8 || q[1] < 8 || q[3] > (KB ? KB[1] + 6 : Hh) - 4) continue;
+      let cost = Math.hypot(q[2] - low[0], (side > 0 ? q[1] : q[3]) - low[1]) + (side > 0 ? 60 : 0); /* above the highest landing path, by the west end of the 07 runways */
+      for (const sg of SEG) if (segBox(sg, q) < 4) cost += 3000;
+      for (const m of MK) if (ov(q, [m.x - R - 4, m.y - R - 4, m.x + R + 4, m.y + R + 4])) cost += 3000;
+      for (const z of placed) if (ov(q, z)) cost += 3000;
+      if (!bestC || cost < bestC.cost) bestC = { cost, cx0, cy0 }; }
+    const { cx0, cy0 } = bestC || { cx0: low[0] - 6 - cw, cy0: low[1] - ch / 2 }, lx = Math.min(Math.max(low[0], cx0), cx0 + cw), ly = cy0 > low[1] ? cy0 : cy0 + ch; // a short leader from the chip to the thresholds
+    gp += `<path class="rwld" d="M${lx.toFixed(1)} ${ly.toFixed(1)}L${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)} ${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}"/><circle class="rwldd" cx="${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)}" cy="${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}" r="2"/><rect class="rwhalo" x="${(cx0 - 3).toFixed(1)}" y="${(cy0 - 3).toFixed(1)}" width="${cw + 6}" height="${ch + 6}" rx="5"/><rect class="rwp" x="${cx0.toFixed(1)}" y="${cy0.toFixed(1)}" width="${cw}" height="${ch}" rx="3"/>` + PT.map((q, k) => `<text class="rwt rwt11" x="${(cx0 + cw / 2).toFixed(1)}" y="${(cy0 + 13 + k * 12).toFixed(1)}" text-anchor="middle">${q.r.des}</text>`).join('');
+    placed.push([cx0 - 2, cy0 - 2, cx0 + cw + 2, cy0 + ch + 2]);
+  }
+  for (const r of [...M.rw].filter(r => !(grouped && r.des !== '18')).sort((a, b) => /C/.test(b.des) - /C/.test(a.des))) { // designator plates (the centre runway first, it has the fewest free spots): past the runway end no path uses, else the clearest spot along it
+    const w = r.des.length * 8 + 8, ax = X(r.a), ay = Y(r.a), bx = X(r.b), by = Y(r.b), L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
+    const want = r.out ? [X(r.at) + r.out[0] * (w / 2 + 6), Y(r.at) - r.out[1] * (w / 2 + 6)] : r.side ? [X(r.at) + r.side[0] * 16, Y(r.at) - r.side[1] * 16] : null;
+    const cand = []; void want;
+    // one rule on both pages: at the runway's landing threshold (west in 07 operations, east in 25; Runway 18 at its north end), offset
+    // perpendicular on the outer side (away from the other runways; the centre runway: north) at a fixed distance
+    const RC = M.rw.map(q => [(X(q.a) + X(q.b)) / 2, (Y(q.a) + Y(q.b)) / 2]).reduce((a2, q, _, A2) => [a2[0] + q[0] / A2.length, a2[1] + q[1] / A2.length], [0, 0]);
+    const aFirst = r.des === '18' ? ay <= by : (od === 25 ? ax >= bx : ax <= bx), thr = aFirst ? [ax, ay] : [bx, by], dirIn = aFirst ? [ux, uy] : [-ux, -uy]; // the landing threshold: west end in 07 operations, east in 25, north for 18 (whatever order the geometry has)
+    let nx = -uy, ny = ux; const cen = /C/.test(r.des);
+    if (cen ? ny > 0 : (nx * ((ax + bx) / 2 - RC[0]) + ny * ((ay + by) / 2 - RC[1])) < 0) { nx = -nx; ny = -ny; }
+    if (r.des === '18' && nx > 0) { nx = -nx; ny = -ny; } // 18: on its west side
+    const o0 = Math.abs(nx) * w / 2 + Math.abs(ny) * 9 + 2.5 + 8; // 8 px clear of the stroke (a badge height + 4 does not fit the card: they land inside the airport)
+    { const ha = Math.abs(dirIn[0]) * w / 2 + Math.abs(dirIn[1]) * 9 + 4; // one rule on both pages: 4 px before the threshold on the runway's axis; sideways only as far as a path needs
+      for (const o of [0, 18, -18]) cand.push([thr[0] - dirIn[0] * ha + nx * o, thr[1] - dirIn[1] * ha + ny * o, Math.abs(o) / 3]); } // on the axis, 4 px before the threshold; sideways when a landing path arrives there
+    for (const [t, pen] of [[w / 2 + 4, 10], [w / 2 + 16, 20], [w / 2 + 28, 30]]) for (const [o, sd, pe] of [[o0, 1, 0], [o0 + 8, 1, 25], [o0, -1, 60], [o0 + 8, -1, 80]]) cand.push([thr[0] + dirIn[0] * t + nx * o * sd, thr[1] + dirIn[1] * t + ny * o * sd, pen + pe]); // else beside the runway, just inside the threshold
+    for (let gx = -70; gx <= 70; gx += 10) for (let gy = -40; gy <= 40; gy += 6) cand.push([thr[0] + gx, thr[1] + gy, 120 + Math.hypot(gx, gy)]); // crowded: the nearest free spot to the threshold
+    let best = null;
+    for (const [px, py, pen] of cand) {
+      const q = [px - w / 2, py - 9, px + w / 2, py + 9];
+      let cost = pen;
+      if (q[0] < 12 || q[2] > W - 12 || q[1] < 8 || q[3] > Hh - 4) cost += 1e4; /* every plate (07C too) 12 px inside the card's sides */ // never touching the card's top padding
+      for (const z of placed) if (ov(q, [z[0] - 2, z[1] - 2, z[2] + 2, z[3] + 2])) cost += 8000;
+      for (const sg of SEG) { const own = sg[6] === 4 && Math.abs(sg[0] - ax) < 0.01 && Math.abs(sg[1] - ay) < 0.01; if (segBox(sg, q) < (own ? -0.5 : 4)) cost += 3000; } /* its own runway: it sits at its end */ // >= 4 px from every stroke, arrow and approach line, its own runway included
+      /* on the airport is fine (as in the 3D view): every plate stays at its threshold */
+      for (const m of MK) if (ov(q, [m.x - R - 3, m.y - R - 3, m.x + R + 3, m.y + R + 3])) cost += 2000;
+      if (!best || cost < best.cost) best = { cost, px, py };
+    }
+    const { px, py } = best;
+    placed.push([px - w / 2 - 2, py - 11, px + w / 2 + 2, py + 11]);
+    gp += `<rect class="rwp" x="${(px - w / 2).toFixed(1)}" y="${(py - 9).toFixed(1)}" width="${w}" height="18" rx="3"${r.closed ? ' style="fill:var(--red)"' : ''}/><text class="rwt" x="${px.toFixed(1)}" y="${(py + 4).toFixed(1)}" text-anchor="middle">${r.des}</text>`;
+  }
+
+  [...MK].sort((a2, b2) => a2.t.p[0] - b2.t.p[0]).forEach((m, k) => { m.no = k + 1; }); // numbered west to east, the same on both pages
+  for (const m of MK) g += `<circle class="tnum" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="7.5"/><text class="tnumt" x="${m.x.toFixed(1)}" y="${(m.y + 3.8).toFixed(1)}" text-anchor="middle">${m.no}</text>`;
+  { const kt = el.closest('.c3d')?.querySelector('#mlgtowns'); if (kt) kt.innerHTML = [...MK].sort((a2, b2) => a2.no - b2.no).map(m => `<span class="tk"><i>${m.no}</i>${m.t.n}</span>`).join(''); }
+  // the towns are named in the key row (numbered); the subtitle keeps the short form
+  g += gp; // plates on top
+  el.innerHTML = `<svg width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" aria-hidden="true" class="${od === 25 ? 'w' : 'e'}${nbm ? ' nb' : ''}"><defs><clipPath id="mclip"><rect x="0" y="0" width="${W}" height="${Math.max(0, KB ? KB[1] + 6 : Hh)}"/></clipPath><filter id="mblur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="8"/></filter><mask id="medge" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${Hh}"><rect x="4" y="12" width="${Math.max(0, W - 16)}" height="${Math.max(0, (KB ? KB[1] + 6 : Hh) - 28)}" fill="#fff" filter="url(#mblur)"/></mask><linearGradient id="mfadeg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${Math.min(0.5, 72 / W).toFixed(3)}" stop-color="#fff" stop-opacity="1"/></linearGradient><mask id="mfade" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${Hh}"><rect x="0" y="0" width="${W}" height="${Hh}" fill="url(#mfadeg)"/></mask></defs><g clip-path="url(#mclip)">${g.replace(/<path class="(river|app)"/g, '<path mask="url(#medge)" class="$1"')}</g></svg>`; // the river and the landing paths fade out over ~24 px at the edges
+}
 
 function renderAll() {
   press($('tz'), $('tz').querySelector(`[data-v=${tz === 'UTC' ? 'utc' : 'local'}]`));
-  renderUpdated(); renderChange(); renderTimeline(); renderOD(); renderR18(); renderAlerts(); renderLiveRecord();
+  renderUpdated(); renderRecord(); renderChange(); renderTimeline(); renderOD(); renderR18(); renderMap(); renderAlerts(); renderLiveRecord();
+  try { alignProof(); } catch {}
 }
 function zoom() { return parseFloat(document.body.style.zoom) || 1; }
-function fit() { // one screen, never a scrollbar: lay out at >= 1280 px wide, scale to the window, the timeline row takes the rest
-  const b = document.body, height = z => {
-    b.style.zoom = 1; b.style.height = 'auto'; b.style.width = `${Math.max(1280, innerWidth / z)}px`; renderTimeline(); return b.scrollHeight; };
-  let z = Math.min(2, innerWidth / 1280);
-  for (let k = 0; k < 4; k++) z = Math.min(2, innerWidth / 1280, innerHeight / height(z));
-  const h = height(z);
-  if (h * z > innerHeight) z = innerHeight / h;
-  b.style.height = `${innerHeight / z}px`;
-  b.style.zoom = z.toFixed(4);
-  renderTimeline(); document.querySelectorAll('.seg').forEach(thumb);
+function alignProof() { // the proof number sits on the headline's baseline: measured with zero-height inline markers
+  const pf = document.querySelector('.proof .pf1'), hd = $('answer'); if (!pf || !hd || NARROW.matches) return;
+  document.querySelector('.proof').style.setProperty('--pfb', '0px');
+  const mk = el => { const i = document.createElement('i'); i.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline'; el.appendChild(i); const y = i.getBoundingClientRect().bottom; i.remove(); return y; };
+  const d = (mk(hd.querySelector(':scope > span:not(.dbadge)') || hd) - mk(pf.querySelector('b') || pf)) / zoom(); document.querySelector('.proof').style.setProperty('--pfb', `${d.toFixed(2)}px`); // the headline's words, not its badge (a transform: no reflow)
 }
+const NARROW = matchMedia('(max-width: 899px)');
+function fit() { // desktop: laid out at >= 1280 px wide, scaled to the window (up to the height that still fits one
+  // screen, ~800 px); the page keeps its natural height and scrolls on tall windows. Phones: one column, no scaling
+  const b = document.body;
+  if (NARROW.matches) { b.style.zoom = ''; b.style.width = ''; }
+  else { const z = Math.max(1, Math.min(1.5, innerWidth / 1280, innerHeight / 810)); b.style.zoom = z.toFixed(4); b.style.width = `${innerWidth / z}px`; }
+  b.style.height = '';
+  MAIN.style.setProperty('--rowh', '21px');
+  if (!NARROW.matches) { // spread the spare height of a tall window over the grid rows, so nothing piles up under the footer
+    const z = parseFloat(b.style.zoom) || 1, spare = innerHeight - b.getBoundingClientRect().height - 12 * z; /* the footer keeps >= 12 px to the window's bottom */
+    if (spare > 0) MAIN.style.setProperty('--rowh', `${Math.min(22.5, 21 + spare / z / ROWS).toFixed(2)}px`); // a little air on a laptop; tall windows keep content-sized cards
+  }
+  renderTimeline(); renderMap(); renderRecord(); document.querySelectorAll('.seg').forEach(thumb); alignProof();
+}
+
+// ---- layout: panels on a 24 x 30 grid; Layout mode drags them (move) or their corner (resize), the others make room
+const COLS = 24, ROWS = 23, MAIN = document.querySelector('main'), GHOST = $('ghost');
+const PANELS = { rec: ['Accuracy', 8, 10], tl: ['Forecast', 13, 14], v3d: ['Map', 6, 9] }; // name, min w, min h
+// the default: one hero across the top, the timeline and the paths map below it
+const DEF = { rec: { x: 14, y: 0, w: 10, h: 12 }, tl: { x: 0, y: 0, w: 14, h: 23 }, v3d: { x: 14, y: 12, w: 10, h: 11 } }; // the facts are the chart card's footer
+const CELL = {};
+document.querySelectorAll('.cell').forEach(c => {
+  const k = c.dataset.p, mv = document.createElement('div');
+  mv.className = 'mv'; mv.innerHTML = `<b>${PANELS[k][0]}</b><i title="Drag to resize"></i>`; c.appendChild(mv); CELL[k] = c;
+});
+const clone = L => JSON.parse(JSON.stringify(L));
+const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const fits = L => Object.entries(L).every(([k, r]) => r.x >= 0 && r.y >= 0 && r.x + r.w <= COLS && r.y + r.h <= ROWS
+  && r.w >= PANELS[k][1] && r.h >= PANELS[k][2]);
+function settle(L, k) { // the panel k keeps its place; every other one floats up as far as it can, below anything it would overlap
+  const ids = Object.keys(L).sort((a, b) => (a === k ? -1 : b === k ? 1 : 0) || L[a].y - L[b].y || L[a].x - L[b].x), done = [];
+  for (const id of ids) {
+    const r = L[id];
+    if (id !== k) {
+      while (r.y > 0 && !done.some(o => hit({ ...r, y: r.y - 1 }, o))) r.y--;
+      for (let o; (o = done.find(d => hit(r, d)));) r.y = o.y + o.h;
+    }
+    done.push(r);
+  }
+  return L;
+}
+const HZ = ['x', 'w', 'y', 'h', 1], VT = ['y', 'h', 'x', 'w', 2];
+const overlaps = L => Object.keys(L).some((a, i, ks) => ks.slice(i + 1).some(b => hit(L[a], L[b])));
+function pushEdge(T, id, d, A) { // the far edge of T[id] moved by d (T[id] already resized): the panels touching that edge give way
+  const [p, s, q, u, mi] = A, r = T[id], edge = r[p] + r[s] - d;
+  for (const [o, n] of Object.entries(T)) {
+    if (o === id || n[p] !== edge || !(n[q] < r[q] + r[u] && r[q] < n[q] + n[u])) continue;
+    if (d > 0) {
+      n[p] += d;
+      if (n[s] - d >= PANELS[o][mi]) n[s] -= d; else pushEdge(T, o, d, A); // too small to shrink: it slides, the next one shrinks
+    } else {
+      const g = { ...n, [p]: n[p] + d, [s]: n[s] - d }; // grow into the freed space, if nothing else is there
+      if (!Object.entries(T).some(([o2, m]) => o2 !== o && hit(g, m))) T[o] = g;
+    }
+  }
+}
+function loadLay() {
+  try {
+    const L = JSON.parse(store.get('fra-layout30') || 'null');
+    if (L && Object.keys(PANELS).every(k => L[k] && ['x', 'y', 'w', 'h'].every(q => Number.isInteger(L[k][q])))
+      && fits(L) && !overlaps(L)) return L;
+  } catch {}
+  return clone(DEF);
+}
+let LAY = loadLay();
+const custom = () => JSON.stringify(LAY) !== JSON.stringify(DEF);
+const area = r => `${r.y + 1} / ${r.x + 1} / span ${r.h} / span ${r.w}`;
+let reflowQ = 0;
+function applyLay() {
+  for (const k in LAY) CELL[k].style.gridArea = area(LAY[k]);
+  cancelAnimationFrame(reflowQ);
+  reflowQ = requestAnimationFrame(() => { renderTimeline(); renderMap(); document.querySelectorAll('.seg').forEach(thumb); });
+}
+function gridStep() { // CSS px per column / row (the page is zoomed: pointer deltas are divided by zoom())
+  const cs = getComputedStyle(MAIN);
+  return [(MAIN.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) / COLS,
+    (MAIN.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / ROWS];
+}
+MAIN.addEventListener('pointerdown', e => {
+  const mv = e.target.closest('.mv'); if (!mv || e.button) return;
+  e.preventDefault(); mv.setPointerCapture(e.pointerId);
+  const c = mv.parentElement, k = c.dataset.p, sizing = e.target.tagName === 'I', start = clone(LAY), s = start[k];
+  const [cw, rh] = gridStep(), z = zoom(), x0 = e.clientX, y0 = e.clientY, mr = MAIN.getBoundingClientRect(),
+    cs = getComputedStyle(MAIN), pl = parseFloat(cs.paddingLeft), pt = parseFloat(cs.paddingTop);
+  document.body.classList.add('rzing'); c.classList.add('lift'); GHOST.style.gridArea = area(s);
+  const move = ev => {
+    const dx = (ev.clientX - x0) / z, dy = (ev.clientY - y0) / z; let T = clone(start); const r = T[k];
+    let ok = false;
+    if (sizing) { // neighbours shrink (or slide) to make room; a smaller panel hands its space to them
+      const w = Math.max(PANELS[k][1], Math.min(COLS - r.x, Math.round(s.w + dx / cw)));
+      const h = Math.max(PANELS[k][2], Math.min(ROWS - r.y, Math.round(s.h + dy / rh)));
+      if (w !== s.w) { r.w = w; pushEdge(T, k, w - s.w, HZ); }
+      if (h !== s.h) { r.h = h; pushEdge(T, k, h - s.h, VT); }
+      ok = fits(T) && !overlaps(T);
+    } else { // room below: the others move down; no room: swap places with the panel under the pointer
+      r.x = Math.max(0, Math.min(COLS - r.w, Math.round(s.x + dx / cw)));
+      r.y = Math.max(0, Math.min(ROWS - r.h, Math.round(s.y + dy / rh)));
+      settle(T, k); ok = fits(T);
+      if (!ok) {
+        const gx = Math.floor(((ev.clientX - mr.left) / z - pl) / cw), gy = Math.floor(((ev.clientY - mr.top) / z - pt) / rh);
+        const o = Object.keys(start).find(id => id !== k && hit({ x: gx, y: gy, w: 1, h: 1 }, start[id]));
+        if (o) { const S = clone(start); S[k] = { ...start[o] }; S[o] = { ...start[k] }; if (fits(S)) { T = S; ok = true; } }
+      }
+    }
+    if (ok) { LAY = T; applyLay(); GHOST.style.gridArea = area(LAY[k]); }
+    // the lifted panel follows the pointer; the dashed ghost shows where it lands
+    if (!sizing) c.style.transform = `translate(${dx - (LAY[k].x - s.x) * cw}px,${dy - (LAY[k].y - s.y) * rh}px)`;
+  };
+  const up = () => {
+    mv.removeEventListener('pointermove', move); mv.removeEventListener('pointerup', up); mv.removeEventListener('pointercancel', up);
+    c.style.transform = ''; c.classList.remove('lift'); document.body.classList.remove('rzing');
+    const T = settle(clone(LAY), null); if (fits(T)) LAY = T;
+    applyLay(); store.set('fra-layout30', JSON.stringify(LAY)); $('rzreset').hidden = !custom();
+  };
+  mv.addEventListener('pointermove', move); mv.addEventListener('pointerup', up); mv.addEventListener('pointercancel', up);
+});
+function setEdit(on) {
+  document.body.classList.toggle('edit', on);
+  $('rzbtn').setAttribute('aria-pressed', on); $('rzbtn').querySelector('span').textContent = on ? 'Done' : 'Edit layout';
+  $('rzreset').hidden = !on || !custom();
+}
+{ // theme switch: auto -> dark -> light
+  const cur = () => document.documentElement.dataset.theme || 'auto', dark = () => cur() === 'dark' || (cur() === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const show = () => { $('open3d').href = `airport3d.html?run=${encodeURIComponent(D.run)}${cur() !== 'auto' ? `&theme=${cur()}` : matchMedia('(prefers-color-scheme: dark)').matches ? '&theme=dark' : '&theme=light'}`; };
+  $('theme').onclick = () => { const n = dark() ? 'light' : 'dark'; document.documentElement.dataset.theme = n; store.set('fra-theme', n); show(); };
+  $('rzbtn').hidden = !new URLSearchParams(location.search).has('edit'); // the layout editor stays, behind ?edit
+  setTimeout(show);
+}
+$('rzbtn').onclick = () => setEdit(!document.body.classList.contains('edit'));
+$('rzreset').onclick = () => { LAY = clone(DEF); store.set('fra-layout30', ''); applyLay(); setEdit(true); };
+addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('edit')) setEdit(false); });
+applyLay();
 addEventListener('resize', fit);
+try { document.fonts.ready.then(() => { alignProof(); renderMap(); }); } catch {} // again once the web font is in: the metrics change
 setPlaying(0);
 renderAll();
 fit();
@@ -901,48 +2379,44 @@ if (location.protocol.startsWith('http')) { pollLive(); setInterval(pollLive, 30
 
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FRA Runway Operations, issued __ISSUE__</title><link rel="icon" href="data:,">
+<title>Dashboard · FRA Runway Direction Forecast</title>__META__
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script>try{const q=new URLSearchParams(location.search).get('theme'),t=['dark','light'].includes(q)?q:localStorage.getItem('fra-theme');document.documentElement.dataset.theme=t||'light'}catch{document.documentElement.dataset.theme='light'}</script>
 <style>__BASE____CSS__</style></head><body>
 __BAR__
+<section class="lede" aria-label="Summary">
+  <div class="lede-l">
+  <div class="eyebrow" id="eyebrow">Runway direction now</div>
+  <h1 class="headline" id="answer"></h1>
+  <p class="subhead" id="subhead"></p>
+  <p class="pinl" id="pinl"></p>
+  <p class="expl">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</p>
+  <p class="disagree" id="disagree" hidden></p>
+  </div>
+  <i class="ldiv" aria-hidden="true"></i>
+  <aside class="proof" id="proof" aria-label="Accuracy in the backtest"></aside>
+</section>
 <main>
-  <div class="card sum">
-    <section aria-label="Operating direction">
-      <div class="lbl">Operating direction<span class="tag" id="odtag">Now</span><button class="back" id="back" hidden>Back to now</button></div>
-      <div class="val od"><div class="num" id="odnum"></div><div><div class="word" id="odword"></div><div class="desc" id="oddesc"></div></div></div>
-      <dl class="foot facts" id="odfacts"></dl>
-    </section>
-    <section aria-label="Next direction change">
-      <div class="lbl">Next direction change</div>
-      <div class="val" id="chgval"></div>
-      <div class="foot" id="chgfoot"></div>
-    </section>
-    <section aria-label="Runway 18 West">
-      <div class="lbl">Runway 18 West<small>departures to the south</small></div>
-      <div class="val" id="r18val"></div>
-      <div class="foot" id="r18foot"></div>
-    </section>
+  <div class="cell" data-p="rec">
+    <section class="card pc rec" aria-label="Track record" id="rec"></section>
   </div>
-
-  <div class="strip">
-    <section class="card alerts" id="alerts" aria-label="Alerts" aria-live="polite"></section>
-    <section class="card lrec" id="lrec" aria-label="Live record"></section>
-  </div>
-
-  <div class="row2">
+  <div class="cell" data-p="tl">
     <section class="card tlc" aria-label="Next 48 hours">
       <div class="hd">
-        <h2>Next 48 hours</h2>
-        <button class="icon" id="play" title="Play / pause (Space)"></button>
+        <h2 id="tlh">Forecast</h2>
+        <button class="btn" id="play" hidden></button>
         <div class="seg" id="zoom" role="group" aria-label="Zoom"><i></i><button data-v="12">12 h</button><button data-v="24">24 h</button><button data-v="48" aria-pressed="true">48 h</button></div>
       </div>
+      <div class="readout" id="hdsel" aria-live="polite"><span class="tag" id="odtag" hidden>Now</span><span class="ro" id="oduse"></span><button class="rback" id="back" style="visibility:hidden">Back to now</button></div>
       <div class="tl" id="tl">
-        <div class="hl" style="grid-row:3">Direction<small>__SW25__25__SW07__07</small></div>
-        <div class="hl" style="grid-row:4"><small>Prognosis</small></div>
-        <div class="hl" style="grid-row:5">Runway 18</div>
-        <div class="hl" style="grid-row:6">Wind<small>kt</small></div>
+        <div class="hl" style="grid-row:3">Direction<small id="dirkey">__SW07__07</small></div>
+        <div class="hl" style="grid-row:4" id="hlsw">__T_switch__<small>__T_per_hour__</small></div>
+        <div class="hl" style="grid-row:5" id="hl18">Runway 18</div>
+        <div class="hl" style="grid-row:6" title="The official rule switches direction when the tailwind stays above 1 kt for more than 30 minutes, or at once from 10 kt">Headwind (kt)</div>
         <div class="lanes" id="lanes" tabindex="0" role="slider" aria-label="Forecast hour" aria-valuemin="0" aria-valuemax="48"
-          title="Hover to preview · click or drag to hold an hour · ←/→ 1 h (Shift 6 h) · ↑/↓ previous/next event · Space play · Esc back to now">
-          <div class="bands" id="bands"></div>
+          title="Hover to preview an hour, click or drag to hold it. Left and right arrows step 1 h, or 6 h with Shift. Up and down arrows jump to the previous or next event. Esc goes back to now.">
+          <div class="bands" id="bands"></div><div class="mids" id="mids"></div>
           <div class="ruler" id="ruler"></div>
           <div class="ev" id="ev"></div>
           <div class="ln lod" id="lod"></div>
@@ -952,39 +2426,57 @@ __BAR__
           <div class="ph" id="ph" hidden><b id="phl"></b></div>
         </div>
       </div>
-      <div class="tlf">
-        <span><i class="mixed"></i>Mixed prognosis</span><span><i style="background:var(--ok)"></i>Runway 18 usable</span>
-        <span><i style="background:var(--red)"></i>Not usable</span><span><i class="nightsw"></i>Night ban 23–05</span>
+      <div class="tlf" id="tlf"></div>
+      <div class="hero tfoot" aria-label="Conditions now">
+        <dl class="strip" id="odfacts"></dl>
+        <div class="r18note" id="r18foot"></div>
+        <div hidden><div id="chgval"></div><div id="chgfoot"></div></div>
+        <div hidden><span id="odnum"></span><span id="odword"></span><div id="oddesc"></div></div>
       </div>
     </section>
-    <section class="card c3d">
-      <iframe class="f3d" id="f3d" title="3D view of Frankfurt Airport at the selected hour" allow="fullscreen" allowfullscreen loading="lazy"></iframe>
-      <button class="fs" id="fs3d" title="Full screen (Esc to leave)" aria-label="Show the 3D view full screen">__EXPAND__</button>
+  </div>
+  <div class="cell" data-p="v3d">
+    <section class="card c3d" aria-label="Landing and take-off paths">
+      <div class="mhd"><div class="lbl">Flight paths<small id="mapwhen">now</small></div><a class="m3d" id="open3d" href="airport3d.html" title="The airport in 3D at this forecast">3D view →</a></div>
+      <div class="map" id="map" role="img" aria-label="Map of the landing and take-off paths at the shown hour"></div>
+      <div class="mlg"><span><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--east)" stroke-width="2.5" stroke-dasharray="6 4" id="mlgapp"/></svg>Landings</span>
+        <span><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--ink)" stroke-width="1.75"/></svg>Take-offs</span>
+        <span id="mlggh" hidden><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--west-line)" stroke-width="2" stroke-dasharray="6 4" opacity=".85"/></svg>West approaches (if switched)</span>
+        <span class="mlgt" id="mlgtowns"></span>
+        <span class="mscl" id="mscl"></span>
+</div>
     </section>
   </div>
+  <div class="ghost" id="ghost"></div>
 </main>
-<div class="toast" id="toast" role="status"></div>
+<footer class="pfoot"><span>__FOOTER__</span>
+  <button class="btn" id="rzreset" hidden title="Back to the default layout">Reset</button>
+  <button class="btn" id="rzbtn" aria-pressed="false" title="Rearrange the panels: drag a panel to move it, or its corner to resize it. Esc when done."><span>Edit layout</span></button></footer>
+<div class="howpop" id="howpop" hidden>Our forecast blends two models trained on the directions actually flown at Frankfurt over the last 120 days; one of them runs 200 wind scenarios around the ECMWF and ICON forecasts. Calibrated out of sample and tested hour by hour on Jun to Oct 2026. INAA is the official operating-direction forecast published by the Umwelthaus. The live record since 1 Nov is only a few days long, too short to judge yet.</div>
 <script type="application/json" id="data">__DATA__</script>
-<script>const ICON = __ICONS__;
+<script>const ICON = __ICONS__, T = __COPY__, ST = __STYLE__;
 __JS__</script>
 </body></html>
 """
 
 BAR_RIGHT = ('<span class="upd" id="upd" aria-live="polite"></span>'
-             '<button class="btn" id="brief" title="Copy a plain-text shift briefing">__COPY__Copy briefing</button>'
-             '<div class="seg" id="tz" role="group" aria-label="Time zone"><i></i><button data-v="local">Local</button><button data-v="utc">UTC</button></div>')
+
+             '<button class="icon thm" id="theme" title="Light or dark" aria-label="Switch between light and dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>'
+             '<div class="seg" id="tz" role="group" aria-label="Time zone"><i></i><button data-v="local" id="tzl">Local</button><button data-v="utc">UTC</button></div>')
 
 
 def page(d):
     """The dashboard HTML for a payload() dict."""
     sw = lambda c: f'<i class="sw" style="background:var(--{c})"></i>'
-    return (PAGE.replace("__ISSUE__", pd.Timestamp(d["issue"]).strftime("%Y-%m-%d %H:%M UTC"))
-            .replace("__BASE__", siteui.BASE_CSS).replace("__CSS__", CSS)
-            .replace("__BAR__", siteui.bar("forecast", BAR_RIGHT.replace("__COPY__", ICONS["copy"])))
+    html = (PAGE.replace("__ISSUE__", pd.Timestamp(d["issue"]).strftime("%Y-%m-%d %H:%M UTC"))
+            .replace("__META__", siteui.meta("Dashboard · FRA Runway Direction Forecast")).replace("__FOOTER__", siteui.FOOTER)
+            .replace("__BASE__", siteui.BASE_CSS).replace("__CSS__", CSS + "@media (min-width:900px){" + siteui.header_css(dict(bar=".topbar", brand=".brand", nav=".topbar .nav", icon=".topbar .icon", seg="#tz", upd=".upd")) + ".topbar{margin-bottom:0}}")
+            .replace("__BAR__", siteui.bar("forecast", BAR_RIGHT)).replace("__LAYOUT__", ICONS["layout"])
             .replace("__SW25__", sw("west")).replace("__SW07__", sw("east")).replace("__EXPAND__", ICONS["expand"])
-            .replace("__ICONS__", json.dumps(ICONS))
+            .replace("__ICONS__", json.dumps(ICONS)).replace("__COPY__", json.dumps(siteui.COPY)).replace("__STYLE__", json.dumps(siteui.STYLE)).replace("__T_switch__", siteui.COPY["switch"]).replace("__T_town__", siteui.COPY["town"]).replace("__T_per_hour__", siteui.COPY["per_hour"])
             .replace("__DATA__", json.dumps(d, separators=(",", ":")).replace("</", "<\\/"))
             .replace("__JS__", JS))
+    return siteui.snap_type(html)
 
 
 def write_atomic(path, text):
@@ -1005,12 +2497,23 @@ def render_3d(path):
     files.update({p.name: p for p in sorted(ISSUED.glob("forecast_*.csv"))[-RUNS_3D:]})
     files[path.name] = path
     runs = sorted((run_hours(p) for p in files.values()), key=lambda r: r["issue"])
+    for r in runs:  # the official prognosis for the default run, so the 3D view can show where it disagrees
+        if r["source"] != path.name:
+            continue
+        pg = published_prognosis(pd.Timestamp(r["issue"]), [pd.Timestamp(h["t"]) for h in r["hours"]])
+        if pg:
+            for h, w, pr in zip(r["hours"], pg["west"], pg["prob"]):
+                if pd.notna(w):
+                    h["pg"], h["pgp"] = round(float(w), 2), round(float(pr), 2)
     fcj = dict(default=path.name, runs=runs)
     html = (scene3d.PAGE.replace("__SCENE__", cache.read_text().strip())
             .replace("__FORECAST__", json.dumps(fcj, separators=(",", ":")))
+            .replace("__COPY__", json.dumps(siteui.COPY, separators=(",", ":")))
+            .replace("__META__", siteui.meta("3D view · FRA Runway Direction Forecast"))
+            .replace("__STYLE__", json.dumps(siteui.STYLE, separators=(",", ":")))
             .replace("__BUNDLE__", scene3d.BUNDLE.read_text().replace("</script", "<\\/script")))
     out = SITE / "airport3d.html"
-    write_atomic(out, html)
+    write_atomic(out, siteui.snap_type(html))
     print(f"wrote {out} ({len(html) / 1e6:.1f} MB), default run {path.name}, {len(runs)} runs")
     return out
 
@@ -1021,8 +2524,15 @@ def render(path):
     SITE.mkdir(exist_ok=True)
     out = SITE / "index.html"
     write_atomic(out, page(d))
+    og = ROOT / "assets" / "screenshots" / "dashboard.png"
+    if og.exists():  # the share image, next to the pages so a relative og:image works wherever site/ is served
+        (SITE / "og.png").write_bytes(og.read_bytes())
     try:
-        render_3d(path)
+        out3d = render_3d(path)
+        if out3d:  # the same backtest numbers as the dashboard, for the 3D view's track-record line
+            h = Path(out3d).read_text(encoding="utf-8")
+            q = json.dumps(dict(quality=d.get("quality")), separators=(",", ":")).replace("</", "<\\/")
+            write_atomic(Path(out3d), h.replace("<script>window.FRA_SCENE=", f"<script>window.FRA_QUALITY={q}.quality;window.FRA_SINCE={json.dumps(d.get('since'))};window.FRA_PGWIN={json.dumps(dict(run=d.get('run'), win=d.get('pgwin') or []))};window.FRA_SCENE=", 1))
     except (SystemExit, Exception) as e:  # the 3D view needs the data/osm cache + web bundle
         print(f"3D view not rebuilt: {e}")
     return out, d

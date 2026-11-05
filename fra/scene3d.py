@@ -18,6 +18,8 @@ from pathlib import Path
 import pandas as pd
 import requests
 
+from fra import siteui
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OSM = DATA / "osm"
@@ -377,7 +379,9 @@ def forecast_payload(path):
             h["ws"] = round(float(wind["wind_speed"].iloc[i]), 1)
             h["wg"] = round(float(wind["wind_gusts"].iloc[i]), 1)
         hours.append(h)
-    return dict(issue=issue.isoformat(), source=path.name, wind_init=None if wind is None else
+    pc = f["p_change_48h"].iloc[0] if "p_change_48h" in f else None  # the model's chance of any switch within 48 h (real column, else omitted)
+    return dict(issue=issue.isoformat(), source=path.name, p_change=None if pc is None or pd.isna(pc) else round(float(pc), 3),
+                wind_init=None if wind is None else
                 str(pd.read_parquet(DATA / "ifs_runs.parquet", columns=["init"])["init"]
                     .pipe(lambda s: s[s <= issue - pd.Timedelta(hours=6)].max())), hours=hours)
 
@@ -387,11 +391,13 @@ def forecast_payload(path):
 PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FRA 3D - operating direction forecast</title><link rel="icon" href="data:,">
+<title>3D view · FRA Runway Direction Forecast</title>__META__
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>html,body{margin:0;height:100%;background:#03060d;overflow:hidden}</style>
 </head><body>
 <div id="app"></div>
-<script>window.FRA_SCENE=__SCENE__;window.FRA_FORECAST=__FORECAST__;</script>
+<script>window.FRA_SCENE=__SCENE__;window.FRA_FORECAST=__FORECAST__;window.FRA_COPY=__COPY__;window.FRA_STYLE=__STYLE__;</script>
 <script>__BUNDLE__</script>
 </body></html>
 """
@@ -412,10 +418,13 @@ def render(fc):
     fcj = dict(default=fc.name, runs=runs)
     page = (PAGE.replace("__SCENE__", json.dumps(scene, separators=(",", ":")))
             .replace("__FORECAST__", json.dumps(fcj, separators=(",", ":")))
+            .replace("__COPY__", json.dumps(siteui.COPY, separators=(",", ":")))
+            .replace("__META__", siteui.meta("3D view · FRA Runway Direction Forecast"))
+            .replace("__STYLE__", json.dumps(siteui.STYLE, separators=(",", ":")))
             .replace("__BUNDLE__", BUNDLE.read_text().replace("</script", "<\\/script")))
     SITE.mkdir(exist_ok=True)
     out = SITE / "airport3d.html"
-    out.write_text(page)
+    out.write_text(siteui.snap_type(page))
     print(f"wrote {out} ({len(page) / 1e6:.1f} MB), default run {fc.name}, {len(runs)} runs")
     return out
 
