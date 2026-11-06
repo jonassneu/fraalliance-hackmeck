@@ -1,5 +1,8 @@
 # Live operation: forward archive, variants, live record, alerts, weekly retrain
 
+> [!NOTE]
+> To install the forecast on another machine, use [SETUP.md](../SETUP.md): `./install.sh` installs the frozen model files of a release, and `python -m ops.serve` runs the same hourly steps (`fra.archive`, `fra.scoring`, `fra.alerts`) together with the web pages. This document describes the original deployment, which issues the official record with frozen code snapshots and several model variants side by side.
+
 Since 31 Oct 2026 the forecast runs on its own, every hour, on this machine (systemd **user** timers). Each run
 archives every input as it was available at that moment, issues the official 48 h forecast (the **champion** of the
 variant registry) and a shadow forecast for every **challenger**, scores all earlier forecasts against what was

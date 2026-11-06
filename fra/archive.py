@@ -1198,6 +1198,9 @@ def prereg_check(champ, challengers):
         if n not in reg:
             out[n] = dict(ok=None, note="not pre-registered")
             continue
+        if v is champ and not RUNTIME_MANIFEST.exists():   # an installation from a release, not the frozen runtime
+            out[n] = dict(ok=None, note="not running from a frozen runtime (installation from a release)")
+            continue
         want = (reg[n].get("runtime") or {}).get("forecast_modules_sha256") or {}
         try:
             man = json.loads(((ROOT if v is champ else runtime_dir(v.get("runtime"))) / "RUNTIME.json").read_text())

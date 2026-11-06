@@ -1,0 +1,17 @@
+{
+  "study": "blend weight per lead bucket, chosen on P1, confirmed on later periods",
+  "registered_utc": "2026-11-06T00:35Z",
+  "registered_before": "any weight other than 0.5 was scored on any period",
+  "seen_before_registration": "replication REPORT.md aggregates: P1 and P2 Brier of blend (0.5), logit and the decision rollout alone (P2: decision alone 0.0397 < blend 0.0414; P1: blend 0.0458 < decision 0.0480 < logit 0.0520); long test (integration REPORT): blend 0.0386 < decision alone 0.0407 < logit 0.0429. So no confirmation period is fully unseen for this question; the holdout is the clean test.",
+  "candidates": {
+    "W4 (primary)": "weight on the logit per lead bucket of fra.train (1-3, 4-12, 13-30, 31-48 h), each the grid value (0.00 .. 1.00, step 0.05) minimising the bucket's Brier over ALL its leads on P1 (blend = w * p_logit + (1 - w) * p_dec_365)",
+    "W1 (secondary)": "one weight for all leads, same grid, minimising Brier over all leads on P1"
+  },
+  "confirmation": {
+    "long_test": "blend-v2's own walk-forward components on 2026-06-01 .. 10-31 (experiments/integration/final_wf_long.parquet p_logit, p_dec): candidate weights vs 0.5, Brier(1,6,24,48), paired 1-day-block bootstrap, 2,000 draws, seed 20261106",
+    "P2": "the replication's components on 2025-11-01 .. 2026-05-31 (partly seen, reported second)"
+  },
+  "passes_if": "on the long test: 95 % CI of W4 - 0.5 entirely below 0 OR (negative point estimate on BOTH the long test and P2 and no lead 1/6/24/48 with an accuracy CI entirely below 0 on either)",
+  "if_passes": "propose a shadow variant (blend-v2 with these weights, its own runtime) to the owner; nothing is registered without the owner",
+  "holdout": "nothing at or after 2026-11-01 is read"
+}

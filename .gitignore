@@ -29,3 +29,6 @@ experiments/parta/log_OLD_*.txt
 site/alerts.json
 site/live_record.json
 site/.*.tmp
+
+# release bundles (ops/release_bundle.py)
+dist/

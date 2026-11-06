@@ -36,6 +36,19 @@ The dashboard answers what an operations team asks first: which way Frankfurt fl
 
 Both pages are rebuilt every hour from the newest forecast, with alerts and the live record. `node web/check.mjs` loads them at six window sizes, light and dark, and checks layout, contrast and wording. The hackathon version runs offline: open [`submission/dashboard.html`](submission/dashboard.html).
 
+## Set it up
+
+Linux or macOS with internet access, about a minute. The release ships the frozen model files, so no training and no historical data are needed.
+
+```bash
+git clone --branch v2.0 https://github.com/jonassneu/fraalliance-hackmeck.git
+cd fraalliance-hackmeck
+./install.sh                         # Python environment, model files, a test forecast
+uv run python -m ops.serve           # forecast every hour, pages on http://localhost:8080/
+```
+
+`./install.sh --service` runs it in the background on Linux. Requirements, network access, outputs and updates: [SETUP.md](SETUP.md).
+
 ## Results
 
 Walk-forward test over 152 days, 1 Jun – 30 Oct 2026, scored against the direction actually flown.
@@ -50,6 +63,7 @@ Walk-forward test over 152 days, 1 Jun – 30 Oct 2026, scored against the direc
 - Ahead of the published prognosis at every lead time, with 95 % confidence intervals that exclude zero. Brier score 0.039 vs 0.082.
 - The next direction change is right 80 % of the time (prognosis 70 %, rules 62 %).
 - Weak spot: when the direction changes within the next hour, every method is right only 54–59 % of the time.
+- **Checked on data never used for design:** 446 days, Aug 2024 – Oct 2025, scored against the 12-year radar history. The forecast was right 96.4 / 93.8 / 92.8 / 91.5 % of the time at 1 / 6 / 24 / 48 h; the published prognosis 92.7 / 92.0 / 91.3 / 89.8 %. Brier score 0.046 vs 0.086. Scores vary with the season: monthly Brier from 0.015 (December) to 0.073 (July). Details: [experiments/replication](experiments/replication/REPORT.md).
 
 Details in the [model card](MODEL_CARD.md).
 
@@ -62,6 +76,7 @@ Details in the [model card](MODEL_CARD.md).
 | Last flown hour | Used before it is fully published | Used once fully published, as in live use |
 | Training labels | Sampled hours before the test weeks | Every hour since Feb 2026; 12 years collected for research |
 | Operation | Run by hand | Every hour from a frozen code snapshot, older versions alongside, alerts, a retry at :50 |
+| Setup | Full data download and training | `./install.sh`: frozen model files from the release, a test forecast, an optional background service |
 
 ## Live record
 
@@ -91,7 +106,7 @@ All public. Weather data by Open-Meteo.com (CC BY 4.0).
 
 ## Run it
 
-Python 3.12 and [uv](https://docs.astral.sh/uv/). `uv sync && uv run pytest` runs the unit tests. The forecast needs the data downloaded first; the radar labels are the slow part, about two days for the 12-year history.
+To run the forecast, use [Set it up](#set-it-up). Rebuilding everything from the raw data needs Python 3.12 and [uv](https://docs.astral.sh/uv/). `uv sync && uv run pytest` runs the unit tests. The data must be downloaded first; the radar labels are the slow part, about two days for the 12-year history.
 
 <details>
 <summary>Full pipeline and live operation</summary>
@@ -144,9 +159,10 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 | Path | Contents |
 | --- | --- |
 | [`fra/`](fra) | The pipeline, one module per step (see below) |
-| [`ops/`](ops) | Live operation: frozen runtimes, hourly job, variants, backups ([ops/README.md](ops/README.md), [ops/RUNTIME.md](ops/RUNTIME.md)) |
+| [`install.sh`](install.sh), [`SETUP.md`](SETUP.md) | Installation from a release and the setup guide |
+| [`ops/`](ops) | Live operation: installer (`install.py`), service (`serve.py`), release bundle (`release_bundle.py`), frozen runtimes, hourly job, variants, backups ([ops/README.md](ops/README.md), [ops/RUNTIME.md](ops/RUNTIME.md)) |
 | [`tests/`](tests) | Unit tests for the official decision rules, checked against the worked examples in the case |
-| [`experiments/`](experiments) | Walk-forward research harness, the four hackathon studies, and the studies since: long test (`eval_long`), decision model (`parta`), wind futures (`partb`), retests (`phase2`), the blend and holdout plan (`integration`), 12-year history (`history12`) |
+| [`experiments/`](experiments) | Walk-forward research harness, the four hackathon studies, and the studies since: long test (`eval_long`), decision model (`parta`), wind futures (`partb`), retests (`phase2`), the blend and holdout plan (`integration`), 12-year history (`history12`), more weather models (`multimodel`), the check on data never used for design (`replication`) |
 | [`research/`](research) | Background research from the start of the day and the decision log |
 | [`submission/`](submission) | The package handed to the jury on 30 Oct 2026: 48 h forecast, dashboard, model card, evaluation tables |
 | [`site/`](site) | Generated web pages: dashboard (`index.html`), 3D view (`airport3d.html`) |
@@ -179,4 +195,4 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 - Holdout verdicts on 1 Dec 2026.
 - Live aircraft positions as a real-time input for short-notice switches.
 
-[Model card](MODEL_CARD.md) · [Decision log](research/conclusion.md) · [Experiments](experiments/) · [Live operation](ops/README.md) · [Submission](submission/)
+[Setup](SETUP.md) · [Model card](MODEL_CARD.md) · [Decision log](research/conclusion.md) · [Experiments](experiments/) · [Live operation](ops/README.md) · [Submission](submission/)

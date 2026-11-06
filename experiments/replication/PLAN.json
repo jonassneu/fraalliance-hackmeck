@@ -1,0 +1,22 @@
+{
+  "study": "replication: does blend-v2's design beat the logit alone on periods no design choice ever saw?",
+  "registered_utc": "2026-11-06T00:15Z",
+  "registered_before": "any prediction or score on these periods (the logit25 table was only checked for feature identity on the 2026 long test)",
+  "why": "the blend's gain (-0.0041 [-0.0067, -0.0018] Brier(1,6,24,48), Jun-Oct 2026) was measured on the same 152 days its design was chosen on (~38 blend variants); the locked holdout gives its first verdict only on 2026-12-01. Complete hourly radar labels (2014-2026) and ECMWF IFS single runs from 2024-03-14 now allow an out-of-period check with ~3x the test days, which also gives later studies more power.",
+  "periods": {
+    "P1_primary": "issues 2024-08-12 .. 2025-10-31, valid < 2025-11-01: before every selection period (Part B robustness Nov 2025-Apr 2026, long test Jun-Oct 2026, hackathon Sep-Oct 2026); starts after the IFS archive has all four daily cycles (2024-08-09 18 UTC)",
+    "P2_secondary": "issues 2025-11-01 .. 2026-05-31, valid < 2026-06-01 (Part B parameters were checked on Nov 2025-Apr 2026, so not selection-free for the decision half)"
+  },
+  "data": "experiments/logit25/inputs/table.parquet (fra.dataset.build on merged IFS backfill+archive, prognosis history+archive, fra.labels.history_labels(gap_rule='confirmed'); identical to data/wf_cache.parquet on the 2026 long test). Before ICON existed (2026-04/05) the consensus features equal ECMWF and Part B uses its IFS-only fallback (DEFAULT_IFS), as it would have live.",
+  "arms": {
+    "logit": "production spec (fra.train.fit od25: C 0.03, 4 lead buckets, last 120 days, per-bucket temperature, clean-label mask = the history labels), weekly walk-forward (fra.evalkit folds from the period start, training rows valid + 2 h <= week start)",
+    "dec_365": "PRIMARY decision arm: fra.decision.DEFAULT trained each week on history-label transitions from the last 365 days known at the week start (h + FUT <= week start); the closest analogue of the champion's 'recent' set (12-17 months of labels at long-test time); rolled out as fra.blend (lag 2: od_now = label of t-2, Part B fra.fcerror.DEFAULT with its IFS fallback, 200 paths, seed 0, ensemble-mean look-ahead)",
+    "dec_all": "secondary: same, trained on all history transitions since 2014 (the blend-hist12 design)",
+    "blend": "0.5 * logit + 0.5 * dec_365 (primary); 0.5 * logit + 0.5 * dec_all (secondary)",
+    "baselines": "published INAA prognosis (base_prognosis_od25) and the official rule (rule_od25) on the same rows"
+  },
+  "primary": "Brier(1,6,24,48) of blend (dec_365) minus logit on P1, paired 1-day-block bootstrap, 2,000 draws, seed 20261106; rows where every arm has a finite prediction",
+  "replicates_if": "95 % CI entirely below 0 on P1 AND negative point estimate in both halves of P1 (issue before / from 2025-04-01) AND no lead 1/6/24/48 with a paired accuracy CI entirely below 0",
+  "consequence": "information for the holdout verdict and for the choice of test period in later studies; nothing live changes",
+  "holdout": "nothing at or after 2026-06-01 is scored here; nothing at or after 2026-11-01 is read"
+}

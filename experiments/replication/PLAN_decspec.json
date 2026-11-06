@@ -1,0 +1,17 @@
+{
+  "study": "decision-model specification on 12 years of labels (successor candidates of blend-hist12)",
+  "registered_utc": "2026-11-06T00:45Z",
+  "registered_before": "any of these candidates was rolled out on any period",
+  "baseline": "D0 = fra.decision.DEFAULT trained on all history transitions since 2014 known at the week start (= replication dec_all = the blend-hist12 design)",
+  "candidates": {
+    "D1_dur": "DEFAULT features + log_dur (hours in the current OD, capped at 48); rollout state (OD, duration) started from the true duration at t-2 (fra.decision.hours_in_od on the history labels)",
+    "D2_hinge": "DEFAULT features + HINGE (positive parts of the current / 3 h tailwind on the active runway)",
+    "D3_C1": "DEFAULT with C = 1.0 instead of 0.1 (12 years of rows support less shrinkage)",
+    "D4_lgbm": "LightGBM, monotone (fra.decision DECREASING), LGB_SMALL params, features BASE without the morn_ interactions + F6"
+  },
+  "common": "weekly walk-forward from 2024-08-12 (fra.evalkit), training rows h + FUT <= week start, Part B DEFAULT (IFS fallback before ICON), 200 paths seed 0 per issue, shared by all candidates, lag 2 (od_now = label of t-2), ensemble-mean look-ahead, blend = 0.5 * logit + 0.5 * candidate",
+  "selection": "on P1 (issues 2024-08-12 .. 2025-10-31): candidate blend minus D0 blend, Brier(1,6,24,48), paired 1-day-block bootstrap (2,000, seed 20261106). Selected = lowest P1 Brier among candidates whose CI vs D0 lies entirely below 0; none -> stop",
+  "confirmation": "selected candidate vs D0 on P2 (2025-11-01 .. 2026-05-31; replication logit) AND on the long test (2026-06-01 .. 10-31; logit = blend-v2's own walk-forward p_logit): negative point estimate on both and no lead 1/6/24/48 with an accuracy CI entirely below 0 on either",
+  "if_confirmed": "propose a shadow variant to the owner (nothing registered without the owner)",
+  "holdout": "nothing at or after 2026-11-01 is read"
+}

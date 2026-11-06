@@ -39,6 +39,9 @@ Each folder has a README with the details, its scripts, and a `results/` folder 
 | [`phase2/`](phase2) | Do the hackathon's choices still hold on the better data? | 21 pre-registered variants; only "train on directly observed labels" passed (tiny gain). |
 | [`integration/`](integration) | Does a blend of the logistic model and the decision model help? | 50/50 blend, Brier 0.039 vs 0.043. **Adopted** as the official forecast; pre-registered holdout plan. |
 | [`history12/`](history12) | Do 12 years of radar history help? | Labels match the published shares; the pre-registered 12-year model was not a clear win. Runway 18 closure model on 850 closures. |
+| [`logit25/`](logit25) | Does the logistic model gain from 2.5 years of training data? | No; the 120-day window stays. |
+| [`multimodel/`](multimodel) | Does a wind centre from nine weather models help? | The wind forecast gets 6 % better, the direction forecast does not (Brier −0.0001, not significant). Not adopted. |
+| [`replication/`](replication) | Does the blend's gain hold on data never used for design? | Yes: 446 days, Aug 2024 – Oct 2025, Brier 0.046 vs 0.052 for the logistic model alone. Per-lead weights and four decision-model variants did not help. |
 
 Each folder has a `REPORT.md` with method, numbers and the exact commands.
 

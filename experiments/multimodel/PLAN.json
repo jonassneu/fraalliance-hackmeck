@@ -1,0 +1,71 @@
+{
+  "study": "multimodel: a multi-model wind centre for the logit consensus features and the Part B paths",
+  "registered_utc": "2026-11-05T20:56Z",
+  "registered_before": "any centre or end-to-end score of the new models had been computed (only the archive depth and the Open-Meteo latency metadata were looked at)",
+  "motivation": "experiments/partb/REPORT.md: adding ICON-D2 to the ECMWF centre moved the Part A end-to-end OD Brier 0.0450 -> 0.0408 (DEFAULT_IFS vs DEFAULT); spread / bias re-tuning of the paths (DEFAULT_NATIVE, gust_metar, recalibration) never moved it. No as-issued ensemble history exists (Open-Meteo single-runs and previous-runs serve no ecmwf_ifs025_ensemble / icon_*_eps runs, probed 2026-11-05).",
+  "models": {
+    "existing": [
+      "ecmwf_ifs (IFS, 6 h buffer)",
+      "icon_d2 filled by icon_eu (as in production)"
+    ],
+    "added": {
+      "aifs": "ecmwf_aifs025_single, cycles 00/06/12/18, buffer 7 h",
+      "ukmo": "ukmo_global_deterministic_10km, 00/06/12/18, buffer 10 h",
+      "knmi": "knmi_harmonie_arome_europe, every 3 h, buffer 4 h",
+      "dmi": "dmi_harmonie_arome_europe, every 3 h, buffer 4 h",
+      "arome": "meteofrance_arome_france_hd, every 3 h, buffer 5 h",
+      "arpege": "meteofrance_arpege_europe, 00/06/12/18, buffer 5 h",
+      "gfs": "gfs_global, 00/06/12/18, buffer 10 h"
+    },
+    "selection": "none: every added model is used; buffers = measured Open-Meteo availability lag + >= 1 h"
+  },
+  "primary_consensus": "C = 0.5 * IFS + 0.5 * mean(all non-IFS models available at that lead), in (u, v); each model as of its own buffer (latest init <= issue - buffer), a model missing at a lead drops out of the non-IFS mean; IFS only where no other model has the lead. This keeps the production structure (0.5 IFS + 0.5 ICON) and replaces 'ICON' by the mean of all other models.",
+  "secondary_diagnostics": [
+    "equal weight over all models",
+    "inverse-MSE weights refit weekly walk-forward",
+    "leave-one-model-out"
+  ],
+  "uses": {
+    "logit": "tw25_cons and tw25_cons_roll6 of the harness table recomputed from C (same definitions, same columns); production spec unchanged, weekly walk-forward refit (experiments.harness.production_preds)",
+    "partb": "fra.fcerror library and sampler with the 'icon' slot = the as-of non-IFS mean (so 'cons' = C and the spread term = |IFS - non-IFS mean|), DEFAULT params unchanged, 200 paths, seed 0",
+    "decision_model": "fra.blend.decision_walk_forward unchanged (recent labels, lag 2) on those paths"
+  },
+  "gate": "centre MAE of tw25 (as of, hourly issues) on the dev period valid 2026-04-02 .. 05-31 must be lower than the production consensus at leads 13-48; otherwise stop before the end-to-end run",
+  "primary_comparison": "Brier(1,6,24,48) of blend_mm (0.5 * logit_mm + 0.5 * dec_mm) minus the champion reproduction (0.5 * logit + 0.5 * dec on the unchanged layer), long test issues 2026-06-01 .. holdout, valid < 2026-11-01, paired 1-day-block bootstrap 2,000 draws seed 20261105",
+  "clearly_wins": "95 % CI entirely below 0 on the long test AND negative point estimate on the pre-15-Sep part (valid < fra.evalkit.SELECTION_START) AND no lead (1/6/24/48) whose accuracy difference has a CI entirely below 0",
+  "if_clearly_wins": "propose (not switch) a new pre-registered shadow variant; the champion and the locked holdout from 2026-11-01 stay untouched",
+  "holdout": "no run, observation or label with time >= 2026-11-01 is fetched or scored here; fetch.py caps inits at 2026-10-31 18 UTC",
+  "clarifications": [
+    {
+      "time_utc": "2026-11-05T21:17Z",
+      "before_results": true,
+      "text": "'same definitions' includes the one feature derived from tw25_cons: xwf_east_tanh (fra.dataset.add_weather_extras, tw = tw25_cons.fillna(tw25)) is recomputed with the new consensus in run_e2e.mm_table, exactly as the live path (fra.multimodel) computes it. Found while writing the live module; no gate or end-to-end result existed yet."
+    }
+  ],
+  "outcome": {
+    "time_utc": "2026-11-05T23:55Z",
+    "gate": {
+      "pass": true,
+      "C_minus_prod_mae_dev_13_48": [
+        -0.1783324518902464,
+        -0.23910873642737687,
+        -0.1217441325127869
+      ]
+    },
+    "primary": {
+      "brier_diff": -0.00011811857153594971,
+      "ci": [
+        -0.0012538913723108367,
+        0.0010995016064587208
+      ],
+      "p": 0.836,
+      "pre15sep": [
+        -0.0006051268264641651,
+        -0.0019884695773323517,
+        0.0007998076088881799
+      ]
+    },
+    "clearly_wins": false,
+    "consequence": "no shadow variant; champion, registry, runtimes and the holdout untouched. The candidate live entry is kept as experiments/multimodel/live_entry.py (not in fra/, never run live)."
+  }
+}

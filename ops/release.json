@@ -1,0 +1,9 @@
+{
+ "doc": "The release this checkout installs (ops/install.py). bundle = the model files of the release (ops/release_bundle.py), pinned by sha256.",
+ "version": "v2.0",
+ "bundle": {
+  "name": "fra-forecast-models-v2.0.tar.gz",
+  "url": "https://github.com/jonassneu/fraalliance-hackmeck/releases/download/v2.0/fra-forecast-models-v2.0.tar.gz",
+  "sha256": "30896f67f3edd3ba33978c557b9744e6802401c73b5718bc883b59bb6f8bd54b"
+ }
+}
