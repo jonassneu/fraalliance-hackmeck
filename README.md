@@ -25,14 +25,16 @@ For each of the next 48 hours the forecast gives the chance of each direction, t
 ## The product
 
 <p align="center">
-  <img src="assets/screenshots/live-3d.png" alt="3D view of Frankfurt Airport: the runways in use, landing paths over the numbered towns, the forecast panel and the 48-hour timeline" width="100%">
+  <img src="assets/screenshots/live-3d.png" alt="3D view of Frankfurt Airport: the runways in use, landing paths over the numbered towns, a panel with the switch, wind and Runway 18 status, and the 48-hour timeline" width="100%">
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/dashboard.png" alt="Forecast dashboard: the direction flown now and the outlook, accuracy against the official forecast, the next 48 hours with the chance of a switch, and the flight paths" width="100%">
+  <img src="assets/screenshots/dashboard.png" alt="Forecast dashboard: the direction flown now, the expected switch with its certainty, Runway 18 status, the next 48 hours with the chance of a switch, Runway 18 and headwind, and the flight paths" width="100%">
 </p>
 
-The 3D view and the dashboard are rebuilt every hour from the newest forecast, with alerts and the live record. The hackathon version runs offline: open [`submission/dashboard.html`](submission/dashboard.html).
+The dashboard answers what an operations team asks first: which way Frankfurt flies now, when it is expected to switch and how sure that is, and whether Runway 18 is open, with how many departures move if it closes. The 48-hour chart shows the direction, the hourly chance of West, Runway 18 and the headwind against the limit; accuracy against the official forecast sits one click away. The 3D view shows the same forecast on the airport.
+
+Both pages are rebuilt every hour from the newest forecast, with alerts and the live record. `node web/check.mjs` loads them at six window sizes, light and dark, and checks layout, contrast and wording. The hackathon version runs offline: open [`submission/dashboard.html`](submission/dashboard.html).
 
 ## Results
 
@@ -119,6 +121,7 @@ uv run python -m fra.changetime                # next-change evaluation -> data/
 uv run python -m fra.blend [ISSUE_UTC]         # official 48 h forecast (blend), printed, nothing written
 uv run python -m fra.predict [ISSUE_UTC]       # logistic model alone: 48 h forecast CSV + PNG
 uv run python -m fra.dashboard                 # site/index.html, site/airport3d.html
+node web/check.mjs                             # layout and contrast checks for both pages (after npm install in web/)
 uv run python -m fra.live &                    # optional: live aircraft + hourly forecast for the 3D view -> site/live.json
 uv run python -m http.server 8000 --directory site    # open http://localhost:8000/
 uv run python -m fra.submit [ISSUE_UTC]        # submission/: forecast, dashboard, model card, evaluation tables

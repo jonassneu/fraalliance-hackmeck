@@ -7,21 +7,21 @@ links and focus. Both pages are laid out on a 1280 px canvas and zoomed to fit t
 
 BASE_CSS = """
 /* graphite neutrals; colour belongs to the data (07 East navy, 25 West teal, the official forecast orange, the tailwind limit red) and to the runway plates */
-:root{--east-line:#2c3e66;--west-line:#1f9e89;--bg:#f1f1ef;--card:#fff;--ink:#1b1c1e;--ink2:#55575d;--ink3:#66686d;--line:rgba(27,28,30,.09);--fill:#ebebe8;
+:root{--east-line:#2c3e66;--west-line:#1f9e89;--bg:#f1f1ef;--card:#fff;--ink:#1b1c1e;--ink2:#55575d;--ink3:#5e6065;--line:rgba(27,28,30,.09);--fill:#ebebe8;
   --asphalt:#2b2c2f;--paint:#f6f6f1;--accent:#1b1c1e;
-  --west:#1f9e89;--risk:#4b4d53;--east:#2c3e66;--amber:#e08a00;--red:#d8392e;--green:#2e9d54;--ok:#cde7d4;--good:#248a3d;--b1:#a1a1a6;--b2:#d2d2d7;
+  --west:#1f9e89;--risk:#4b4d53;--east:#2c3e66;--amber:#e08a00;--red:#d8392e;--green:#2e9d54;--live:#5c9a0f;--ok:#cde7d4;--good:#248a3d;--b1:#a1a1a6;--b2:#d2d2d7;
   --shadow:0 8px 24px rgba(20,20,22,.1),0 0 0 1px rgba(20,20,22,.06);--ease:cubic-bezier(.2,.8,.2,1);
-  --ink-rgb:27 28 30;--on-ink:#fff;--on-dir:#fff;--hatch:rgba(255,255,255,.4);--alert-bg:#fdf4f3;--inaa-ink:#9a5a00;
+  --ink-rgb:27 28 30;--on-ink:#fff;--on-dir:#fff;--hatch:rgba(255,255,255,.4);--alert-bg:#fdf4f3;--inaa-ink:#8a5000;
   --area-fill:rgba(27,28,30,.07);--area-line:rgba(27,28,30,.18);--hover:#f7f7f5;--rwy:#2b2c2f;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:var(--sans)} /* one typeface: figures use tabular numbers, not a mono face */
 /* dark: the system setting, or data-theme on <html> (the same palette logic as the 3D view's dark mode) */
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111214;--card:#1b1c1f;--ink:#ececea;--ink2:#a7a9ae;--ink3:#8e9095;--line:rgba(255,255,255,.1);--fill:#2a2b2f;
   --asphalt:#3a3b40;--accent:#ececea;--west:#4dbfa7;--east:#2f4a7a;--east-line:#a3adc2;--west-line:#5fcab5;--risk:#9aa0a8;--amber:#f0a030;--red:#ef5b4f;--green:#3fb96a;--b1:#6f7177;--b2:#4a4c51;
-  --shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.07);--ink-rgb:236 236 234;--on-ink:#111214;--on-dir:#fff;--hatch:rgba(0,0,0,.5);
+  --shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.07);--ink-rgb:236 236 234;--on-ink:#111214;--on-dir:#fff;--hatch:rgba(255,255,255,.5);--live:#8cc63f;
   --alert-bg:#3a1d1b;--inaa-ink:#f0a24a;--area-fill:rgba(255,255,255,.07);--area-line:rgba(255,255,255,.22);--hover:#26272b;--rwy:#d8d7d2;color-scheme:dark}}
 :root[data-theme=dark]{--bg:#111214;--card:#1b1c1f;--ink:#ececea;--ink2:#a7a9ae;--ink3:#8e9095;--line:rgba(255,255,255,.1);--fill:#2a2b2f;
   --asphalt:#3a3b40;--accent:#ececea;--west:#4dbfa7;--east:#2f4a7a;--east-line:#a3adc2;--west-line:#5fcab5;--risk:#9aa0a8;--amber:#f0a030;--red:#ef5b4f;--green:#3fb96a;--b1:#6f7177;--b2:#4a4c51;
-  --shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.07);--ink-rgb:236 236 234;--on-ink:#111214;--on-dir:#fff;--hatch:rgba(0,0,0,.5);
+  --shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.07);--ink-rgb:236 236 234;--on-ink:#111214;--on-dir:#fff;--hatch:rgba(255,255,255,.5);--live:#8cc63f;
   --alert-bg:#3a1d1b;--inaa-ink:#f0a24a;--area-fill:rgba(255,255,255,.07);--area-line:rgba(255,255,255,.22);--hover:#26272b;--rwy:#d8d7d2;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -80,7 +80,7 @@ LOGO = ('<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 14.5h17v5h-17
 PAGES = [("forecast", "index.html", "Dashboard"), ("3d", "airport3d.html", "3D view")]
 
 # one hatch for the night ban on both pages: the dashboard as --hatch-bg, the 3D view as window.FRA_STYLE
-HATCH = dict(css="repeating-linear-gradient(135deg,{c} 0 1.5px,transparent 1.5px 4.5px)", light="rgba(255,255,255,.4)", dark="rgba(0,0,0,.5)")
+HATCH = dict(css="repeating-linear-gradient(135deg,{c} 0 1.5px,transparent 1.5px 4.5px)", light="rgba(255,255,255,.4)", dark="rgba(255,255,255,.5)")  # dark: light stripes, ~3:1 on the navy bar
 # the switch-chance row on both pages: 0 to 100 % once a real switch (>= 20 %) is in view; otherwise 0 to 20 % in a
 # 84 px row with one gridline at 10 % (labelled in the gutter), the same on every calm day; 110 px for a real switch
 SWITCH = dict(nice_step=0.1, nice_min=0.2, min_bar=0.01, real=0.2, real_h=110, calm_top=0.2, low_top=0.2, calm_h=48, calm_h_3d=56, grid=0.1)  # 0 to 100 % for a real switch (>= 20 %); 0 to 20 % below that, 0 to 12 % while the peak stays under 10 %; one 10 % gridline
@@ -133,6 +133,33 @@ COPY = dict(
     faded="Faded: < 90" + NNB + "% sure",
     wind="Wind",
     r18="Runway 18 West",
+    # one legend item for Runway 18 on both pages: solid = closed, hatched = at risk (the split is in the tooltip)
+    r18_closed="Runway 18 closed",
+    r18_risk="Runway 18 at risk",
+    r18_both="Runway 18 closed / at risk",
+    r18_tip="Solid: closure chance over 50" + NNB + "% that hour. Hatched: 10 to 50" + NNB + "%.",
+    # the Runway 18 status at the current hour, one wording on both pages: the next closure in the 48 h window, scheduled
+    # (the headline names the absolute day, like the switch line; the quiet line the relative day) or in effect; else open.
+    # {date} = "Fri 6 Nov", {a}, {b} = HH:MM; {b} carries its weekday when the closure ends on another day. {rel} = Today /
+    # Tomorrow / In N days; the "at risk" range (the legend's term) adds the at-risk hours drawn next to the closure in the
+    # lane (left out when there are none); "open until then" names the runway's state before it
+    r18_closes="Closes {date}, {a}–{b}",
+    r18_rel=["Today", "Tomorrow", "In {n} days"],
+    r18_may="at risk {a}–{b}",
+    r18_date="open until then",
+    r18_until="Closed now until {b}",
+    r18_open="Open for the next {n}" + NNB + "h",
+    # no closure in the window: the quiet line names the highest closure chance of any open daytime hour, the last line
+    # how many departures an hour it carries at the busiest (the figure a closure would move); both from the forecast
+    r18_open_max="Closure chance at most {p} an hour",
+    r18_carries="Carries up to ≈{n} departures an hour",
+    r18_moves="≈{n} departures an hour move to the Centre runway",
+    r18_moves0="Inside the night ban, so no departures move",
+    # the switch's certainty, tied to the switch: the highest hourly chance of the other direction and when it is reached
+    # (hero: "81 % chance of West at Sat 17:00"; 3D card row "Chance of West": "81 % at Sat 17:00"; both charts:
+    # "Highest: 81 % at Sat 17:00", one preposition everywhere)
+    peak_hi="{p} chance of {to} at {t}",
+    peak_by="{p} at {t}",
 )
 
 
@@ -178,9 +205,10 @@ def meta(title):
 
 
 # one header for both pages: the dashboard's .topbar and the 3D view's .pbar are drawn from these numbers (CSS px before the
-# page zoom; both pages scale the header by the same factor, so brand and tabs sit at identical pixels)
+# page zoom; both pages scale the header by the same factor, so brand and tabs sit at identical pixels). The brand's line
+# height is fixed too: left to each page's body line height it set the brand's baseline a pixel apart on the two pages.
 HEADER = dict(h=56, pad=24, gap=24, brand=16, brand_sub=14, logo=24, logo_gap=10, nav_fs=14, nav_pad_y=4, nav_pad_x=12, nav_gap=4,
-              nav_ml=-8, right_gap=12, icon=32, seg_h=28, seg_fs=13, seg_pad=12, upd_fs=14)
+              nav_ml=-8, right_gap=12, brand_lh=24, icon=32, seg_h=28, seg_fs=13, seg_pad=12, upd_fs=14)
 
 
 def header_css(sel):
@@ -189,15 +217,21 @@ def header_css(sel):
     return (f"{sel['bar']}{{height:{H['h']}px;padding:0 {H['pad']}px;gap:{H['gap']}px;display:flex;align-items:center;box-sizing:border-box}}"
             f"{sel['brand']}{{display:flex;align-items:center;gap:{H['logo_gap']}px;font-size:{H['brand']}px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}}"
             f"{sel['brand']} svg{{width:{H['logo']}px;height:{H['logo']}px;flex:none}}"
-            f"{sel['brand']} span{{font-size:{H['brand_sub']}px;font-weight:400;letter-spacing:0}}"
+            f"{sel['brand']} span{{font-size:{H['brand_sub']}px;font-weight:400;letter-spacing:0;line-height:{H['brand_lh']}px}}"
+            f"{sel['brand']}{{line-height:{H['brand_lh']}px}}"
             f"{sel['nav']}{{display:flex;gap:{H['nav_gap']}px;margin-left:{H['nav_ml']}px}}"
             f"{sel['nav']} a{{font-size:{H['nav_fs']}px;font-weight:500;line-height:1.6;padding:{H['nav_pad_y']}px {H['nav_pad_x']}px;border-radius:8px}}"
+            # the page tabs as a segmented control, the time-zone switch's: a grey track, the current page a raised card-colour pill
+            f"{sel['nav']}{{gap:0;padding:2px;border-radius:8px;background:var(--fill);align-items:center}}"
+            f"{sel['nav']} a{{height:{H['seg_h']}px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 {H['nav_pad_x']}px;border-radius:6px;line-height:1}}"
+            f"{sel['nav']} a[aria-current]{{background:{sel['pill_bg']};box-shadow:{sel['pill_sh']};color:{sel['pill_ink']}}}"
             f"{sel['icon']}{{width:{H['icon']}px;height:{H['icon']}px}}"
             f"{sel['seg']} button{{height:{H['seg_h']}px;padding:0 {H['seg_pad']}px;font-size:{H['seg_fs']}px}}"
-            f"{sel['upd']}{{font-size:{H['upd_fs']}px}}")
+            f"{sel['upd']}{{font-size:{H['upd_fs']}px;line-height:20px}}")
 
 
-STYLE["header_css"] = header_css(dict(bar=".pbar", brand=".pbrand", nav=".ptabs", icon=".pthm", seg=".ptz", upd=".prun"))
+STYLE["header_css"] = header_css(dict(bar=".pbar", brand=".pbrand", nav=".ptabs", icon=".pthm", seg=".ptz", upd=".prun",
+                                      pill_bg="var(--mat)", pill_sh="0 1px 2px rgba(0,0,0,.12)", pill_ink="var(--label)"))
 
 
 # the official window's tag, one wording on both pages: "Official: Fri 19h → Sat 11h" ({a}/{b} = weekday + hour), the bare
@@ -209,14 +243,26 @@ STYLE["pgtag"] = dict(long="Official: {da} {ha}h → {db} {hb}h", mid="Official 
 # a switch in the forecast's last hours is drawn at least this wide (px), running past the plot's right edge
 STYLE["switch_tab_min"] = 24
 # the official-window tag: one background on both pages (white text on light, ink on dark: >= 4.5:1, check.mjs)
-STYLE["tag_bg"] = dict(light="#9a5a00", dark="#f0a030", ink_light="#ffffff", ink_dark="#1b1c1f")
-STYLE["legend_order"] = ["east", "west", "faded", "official", "night", "limit", "r18closed", "r18risk"]
+STYLE["tag_bg"] = dict(light="#8a5000", dark="#f0a030", ink_light="#ffffff", ink_dark="#1b1c1f")
+STYLE["legend_order"] = ["east", "west", "faded", "official", "night", "limit", "r18"]
 
 
 # one footer text for both pages
-FOOTER = ("Official forecast = INAA (Umwelthaus). Backtest: walk-forward, each week is forecast by a model trained only on earlier data. "
-          "Wind: ECMWF IFS, DWD ICON. Map data © OpenStreetMap contributors.")
+# (both pages set it as two short lines on desktop: sources, then the backtest)
+FOOTER_LINES = ("Official forecast = INAA (Umwelthaus). Wind: ECMWF IFS, DWD ICON. Map data © OpenStreetMap contributors.",
+                "Backtest: walk-forward \u2014 each week's model trained only on earlier data.")
+
+
+def footer_lines(months=None):
+    """The two footer lines; the backtest line names its length when known (the only backtest note on the page)."""
+    if not months:
+        return FOOTER_LINES
+    return (FOOTER_LINES[0], FOOTER_LINES[1].replace("Backtest: ", f"Backtest: {months}\u00a0months, ", 1))
+
+
+FOOTER = " ".join(FOOTER_LINES)  # one line, where a page has no room for two
 STYLE["footer"] = FOOTER
+STYLE["footer_lines"] = list(FOOTER_LINES)
 
 
 # one type scale for both pages and the shared header: every font size in the built HTML snaps to a token

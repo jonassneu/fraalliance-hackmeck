@@ -431,7 +431,7 @@ abbr[title]{text-decoration:underline dotted var(--b1);text-underline-offset:3px
 .r18line b{color:var(--ink);font-weight:600}
 .method{margin-top:auto;padding-top:10px;font-size:13px;color:var(--ink2)}
 .method b{font-weight:600;color:var(--ink)}
-.method .mt{width:100%;font-size:11px;color:var(--ink3)}
+.method .mt{width:100%;font-size:12px;color:var(--ink3)}
 .pill{padding:1px 8px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:500;color:var(--ink2);white-space:nowrap}
 .pill:empty{display:none}
 .tag{font-size:13px;font-weight:500;line-height:20px;padding:0 8px;border-radius:6px;background:var(--fill);color:var(--ink)}
@@ -599,7 +599,8 @@ body.edit iframe{pointer-events:none}
 .lod .e.lo{background:color-mix(in srgb,var(--east) 38%,var(--card))!important}
 .lod .w.lo{background:color-mix(in srgb,var(--west) 38%,var(--card))!important} /* faded keeps its direction: a 38 % tint */
 .lod .u,.mixed{background:repeating-linear-gradient(135deg,var(--west) 0 3px,var(--east) 3px 6px)}
-.l18 .n{opacity:.4}
+.l18 .n{opacity:.7} /* night: dimmed, but a closure still reads */
+:root[data-theme=dark] .l18>div:not(.x):not(.r){background:#4a4b50} /* dark: open hours >= 1.5:1 on the card */
 .lpg>div{background:transparent;display:flex;align-items:flex-end;border-radius:2px}
 .lpg .w{background:var(--west)}
 .lpg .e{background:var(--east)}
@@ -611,9 +612,9 @@ body.edit iframe{pointer-events:none}
 .lwd .ln-w{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .lwd .grid{stroke:var(--line);stroke-width:1}
 .lwd .flagband{fill:rgba(224,138,0,.08)}
-.lwd .flagt{font-size:11px;font-weight:500;fill:var(--inaa-ink)}
+.lwd .flagt{font-size:12px;font-weight:500;fill:var(--inaa-ink)}
 .lwd .dip{fill:var(--amber);stroke:var(--card);stroke-width:1.5}
-.lwd .dipt{font-size:11px;font-weight:500;fill:#a35f00}
+.lwd .dipt{font-size:12px;font-weight:500;fill:#a35f00}
 .lwd .tip-w{fill:none;stroke:var(--ink2);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .ruler{position:relative;border-bottom:1px solid var(--line)}
 .ruler .d.end{font-weight:400;color:var(--ink2)}
@@ -625,8 +626,9 @@ body.edit iframe{pointer-events:none}
 .mk{position:absolute;top:0;height:20px;padding:0 6px;border-radius:4px;transform:translateX(-50%);font:500 13px/20px var(--mono);white-space:nowrap;background:var(--asphalt);color:var(--paint);box-shadow:inset 0 -2px 0 var(--dc,transparent);transition:transform .12s var(--ease)}
 .mk.r18{--dc:var(--red)}
 
-#lod .swchip,.lanes > .swchip{position:absolute;top:-14px;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 11px/14px var(--sans);color:#fff;background:var(--dc);z-index:8;white-space:nowrap;cursor:pointer}
-:root[data-theme=dark] #lod .swchip,:root[data-theme=dark] .lanes > .swchip{color:#0f1a17}
+#lod .swchip,.lanes > .swchip{position:absolute;top:-14px;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 12px/14px var(--sans);color:#fff;background:var(--dc);z-index:8;white-space:nowrap;cursor:pointer}
+#lod .swchip.w,.lanes > .swchip.w{color:#0f1a17} /* dark ink on teal, white on navy: >= 4.5:1 in both themes */
+#lod .swchip.e,.lanes > .swchip.e{color:#fff}
 @media (max-width:479px){.tl{position:relative} .tl > #tlf.inbar{position:absolute;left:0;right:0;margin:0;z-index:7;row-gap:2px;font-size:13px;background:var(--card);padding:2px 0} #lod{align-self:start;height:var(--dirh,44px)}} /* the bar keeps its height; the legend sits on top of the cursor line */
 #lod .swtab{position:absolute;top:0;bottom:0;border-radius:0 6px 6px 0;z-index:2;pointer-events:auto}
 .now{position:absolute;top:0;left:0;height:20px;padding:0 6px;border-radius:4px;font:500 13px/20px var(--sans);background:var(--fill);color:var(--ink)}
@@ -634,13 +636,15 @@ body.edit iframe{pointer-events:none}
 .nightsw{background:rgb(var(--ink-rgb) / .07)}
 .night{background:rgb(var(--ink-rgb) / .025);position:absolute;top:0;bottom:0}
 .dlab{position:absolute;top:50%;transform:translateY(-50%);z-index:2;font:600 13px/1 var(--sans);color:var(--on-dir);white-space:nowrap;pointer-events:none}
-.rl{position:absolute;left:6px;top:2px;z-index:3;font:600 11px/14px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);pointer-events:none;white-space:nowrap}
+.rl{position:absolute;left:6px;top:2px;z-index:3;font:600 12px/14px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);pointer-events:none;white-space:nowrap}
 .lod .rl{top:50%;transform:translateY(-50%);color:var(--on-dir);left:8px}
 .lpg .rl,.lwd .rl{background:color-mix(in srgb,var(--card) 80%,transparent);padding:0 3px;left:3px}
 .pgt{position:absolute;top:-8px;bottom:0;background:rgba(224,138,0,.06)}
 .icon.thm{background:transparent;color:var(--ink2)}
 .icon.thm svg{width:16px;height:16px}
 .icon.thm:hover{background:var(--fill)}
+.icon.thm{box-shadow:inset 0 0 0 1px var(--line)} /* outlined like the other header controls, so it reads as a button */
+.icon.thm:focus-visible{border-radius:8px}
 .tlf .cap{margin-left:auto;color:var(--ink2)}
 .upd{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);white-space:nowrap}
 .upd.stale i{background:var(--east)}
@@ -795,7 +799,7 @@ body.edit iframe{pointer-events:none}
 @media (prefers-color-scheme:dark){
   :root:not([data-theme=light]) .dlab.w,:root:not([data-theme=light]) .headline .dbadge[style*="west"]{color:#10131c}
 }
-#lod .pgin{position:absolute;top:-8px;z-index:3;height:16px;padding:0 5px;border-radius:3px;background:var(--amber);color:#fff;font:600 11px/16px var(--sans);letter-spacing:.02em}
+#lod .pgin{position:absolute;top:-8px;z-index:3;height:16px;padding:0 5px;border-radius:3px;background:var(--amber);color:#fff;font:600 12px/16px var(--sans);letter-spacing:.02em}
 :root[data-theme=dark] #lod .pgin{color:#1b1c1f}
 .dbh b{font-size:15px;font-weight:600;color:var(--ink)}
 .rec .kpil{margin-top:2px;font-size:13px;color:var(--ink2)}
@@ -859,7 +863,7 @@ body.edit iframe{pointer-events:none}
 .disagree .ofn{font-weight:400;color:var(--inaa-ink);text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;cursor:help}
 .hl{grid-column:1;display:flex;flex-direction:column;padding:2px 8px 0 0;white-space:normal;font-size:13px;font-weight:500;line-height:1.3;justify-content:center;padding-top:0}
 .bands{position:absolute;left:0;right:0;top:32px;bottom:0;pointer-events:none;z-index:4}
-#ev .pgl{top:-1px;bottom:auto;height:14px;padding:0 4px;border-radius:3px;background:var(--amber);color:#fff;font:600 11px/14px var(--sans);letter-spacing:.03em;transform:none}
+#ev .pgl{top:-1px;bottom:auto;height:14px;padding:0 4px;border-radius:3px;background:var(--amber);color:#fff;font:600 12px/14px var(--sans);letter-spacing:.03em;transform:none}
 .hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);grid-template-rows:1fr;column-gap:32px;display:flex;flex-direction:column;justify-content:center;padding:12px 24px;align-self:stretch}
 .hero .strip dd small{font-size:15px;font-weight:400;color:var(--ink2)}
 .rec .pairs .pv b{font-size:15px}
@@ -867,8 +871,8 @@ body.edit iframe{pointer-events:none}
 .accsub i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
 .accsub i.ko{background:var(--amber)}
 .accsub .nw{margin-left:auto}
-.db .dbax{stroke:rgb(var(--ink-rgb) / .18);stroke-width:1}
-.db .dbt.sub{font-size:11px}
+.db .dbax{stroke:rgb(var(--ink-rgb) / .32);stroke-width:1} /* the plot ends visibly here: its values sit just under it */
+.db .dbt.sub{font-size:12px}
 @media (max-width:899px){
   .accsub .nw{margin-left:0}
   .accsub{flex-wrap:wrap;gap:4px 12px}
@@ -904,7 +908,7 @@ body.edit iframe{pointer-events:none}
 .pfe{margin:0 0 2px;font-size:15px;font-weight:500;color:var(--ink2);line-height:20.3px}
 .pf1{display:flex;height:auto;line-height:1.1;align-items:baseline;gap:0;margin-top:0}
 .pf1 b{letter-spacing:-.02em;font-weight:600;font-size:36px;line-height:44px}
-.db .dbt.unit{font-size:11px;fill:var(--ink2)}
+.db .dbt.unit{font-size:12px;fill:var(--ink2)}
 @media (max-width:899px){
   .lbl.acct{height:auto;row-gap:2px;white-space:normal;margin-bottom:6px}
 }
@@ -915,7 +919,7 @@ body.edit iframe{pointer-events:none}
 @media (max-width:479px){
   .hl small{display:none}
   #lod,#lpg,#lwd{margin-top:20px}
-  .lpg .gt{display:inline;font-size:11px}
+  .lpg .gt{display:inline;font-size:12px}
 }
 .tlc{display:flex;flex-direction:column;min-width:0;min-height:0;padding:16px 24px;justify-content:flex-start;will-change:transform}
 @media (max-width:479px){
@@ -925,7 +929,7 @@ body.edit iframe{pointer-events:none}
 .acct .accsub{display:inline-flex;margin:0 0 0 8px;gap:12px;font-weight:400;margin-left:auto!important;font-size:13px}
 .db .dbi circle{fill:none;stroke:var(--ink2);stroke-width:1}
 .db .dbi{cursor:help}
-.db .dbt.hd{font-weight:500;fill:var(--ink)}
+.db .dbt.hd{font-weight:400;fill:var(--ink2)} /* the three column headers at one weight and colour */
 @media (max-width:899px){
   .acct .accsub{margin-left:0!important}
 }
@@ -946,8 +950,9 @@ body.edit iframe{pointer-events:none}
 .pfv.of{color:var(--inaa-ink)}
 .eof{white-space:nowrap;font-weight:400;color:var(--ink2)} /* "(end of forecast)": secondary, never split */
 @media (max-width:479px){.eof{display:block}.eofs{display:none}} /* phones: the phrase on its own line, no leading separator */
-.pfm .pfo,.pfm .pfo b{color:var(--inaa-ink);cursor:help}
-.pfs{padding-left:66px;font-size:11px;color:var(--ink3)}
+.pfm .pfo{color:var(--ink2);cursor:help}
+.pfm .pfo b{color:var(--inaa-ink)} /* only the official value in amber; the words in the secondary grey (as on the 3D card) */
+.pfs{padding-left:66px;font-size:12px;color:var(--ink3)}
 .pfsx{display:flex;justify-content:space-between}
 .pfsx b{font-weight:400}
 #lod .pgline{position:absolute;top:0;height:3px;z-index:3;background:var(--amber);pointer-events:auto}
@@ -968,10 +973,10 @@ body.edit iframe{pointer-events:none}
 .accsub2 i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
 .accsub2 i.ko{background:var(--amber)}
 .db .dbpill{fill:rgb(var(--ink-rgb) / .08)}
-.db .dbpt{font-size:11px;fill:var(--ink2)}
+.db .dbpt{font-size:12px;fill:var(--ink2)}
 .rec .dbcap{margin:0 0 2px;font-size:13px;color:var(--ink2);display:none}
-.upd i{background:var(--green);width:8px;height:8px;border-radius:50%;flex:none}
-.upd i.ok{background:var(--green)}
+.upd i{background:var(--live);width:8px;height:8px;border-radius:50%;flex:none}
+.upd i.ok{background:var(--live)} /* yellow-green: never read as the West teal */
 .upd i.old{background:var(--b1)}
 .upd .age{color:var(--ink2)}
 .tfoot .strip{flex:1;display:grid;padding:0;grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -987,14 +992,15 @@ body.edit iframe{pointer-events:none}
   .pissued .uh{display:none}
   .pissued{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px;color:var(--ink2)}
   .pissued i{width:7px;height:7px;border-radius:50%}
-  .pissued i.ok{background:var(--green)}
+  .pissued i.ok{background:var(--live)}
   .pissued i.old{background:var(--b1)}
   .pissued .iss{font-weight:500;color:var(--ink)}
   .pissued .age{white-space:nowrap}
   .accsub2{flex-wrap:wrap}
   .accsub2>span:first-child{flex-basis:100%}
 }
-.ruler .nowtag{position:absolute;z-index:2;height:14px;padding:0 5px;border-radius:3px;transform:translateX(-100%);background:var(--ink);color:var(--on-ink);font:600 11px/14px var(--sans);top:auto;bottom:3px}
+.ruler .nowtag{position:absolute;z-index:2;height:14px;padding:0 5px;border-radius:3px;transform:translateX(calc(-100% - 4px));background:var(--ink);color:var(--on-ink);font:600 12px/14px var(--sans);top:auto;bottom:3px}
+@media (min-width:640px){.ruler .nowtag::after{content:'';position:absolute;left:100%;top:50%;margin-top:-4px;border-style:solid;border-width:4px 0 4px 4px;border-color:transparent;border-left-color:var(--ink)}} /* a pointer from the tag to its line: the tag reads as the line's label */
 @media (max-width:479px){
   .hl{align-self:start;position:relative;pointer-events:none;font-size:13px;white-space:nowrap;grid-column:2/-1;width:max-content;padding:0 6px 0 8px;z-index:6}
   .pfe{white-space:normal}
@@ -1013,7 +1019,7 @@ body.edit iframe{pointer-events:none}
 .hdsel:not(:has(.tag:not([hidden])))+#zoom{margin-left:auto!important}
 .hdsel:not(:has(.tag:not([hidden]))){display:none}
 .ruler .d.off{opacity:0}
-.db .dbt.cap{font-size:11px;fill:var(--ink3)}
+.db .dbt.cap{font-size:12px;fill:var(--ink3)}
 .proof .pfe{margin-bottom:2px}
 .proof .pfe,.proof .pf1,.proof .pfm{margin:0}
 .lede .subhead,.lede .disagree{max-width:60ch}
@@ -1022,7 +1028,7 @@ body.edit iframe{pointer-events:none}
 @media (max-width:899px){
   .proof .pf3{text-wrap:balance;margin-top:8px}
 }
-.db .dbt.tk{font-size:11px;fill:var(--ink3)}
+.db .dbt.tk{font-size:12px;fill:var(--ink3)}
 .expl .sm{display:none}
 .lede{flex:none;gap:32px;justify-content:flex-start;padding:24px 18px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;padding-right:24px;align-items:start!important}
 .proof{color:var(--ink);align-items:flex-start;text-align:left;border-left:1px solid var(--line);margin-left:28px;flex:none;margin-top:0;margin:0 0 0 6px;padding:0 0 0 22px;justify-content:flex-start;display:flex;flex-direction:column;padding-top:0;align-self:start;gap:0;min-width:0}
@@ -1050,7 +1056,7 @@ body.edit iframe{pointer-events:none}
 .tlf .pgbsw{width:16px;height:9px;border:0;border-radius:2px;background:var(--amber)}
 main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing:border-box;width:100%}
 @media (max-width:899px){
-  .topbar{flex-wrap:wrap;display:grid;align-items:center;gap:10px 12px;padding:12px 16px;height:auto;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-areas:"brand thm tz" "nav nav upd"!important;column-gap:8px!important}
+  .topbar{flex-wrap:wrap;display:grid;align-items:center;gap:10px 12px;padding:12px 16px;height:auto;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-areas:"brand thm tz" "nav upd upd"!important;column-gap:8px!important}
   .topbar .upd{display:flex;flex-wrap:nowrap;font-size:13px;white-space:nowrap;justify-self:end;grid-area:upd}
   .hdsel small{min-width:0;white-space:normal;text-align:left}
   .hd{flex-wrap:wrap}
@@ -1065,18 +1071,19 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .accsub3{margin:0 0 4px;font-size:13px;color:var(--ink2)}
 .db .dbrule{stroke:rgb(var(--ink-rgb) / .06);stroke-width:1}
 .db .dbtag{fill:rgb(var(--ink-rgb) / .07)}
-.db .dbplan{font-size:11px;font-weight:400;fill:var(--ink2)}
+.db .dbplan{font-size:12px;font-weight:400;fill:var(--ink2)}
 .db .dbhi{fill:rgb(var(--ink-rgb) / .06)}
 .db .dbacc{fill:var(--east)}
 .db .dbl{fill:var(--ink);font-size:13px;font-weight:600}
-.db .dbi text{font-weight:700;fill:var(--ink2);font-size:11px;font-style:normal}
-.readout .ro b{font-weight:600;color:var(--ink)}
+.db .dbi text{font-weight:700;fill:var(--ink2);font-size:12px;font-style:normal}
+.readout .ro b{font-weight:500;color:var(--ink)} /* the readout regular, only its time in medium: the bold title before it stays the one bold word */
 .readout .rback{flex:none;transition:background-color .15s var(--ease);height:28px;padding:0 12px;border-radius:8px;background:var(--fill);box-shadow:none;font-size:13px;font-weight:500;color:var(--ink);line-height:28px;margin-left:0} /* inline right after the readout, as in 3D */
 .readout .rback:hover{background:var(--hover);color:var(--ink)}
 .readout .rback[hidden]{display:none}
 .tl,.tl.noev{min-height:0;flex:0 0 auto;row-gap:0;grid-template-rows:34px var(--evh,0px) calc(16px + var(--dirh,36px)) calc(12px + var(--swh,44px)) var(--r18row,0px) calc(24px + var(--hwh,70px));margin-top:8px}
 #ruler{grid-row:1}
 #ev{grid-row:2}
+#ev .mk{top:4px} /* 4 px clear of the hour axis above it */
 #lod{grid-row:3}
 #lpg{grid-row:4}
 #l18{grid-row:5}
@@ -1098,10 +1105,10 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 }
 .mids{position:absolute;left:0;right:0;top:32px;z-index:0;pointer-events:none}
 .mids .mid{position:absolute;top:0;bottom:0;width:1px;background:rgb(var(--ink-rgb) / .14)}
-.lpg .pk text{font-size:11px;fill:var(--ink2)}
+.lpg .pk text{font-size:12px;fill:var(--ink2)}
 .lpg .pkbg{fill:var(--card)}
 .lpg i.pkb{filter:brightness(.75)}
-.lpg .pkt{font:500 11px var(--sans);fill:var(--ink2)}
+.lpg .pkt{font:500 12px var(--sans);fill:var(--ink2)}
 :root[data-theme=dark] .lpg i.pkb{filter:brightness(1.1)} /* one graphite step up, not white */
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]) .lpg i.pkb{filter:brightness(1.1)}}
 .ruler .d{position:absolute;top:0;font:600 13px/1 var(--sans);white-space:nowrap;transition:opacity .15s;background:var(--card);padding:0 3px;margin-left:-3px;z-index:1}
@@ -1111,7 +1118,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   :root:not([data-theme=light]) .map .area{fill:rgb(var(--ink-rgb) / .07)}
 }
 @media (max-width:479px){
-  #hdsel.readout{font-size:11px;line-height:16px;white-space:normal;align-items:flex-start;margin-top:8px;min-height:32px;height:auto}
+  #hdsel.readout{font-size:12px;line-height:16px;white-space:normal;align-items:flex-start;margin-top:8px;min-height:32px;height:auto}
   .readout .ro{white-space:normal;overflow:visible;text-overflow:clip}
 }
 .upd .frs{color:var(--ink2);font-variant-numeric:tabular-nums}
@@ -1121,7 +1128,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 #rec.flash{animation:recflash 1.4s var(--ease)}
 @keyframes recflash{0%,60%{box-shadow:0 0 0 3px var(--east-line)}100%{box-shadow:inset 0 0 0 1px rgba(27,28,30,.04)}}
 @media (max-width:480px){
-  .topbar .seg button{font-size:11px;padding:0 8px}
+  .topbar .seg button{font-size:12px;padding:0 8px}
   .lwd .limt.gutter{display:none}
 }
 #hdsel.readout{display:flex;align-items:center;gap:16px;margin:2px 0 0;font-size:13px;color:var(--ink2);white-space:nowrap;min-width:0;overflow:visible;justify-content:flex-start;height:28px;line-height:28px}
@@ -1142,7 +1149,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   .lede .headline .ff{display:none}
   .lede .eyebrow::before{content:"Frankfurt · "}
 }
-.lpg .pk{font-weight:400;transition:opacity .15s var(--ease);font-size:11px;fill:var(--ink2)}
+.lpg .pk{font-weight:400;transition:opacity .15s var(--ease);font-size:12px;fill:var(--ink2)}
 @media (min-width:480px){
   #lpg{margin-top:12px}
   #hlsw{margin-top:12px;justify-content:center} /* centred on the 0-20 % plot */
@@ -1162,11 +1169,12 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .rec .db{margin-top:0;flex:1 1 auto;min-height:0}
 .rec .accst{margin-top:6px}
 .map .area{stroke-linejoin:round;fill:rgb(var(--ink-rgb) / .05);stroke:rgb(var(--ink-rgb) / .3);stroke-width:.75} /* a hairline outline on a light surface */
-.lpg .gt,.lwd .ax{font-size:11px;fill:var(--ink3)}
+.lpg .gt,.lwd .ax{font-size:12px;fill:var(--ink3)}
 #lod .pgtag.ra::after{content:'';position:absolute;left:var(--tk);bottom:-4px;width:1px;height:4px;background:inherit}
-#lod .pgtag{position:absolute;top:-14px;z-index:7;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 11px/14px var(--sans);letter-spacing:.02em;white-space:nowrap;background:var(--inaa-ink);color:#fff}
+#lod .pgtag{position:absolute;top:-14px;z-index:7;height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 12px/14px var(--sans);letter-spacing:.02em;white-space:nowrap;background:var(--inaa-ink);color:#fff}
 :root[data-theme=dark] #lod .pgtag{background:#f0a030;color:#1b1c1f} /* siteui.STYLE.tag_bg, the same on the 3D view */
-.db .dbv.o{font-weight:400;fill:var(--inaa-ink)}
+.db .dbko{fill:var(--card)}
+.db .dbv.o{fill:var(--inaa-ink)} /* the official values at our values' size and weight: colour is the only difference */
 .db .dbv,.db .dbt.tk{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round} /* the gridlines stop behind the labels */
 @media (min-width:900px){
   .lede .lede-l{display:contents}
@@ -1186,12 +1194,9 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   .lede .disagree{grid-area:5/1;margin-top:4px}
   .lede .subhead{grid-area:3/1;margin-top:16px}
 }
-.map .rwhalo{fill:var(--card)}
 .map .gapp{fill:none;stroke:var(--west-line);stroke-width:2;stroke-dasharray:6 4;opacity:.85}
 .mlg #mlggh[hidden]{display:none!important}
 .mlg .ghk{width:18px;height:0;border-top:1.5px dashed var(--west-line);opacity:.8;display:inline-block}
-.map .rwld{fill:none;stroke:rgb(var(--ink-rgb) / .5);stroke-width:1}
-.map .rwldd{fill:rgb(var(--ink-rgb) / .5)}
 .map .tnum{fill:var(--east-line);stroke:var(--card);stroke-width:6;paint-order:stroke} /* a 3 px card-colour halo: the line visibly breaks around the disc */
 .map .tnumt{font:600 11px var(--sans);fill:var(--card)}
 .mlgt{display:inline-flex;align-items:center;flex-wrap:wrap;gap:16px}
@@ -1200,7 +1205,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .accst dd .vs{font-size:13px;font-weight:400;color:var(--ink2)}
 .accst dd .vs .of{font-weight:600;color:var(--inaa-ink)}
 .c3d .mlg{align-self:center;font-size:13px;color:var(--ink2)}
-.lwd .limt{transition:opacity .15s var(--ease);font-weight:500;font-size:11px;fill:var(--red)!important}
+.lwd .limt{transition:opacity .15s var(--ease);font-weight:500;font-size:12px;fill:var(--red)!important}
 @media (min-width:900px){
   .lede.lede{display:grid;grid-template-rows:auto auto auto auto auto;row-gap:0;align-items:start!important;padding-left:18px;padding-right:18px;grid-template-columns:minmax(0,14fr) 0 minmax(0,10fr)!important;column-gap:0!important;padding-top:14px}
   .lede .proof.proof{grid-area:1/3/span 5/4;display:flex;flex-direction:column;align-self:start!important;padding-left:32px;margin-left:-33px;margin:0 0 0 6px!important;padding:0 0 0 22px!important;border:0;border-left:1px solid var(--line)}
@@ -1210,7 +1215,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 }
 .lanes:focus{outline:none}
 .lanes:focus-visible{outline-offset:6px;border-radius:8px;outline:2px solid rgb(var(--ink-rgb) / .3)}
-.ph b{position:absolute;left:0;border-radius:4px;white-space:nowrap;height:18px;padding:0 6px;font:600 11px/18px var(--sans);transform:translateX(0);background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);display:inline-flex;align-items:center;gap:3px;top:0}
+.ph b{position:absolute;left:0;border-radius:4px;white-space:nowrap;height:18px;padding:0 6px;font:600 12px/18px var(--sans);transform:translateX(0);background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);display:inline-flex;align-items:center;gap:3px;top:0}
 .ph.pin b{background:var(--ink)!important;color:var(--on-ink)!important;box-shadow:none!important}
 .ph.pin::before{width:2px!important;left:-1px!important}
 .ph::before{-webkit-mask:var(--mk,none);mask:var(--mk,none)}
@@ -1236,7 +1241,11 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .status .ck,.badge .ck{width:14px;height:14px;margin-right:4px;vertical-align:-2px;color:var(--ink2)}
 .map .rwp{fill:#55575d;stroke:var(--card);stroke-width:2;paint-order:stroke}
 .map .rwt{font:600 13px/1 var(--sans);fill:#fff}
-.map .rwt.rwt11{font-size:11px}
+.map .rwt.rwt11{font-size:12px}
+.map .rwhalo,.map .rwph{fill:var(--card)}
+.map .rwld{fill:none;stroke:rgb(var(--ink-rgb) / .5);stroke-width:1}
+.map .rwldd{fill:rgb(var(--ink-rgb) / .5)}
+.map .rwtk{fill:none;stroke:var(--ink2);stroke-width:1} /* a plate's leader tick to its runway's threshold */
 .map .river{stroke-linejoin:round;stroke-linecap:round;fill:none!important;stroke:#8fb3d1!important;stroke-width:1.5!important}
 .map .scl path{fill:none;stroke:var(--ink3);stroke-width:1}
 .map .scl text{fill:var(--ink3);font-size:13px}
@@ -1245,7 +1254,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .mlg .mscl[hidden]{display:none!important}
 .mlg .mscl svg{width:auto;height:5px}
 .mlg .msb{display:inline-flex;flex-direction:column;align-items:center;gap:1px}
-.mlg .msb b{font-weight:400;font-size:11px;line-height:12px}
+.mlg .msb b{font-weight:400;font-size:12px;line-height:12px}
 .mlg .mscl path{fill:none;stroke:var(--ink2);stroke-width:1}
 .nowl{position:absolute;bottom:0;z-index:4;width:1.5px;margin-left:-.75px;opacity:1;top:-6px;background:#4b4d53}
 :root[data-theme=dark] .nowl{background:var(--ink)}
@@ -1259,7 +1268,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   .tl,.tl.noev{grid-template-rows:34px var(--evh,0px) calc(36px + var(--dirh,44px) + var(--lgh,0px)) calc(36px + min(var(--swh,76px), 96px)) var(--r18row,0px) calc(36px + min(var(--hwh,72px), 96px));grid-template-columns:28px minmax(0,1fr)}
 }
 .tfoot .strip>div{padding-right:16px;min-width:0}
-.tfoot .strip dd,.tfoot .strip dd small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tfoot .strip dd,.tfoot .strip dd small{overflow:visible;text-overflow:clip;white-space:normal} /* a fact wraps to a second line rather than losing its end to an ellipsis */
 @media (prefers-color-scheme:dark){
   :root:not([data-theme=light]){--risk:#9a9a9a}
 }
@@ -1306,8 +1315,12 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .accst dt{font-size:13px;line-height:1.25;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rec .accsub3{margin-bottom:0}
 .db{margin-top:5px;position:relative}
-.dbib{position:absolute;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--ink2);font:600 11px/14px var(--sans);color:var(--ink2);text-align:center;cursor:help}
-.dbib:hover,.dbib[aria-expanded=true]{background:var(--ink);color:var(--on-ink);box-shadow:none}
+/* the (i): a 16 px drawn icon at the drawn arrows' stroke weight, in a 32 px hit area */
+.dbib{position:absolute;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:none;color:var(--ink2);display:grid;place-items:center;cursor:help}
+.dbib svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.dbib svg .dot{fill:currentColor;stroke:none}
+.dbib:hover,.dbib[aria-expanded=true]{color:var(--ink);background:var(--fill)}
+.dbib:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
 .dbpop{position:absolute;right:0;top:4px;z-index:20;width:260px;padding:8px 12px;border-radius:8px;background:var(--card);box-shadow:var(--shadow);font-size:13px;line-height:1.45;color:var(--ink2);white-space:normal}
 .rec{display:flex;flex-direction:column;padding:16px 22px 16px;padding-top:12px;padding-bottom:12px;overflow:visible}
 .cell[data-p=rec]>.card{overflow:visible}
@@ -1315,7 +1328,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 @media (min-width:900px){
   .c3d{grid-template-columns:minmax(0,1fr) var(--keyw,140px);grid-template-rows:auto minmax(0,1fr);column-gap:10px;display:flex;flex-direction:column;position:relative}
   .c3d .map{grid-column:1;grid-row:2;flex:1 1 auto;margin-top:2px}
-  .c3d .mlg{grid-column:2;grid-row:2;justify-content:center;white-space:normal;line-height:1.3;flex-wrap:nowrap;margin-top:6px;position:absolute;left:16px;right:auto;top:auto;bottom:10px;flex-direction:row;align-items:center;z-index:3;margin:0;padding:4px 8px;border-radius:6px;background:color-mix(in srgb,var(--card) 88%,transparent);font-size:11px;gap:2px 10px;right:16px;flex-wrap:wrap}
+  .c3d .mlg{grid-column:2;grid-row:2;justify-content:center;white-space:normal;line-height:1.3;flex-wrap:nowrap;margin-top:6px;position:absolute;left:16px;right:auto;top:auto;bottom:10px;flex-direction:row;align-items:center;z-index:3;margin:0;padding:4px 8px;border-radius:6px;background:color-mix(in srgb,var(--card) 88%,transparent);font-size:12px;gap:2px 10px;right:16px;flex-wrap:wrap}
   .c3d .mlg span,.c3d .mlg .tk{gap:6px}
   .c3d .mlg .mscl{gap:4px}
   .c3d .mlgt{flex-wrap:nowrap;gap:10px}
@@ -1344,6 +1357,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   .lede .proof .pf1 b{font-size:36px}
 }
 .lpg .pkl{fill:none;stroke:var(--ink2);stroke-width:1}
+.lpg .pko{fill:var(--card)} /* the peak note's knockout: no day line or gridline runs through its text */
 @media (min-width:900px){ /* every desktop canvas is ~810 px high after the zoom */
   .lede.lede{padding-top:8px;padding-bottom:0}
   .lede #subhead{margin-top:8px!important}
@@ -1377,7 +1391,7 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
   :root:not([data-theme=light]) .night{background:rgba(0,0,0,.22)}
 }
 .accst .ofl{color:var(--ink2)}
-.map .rvl{font:italic 400 11px var(--sans);fill:#5f88ab}
+.map .rvl{font:italic 400 12px var(--sans);fill:#5f88ab}
 @media (max-width:479px){
   .accst dt:not(.ofl){overflow:visible;white-space:nowrap;min-height:0}
 }
@@ -1386,8 +1400,365 @@ main,.lede,.pfoot{max-width:1360px;margin-left:auto;margin-right:auto;box-sizing
 .lpg .grid.half{stroke:rgb(var(--ink-rgb) / .14);stroke-dasharray:2 3} /* the dotted mid gridline */
 .ruler .h.tagged{visibility:hidden}
 .pfb{margin-top:4px;font-size:13px;color:var(--ink3)}
+/* the Runway 18 closure note: one full-width line above the three facts, so the facts keep their width */
+.tlc .tfoot{flex-wrap:wrap;row-gap:6px}
+.tlc .tfoot .r18note{order:-1;flex:1 0 100%;margin:0}
+.tlc .tfoot .alert{display:block;line-height:20px}
+.tlc .tfoot .alert span::before{content:" · "}
+.tlc .tfoot .alert b::before{width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px} /* the closed cells' red square: this line is their key */
+@media (min-width:480px){
+  .tlc .tlf{margin-top:10px}
+  .tlc .tfoot{margin-top:10px;padding-top:8px}
+  /* the Runway 18 row and its closure line cost height in a card of fixed height: the two plots give it back,
+     the headwind plot down to 46 px and the chance plot down to 32 px on short windows (1366 x 768) */
+  .tl.r18on,.tl.noev.r18on{--r18row:26px!important;grid-template-rows:40px var(--evh,0px) calc(20px + 36px) minmax(calc(12px + 32px),1fr) var(--r18row,0px) minmax(calc(12px + 46px),calc(12px + 60px))}
+}
+@media (max-width:479px){ /* phones: every control in the header and the zoom switch is a 44 px touch target */
+  .topbar .nav a,#tz button,#zoom button{height:44px!important;min-height:44px;display:inline-flex;align-items:center}
+  .topbar #theme{height:44px}
+}
+@media (max-width:479px){
+  .tl.r18on,.tl.noev.r18on{--r18row:48px!important} /* phones: the row name in the 36 px above, then 12 px cells (the row was 0 px tall) */
+}
 @media (min-width:900px){
   .topbar{padding-left:max(24px, calc((100% - 1360px) / 2 + 24px))!important;padding-right:max(24px, calc((100% - 1360px) / 2 + 24px))!important}
+}
+
+/* the hero column never grows past the page margin (its no-wrap runs wrap as whole runs instead) */
+.lede-l{min-width:0}
+.pinl .pl0{display:block;font-size:15px;font-weight:500;color:var(--ink2);line-height:20px}
+.pinl .pl1{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;row-gap:0}
+.pinl .pl1 .nw{color:var(--ink2)}
+.pinl .pl2{display:inline-flex;align-items:center;text-decoration:none}
+.pinl .pl2 .u{text-decoration:underline;text-decoration-color:var(--b2);text-underline-offset:4px}
+.pinl .pn{font-weight:500}
+/* text arrows are the drawn arrow, at text size, in the link's colour */
+.beat .tarr,.m3d .tarr{margin:0 0 0 .35em;width:1.05em;height:.75em;vertical-align:-.02em;stroke-width:3}
+.pf3 a.beat .tarr{color:var(--east-line)}
+/* "3D view": a small ghost button */
+.m3d{display:inline-flex;align-items:center;height:32px;margin:-7px 0;padding:0 10px;border-radius:8px;box-shadow:inset 0 0 0 1px var(--b2);text-decoration:none;color:var(--ink);transition:background-color .15s var(--ease)}
+.m3d:hover{background:var(--hover)}
+/* the hero accuracy: the KPI figures' step (24 px semibold), smaller than the headline; its label's top on the kicker's
+   top and the number directly under its label */
+.lede .proof .pf1 b{font-weight:600!important;letter-spacing:-.01em}
+@media (min-width:900px){
+  .lede .proof .pfe{margin:0 0 4px!important}
+  .lede .proof .pf1{margin-top:0!important}
+  .lede .proof .pf1 b{font-size:24px!important;line-height:1.15!important}
+  .lede .subhead{font-size:24px!important;font-weight:600!important;line-height:1.25!important} /* one type step with the hero figure and the KPI figures */
+}
+/* the accuracy card's bottom padding (to its last line of text) equals its top padding (to its title): the space comes
+   from the gap above the 49 / 65 % row */
+@media (min-width:900px){
+  .rec{padding-bottom:18px!important}
+  .rec .accst.accst{margin-top:2px}
+  .rec .acchd{height:26px;min-height:26px;box-sizing:border-box;padding-top:0} /* the title where it was (as on the other cards), 6 px less under it */
+  .rec .accst.accst{padding-top:4px}
+  .rec .accst dd{line-height:1} /* the KPI figures' line box on the glyphs */
+}
+/* the switch chip names its hour; a tick marks the hour when the chip has to sit left of it */
+#lod .swchip,.lanes > .swchip{height:16px;font:500 13px/16px var(--sans)}
+.lanes > .swtick{position:absolute;width:2px;margin-left:-1px;background:var(--ink);z-index:3;pointer-events:none}
+/* the in-bar direction label on a solid chip of its bar colour, so the night hatch never runs behind it */
+.dlab{padding:3px 6px;margin-left:-6px;border-radius:3px;line-height:14px}
+.dlab.e{background:var(--east)}
+.dlab.w{background:var(--west);color:#10131c} /* dark ink on teal in both themes (>= 4.5:1), as the switch chip */
+/* axis values at the 13 px step */
+.lpg .gt,.lwd .ax{font-size:13px}
+/* the headwind limit: a neutral dashed line (red is the Runway 18 closure only) */
+.lwd .lim{stroke:var(--ink2);opacity:1}
+.lwd .zone{fill:rgb(var(--ink-rgb) / .07)}
+:root[data-theme=dark] .lwd .zone{fill:rgba(255,255,255,.08)}
+.lwd .limt{fill:var(--ink2)!important}
+.limsw{border-top-color:var(--ink2)!important;opacity:1}
+/* dark: the night band a step lighter than the card, with hairline edges */
+:root[data-theme=dark] .night{background:rgba(255,255,255,.06);box-shadow:inset 1px 0 rgba(255,255,255,.09),inset -1px 0 rgba(255,255,255,.09)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]) .night{background:rgba(255,255,255,.06);box-shadow:inset 1px 0 rgba(255,255,255,.09),inset -1px 0 rgba(255,255,255,.09)}
+  :root:not([data-theme=light]) .lwd .zone{fill:rgba(255,255,255,.08)}
+}
+@media (max-width:479px){
+  /* row names on a card-coloured chip: day lines and night bands stop at the name */
+  .tl .hl{background:var(--card);border-radius:4px}
+  /* "Back to now" on the readout line, over its right end: no reserved row under the readout */
+  #hdsel.readout{position:relative;flex-wrap:nowrap}
+  #hdsel .rback{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0}
+  #hdsel.readout{height:32px;align-items:center}
+  #hdsel .ro{white-space:normal!important;line-height:16px;max-height:32px;overflow:hidden;text-overflow:clip}
+  #hdsel:has(.rback[style*="visible"]) .ro{padding-right:112px} /* pinned: up to two 16 px lines beside the button, in the same 32 px row */
+  /* segmented controls: the track shows 4 px round the selected pill */
+  .seg{padding:4px}
+  .seg>i{top:4px;height:calc(100% - 8px)!important}
+  .topbar .nav{padding:4px}
+  #tz button{padding:0 6px!important}
+}
+/* desktop top band: the intro runs the width of its column, up to the accuracy block's rule */
+@media (min-width:900px){ .lede .expl{max-width:none;padding-right:8px} }
+/* the 48 h card: a slimmer direction bar gives the chance plot its height */
+@media (min-width:480px){
+  .tl.r18on,.tl.noev.r18on{grid-template-rows:40px var(--evh,0px) calc(18px + 28px) minmax(calc(8px + 32px),1fr) var(--r18row,0px) minmax(calc(12px + 46px),calc(12px + 60px))}
+  .tl.r18on #lod{margin-top:18px}
+  .tl.r18on #lpg{margin-top:8px}
+  .tlc .tlf{margin-top:8px}
+  .tlc .tfoot{margin-top:8px}
+}
+.r18lead{position:absolute;width:1px;background:var(--red);opacity:.6;pointer-events:none}
+.r18brk{position:absolute;height:3px;border:1px solid var(--red);border-bottom:0;border-radius:2px 2px 0 0;opacity:.6;pointer-events:none;box-sizing:border-box} /* a bracket over the closed cells, where the leader lands */
+@media (max-width:479px){
+  /* phones: the Now pill 12 px inside the card, row-name chips their text width + 4 px (the text stays where it was) */
+  .tl,.tl.noev{grid-template-columns:31px minmax(0,1fr)}
+  .ruler .nowtag{padding:0 4px}
+  .tl .hl{padding:0 2px;margin-left:calc(6px + var(--nowx,0px))}
+}
+/* the accuracy claim reads as a link at rest, on every width: a visible underline under its words */
+.pf3 a.beat .u,.pinl .pl2 .u{text-decoration:underline;text-decoration-color:rgb(var(--ink-rgb) / .4);text-decoration-thickness:1px;text-underline-offset:4px}
+.pf3 a.beat:hover .u,.pinl .pl2:hover .u{text-decoration-color:currentColor}
+.phexpl{display:none}
+@media (max-width:479px){
+  /* phones: the 48 h chart's headwind row starts inside the first screen; the intro sentence moves under the panels */
+  .topbar{padding-top:8px!important;padding-bottom:8px!important;row-gap:6px!important}
+  .lede{padding-top:10px!important;padding-bottom:10px!important}
+  .lede .subhead{margin-top:10px!important}
+  .lede .expl{display:none}
+  .phexpl{display:block;margin:4px 24px 8px;font-size:15px;line-height:1.4;color:var(--ink2);text-wrap:pretty} /* on the footer text's left edge */
+  .tlc{padding-top:12px!important}
+  /* the kicker reads as on desktop: "Runway direction now · since <day>, <time>" */
+  .lede .eyebrow::before{content:none!important}
+  .lede .eyebrow .ebl{display:inline!important}
+  /* a thin Now line: still the darkest rule, no longer an axis */
+  .nowl{width:1px;margin-left:-.5px}
+}
+@media (max-width:479px){
+  /* phones: the accuracy block set apart from the headline by a hairline and 8 px more air; its figure no larger than the outlook line */
+  .lede .pinl{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+  .lede .pinl .pn{font-size:18px;line-height:24px}
+  .lede .pinl .pl1{column-gap:10px}
+  /* the 48 h card: a tighter top, so the headwind plot ends inside the first screen */
+  .lede{padding-bottom:8px!important}
+  .tlc{padding-top:8px!important}
+  .tl,.tl.noev{grid-template-rows:34px var(--evh,0px) calc(32px + var(--dirh,44px) + var(--lgh,0px)) calc(32px + min(var(--swh,76px), 96px)) var(--r18row,0px) calc(32px + min(var(--hwh,72px), 96px))}
+  .tl .ln,.lwd{margin-top:32px!important}
+  .tl .hl{margin-top:10px}
+}
+/* accuracy by lead time: every label at the 13 px secondary step, in the body's secondary grey (>= 5:1) */
+.db .dbt.tk,.db .dbt.sub,.db .dbt.cap,.db .dbt.unit,.db .dbpt,.db .dbplan{font-size:13px;fill:var(--ink2)}
+/* accuracy by lead time: a thin baseline with tick marks through it, the values directly under them; the rows take the
+   card's spare height, the stat tiles 8 px under the axis values */
+.db .dbax,.db .dbtm{stroke:rgb(var(--ink-rgb) / .45);stroke-width:1}
+@media (min-width:480px){.rec .accst.accst{margin-top:8px}}
+/* 48 h card: the chance and headwind scale values and the limit label in the accuracy axis's 13 px secondary grey */
+.lpg .gt,.lwd .ax{font-size:13px;fill:var(--ink2)}
+.lwd .limt{font-size:13px;font-weight:400}
+/* the flight-path map's north arrow and scale bar: a drawn 14 px arrow, a 2 px bar, 13 px secondary labels */
+.map .scl path{fill:none;stroke:var(--ink2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.map .scl path.narw{stroke-width:1.5}
+.map .scl text{font-size:13px;fill:var(--ink2)}
+.map .scl text.nlbl{font-weight:600}
+/* the theme toggle: an 18 px glyph at the other icons' 1.5 px stroke (24-unit box at 2 units), in a 32 px hit area */
+.icon.thm svg{width:18px;height:18px}
+/* the footer: two short lines side by side (desktop), the sources under the 48 h card, the backtest note under the
+   accuracy card from its left edge (--fc2, set by fit()), never one line across the whole window */
+@media (min-width:900px){.pfoot>span:first-child{display:grid;grid-template-columns:var(--fc2,58%) minmax(0,1fr);flex:1}.pfoot .fl{display:block;min-width:0;padding-right:16px}}
+@media (min-width:1280px){.pfoot .fl{white-space:nowrap}} /* one line each, whatever font is in when fit() measures */
+/* runway plates on the light map: a white plate with a dark hairline and dark text, secondary to the paths */
+:root:not([data-theme=dark]) .map .rwp:not(.cl){fill:var(--card);stroke:#55575d;stroke-width:1;paint-order:normal}
+:root:not([data-theme=dark]) .map .rwt:not(.cl){fill:var(--ink)}
+.map .rwt.cl{fill:#fff}
+@media (min-width:900px){
+  /* the flight-path key: two rows (paths, then places) on the card's text edge */
+  .c3d .mlg{justify-content:flex-start!important;left:12px!important;right:auto!important;max-width:calc(100% - 24px)}
+  .c3d .mlg .mlgt{flex-basis:100%}
+  /* the hero 8 px further from the header rule */
+  .lede.lede{padding-top:16px}
+}
+/* round 9 (desktop). The hero: the accuracy figure one type step under the headline (24 px, the headline stays the one
+   large figure), the accuracy block on its card column's edge like the kicker on the 48 h card's (no divider, no inset). */
+@media (min-width:900px){
+  .lede .proof.proof{border-left:0!important;padding-left:0!important}
+  .lede .proof .pf1 b,.lede .proof .pf1 b.pn{font-size:24px!important;line-height:1.1}
+  /* one header row on every card: 12 px under the card's top edge, 32 px tall (the controls' height), the title and the
+     control on its right centred in it, so the three titles sit at one offset from their card tops */
+  .tlc.tlc,.rec.rec,.c3d.c3d{padding-top:12px}
+  .tlc .hd,.rec .acchd,.c3d .mhd{height:32px;min-height:32px;margin-top:0;align-items:center;flex:none}
+  .tlc .hd h2,.rec .acchd .lbl,.c3d .mhd .lbl{line-height:24px;height:24px;align-items:center}
+  /* the footer: the backtest note ends on the content's right edge (the accuracy and flight-path cards'), as on the 3D view */
+  .pfoot .fl+.fl{text-align:right;padding-right:0}
+}
+/* the switch chip and the official tag: free-standing labels 3 px over the direction bar (not tabs on its edge); the
+   "18 closed" tag 6 px under the hour axis */
+#lod .swchip,.lanes > .swchip,#lod .pgtag{border-radius:3px}
+#lod .pgtag{top:-17px}
+#lod .pgtag.ra::after{bottom:-7px;height:7px}
+#ev .mk{top:6px}
+/* the numbered towns: neutral markers (white disc, dark-grey ring, dark numeral) on a 2 px card halo, so a path passing
+   under one visibly breaks; never the East navy. The key's discs are the same marker. */
+.map .tnumh{fill:var(--card)}
+.map .tnum.tnum{fill:var(--card);stroke:var(--ink2);stroke-width:1.5;paint-order:normal}
+.map .tnumt.tnumt{fill:var(--ink)}
+.mlgt i,.mlgt .tk i{background:var(--card)!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1.5px var(--ink2)}
+/* the Main: named along its line in a darker step of its blue (an italic map label) */
+.map .rvl{font:italic 600 13px var(--sans);fill:#244f72;paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round} /* the river's name: a darker blue on a card-colour halo (>= 4.5:1), as on the 3D map */
+:root[data-theme=dark] .map .rvl{fill:#8fb3d1}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .map .rvl{fill:#8fb3d1}}
+/* the headwind limit's label inside the plot, over its line, on a card-coloured halo */
+.lwd .limt.inplot{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+/* round 11: the operator's view. The hero answers now, the switch (when and how sure) and Runway 18; the accuracy is one
+   quiet line whose link opens the accuracy card as a detail view; the 48 h card and the map share the main row. */
+.lede .trust{margin:8px 0 0;font-size:15px;line-height:20px;color:var(--ink2);text-wrap:pretty}
+.lede .trust .nw{white-space:nowrap}
+.lede .trust a.beat{color:inherit;white-space:nowrap}
+.lede .trust a.beat .u{text-decoration:underline;text-decoration-color:rgb(var(--ink-rgb) / .4);text-decoration-thickness:1px;text-underline-offset:4px}
+.lede .trust a.beat:hover{color:var(--ink)}
+.lede .trust a.beat:hover .u{text-decoration-color:currentColor}
+.lede .trust .tarr{color:currentColor}
+/* the switch line: the instant at the KPI step, the hours to go and the certainty on a second, lighter line */
+.lede .subhead .sh1,.lede .subhead .sh2{display:block}
+.lede .subhead .sh2{margin-top:2px;font-size:18px;font-weight:400;line-height:24px;color:var(--ink2)}
+.lede .subhead .nw{white-space:nowrap}
+/* the hero's Runway 18 block: label on the kicker's line, the state at the KPI step, the next closure keyed by the closed cells' red */
+.r18h .r18l{font-size:15px;font-weight:500;line-height:20px;color:var(--ink2)}
+.r18h .r18s{margin-top:4px}
+.r18h .r18s b{display:block;font-size:24px;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:var(--ink)}
+.r18h .r18n{margin:8px 0 0;font-size:15px;line-height:20px;color:var(--ink2)}
+.r18h .r18w,.r18h .r18i{display:block;padding-left:18px}
+.r18h .r18w b{font-weight:500;color:var(--ink)}
+.r18h .r18d{display:inline-block;width:10px;height:10px;margin:0 8px 0 -18px;border-radius:50%;background:var(--red);vertical-align:0}
+.r18h .r18i .sep{display:none}
+.r18h .r18w.calm{padding-left:0}
+@media (min-width:900px){
+  .lede .r18h{grid-area:1/3/span 5/4;margin:0 0 0 6px;padding:0;align-self:start;min-width:0}
+  .lede .trust{grid-area:4/1}
+}
+@media (max-width:899px){
+  .lede .r18h{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line)}
+}
+/* the 48 h card's foot: one compact wind line under the legend */
+.tlc .tfoot{display:block;margin:6px 0 0;padding:0;border:0}
+.tlc .wind24{margin:0;font-size:13px;line-height:20px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlc .wind24 b{font-weight:600;color:var(--ink)}
+.tlc .wind24 .wk::after{content:" ·"}
+.tlc .wind24 .ws::before{content:"· "}
+/* the accuracy detail view: the accuracy card, as it was on the page, in a modal dialog */
+.recdlg{padding:0;border:0;background:none;color:inherit;overflow:visible;max-width:calc(100vw - 32px);max-height:none}
+.recdlg::backdrop{background:rgb(18 19 22 / .36)}
+.recdlg .rec{width:520px;height:262px;box-sizing:border-box;box-shadow:0 24px 64px rgb(18 19 22 / .28)}
+.rec .acchd{gap:12px}
+.rec .acchd .lbl small{margin-left:8px}
+.rec .acchd .acck{margin-left:auto}
+.recx{flex:none;width:32px;height:32px;margin:0 -8px 0 0;border-radius:8px;display:grid;place-items:center;color:var(--ink2)}
+.recx svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.recx:hover{background:var(--hover);color:var(--ink)}
+@media (max-width:899px){
+  .recdlg .rec{width:min(520px, calc(100vw - 32px));height:auto}
+}
+/* the flight-path card's operator line: what a switch would change on the map */
+.c3d .mif{margin:0;font-size:13px;line-height:18px;color:var(--ink2)}
+.c3d .mif[hidden]{display:none}
+/* the 48 h card, now without its stat row: the chance and headwind plots share the height (the headwind plot to ~0.6 of
+   the chance plot's), the limit's label under its dashed line on the shaded zone (no halo needed there) */
+@media (min-width:480px){
+  .tl.r18on,.tl.noev.r18on{grid-template-rows:40px var(--evh,0px) calc(18px + 28px) minmax(calc(8px + 32px),1fr) var(--r18row,0px) minmax(calc(12px + 46px),.62fr)}
+  .tl,.tl.noev{grid-template-rows:40px var(--evh,0px) calc(20px + 36px) minmax(calc(12px + 58px),1fr) var(--r18row,0px) minmax(calc(12px + 66px),.62fr)}
+}
+.lwd .limt.inplot{stroke:none}
+/* the event tags: "18 closed" and the switch chip one height, one font, on one baseline 3 px over the direction bar; each
+   joined to its moment by a 1 px stem */
+@media (min-width:480px){
+  #ev .mk{height:16px;font:500 13px/16px var(--sans);border-radius:3px}
+}
+.lanes > .swstem{position:absolute;width:1px;z-index:8;pointer-events:none}
+/* phones: the trust line under the outlook (before the Runway 18 block); the Runway 18 block compact: name and state on
+   one line, the closure and what it moves under it, so the 48 h chart's headwind row stays on the first screen */
+@media (max-width:899px){
+  .lede-l .trust{order:4}
+}
+@media (max-width:479px){
+  .lede .subhead .sh2{font-size:15px;line-height:20px}
+  .lede .subhead .sh2 .nw{white-space:normal}
+  .lede .trust{font-size:13px;line-height:18px;margin-top:4px}
+  .lede .r18h{margin-top:8px;padding-top:8px;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px}
+  .r18h .r18s{margin:0}
+  .r18h .r18s b{font-size:15px;line-height:20px;display:inline}
+  .r18h .r18n{flex:1 0 100%;margin-top:2px;font-size:13px;line-height:18px}
+  .r18h .r18d{width:8px;height:8px;margin-right:6px;margin-left:-14px}
+  .r18h .r18w,.r18h .r18i{padding-left:14px}
+}
+@media (max-width:479px){ .tlc .wind24{white-space:normal} }
+@media (min-width:900px) and (max-height:860px){ .lede .trust{margin-top:4px} .lede .subhead .sh2{margin-top:0} }
+/* phones: the trust line moves under the cards, a footnote above the page footer; the Runway 18 block without its rule */
+.trustph{display:none}
+@media (max-width:479px){
+  .lede .trust{display:none}
+  .trustph{display:block;margin:12px 16px 0;font-size:13px;line-height:18px;color:var(--ink2);text-wrap:pretty}
+  .trustph .nw{white-space:nowrap}
+  .trustph a.beat{color:inherit}
+  .trustph a.beat .u{text-decoration:underline;text-decoration-color:rgb(var(--ink-rgb) / .4);text-decoration-thickness:1px;text-underline-offset:4px}
+  .trustph .tarr{color:currentColor}
+  .lede .r18h{border-top:0;padding-top:0;margin-top:10px}
+}
+@media (max-width:479px){ /* the Runway 18 block costs the first screen ~60 px: the chance plot gives up to 20 of it (78 px, was 96) */
+  .tl,.tl.noev{grid-template-rows:34px var(--evh,0px) calc(32px + var(--dirh,44px) + var(--lgh,0px)) calc(32px + min(var(--swh,76px), 76px)) var(--r18row,0px) calc(32px + min(var(--hwh,72px), 96px))}
+}
+.recdlg .rec.rec{padding-bottom:16px!important} /* the card's bottom padding to its last text equals its top padding to the title */
+@media (max-width:479px){ .c3d{height:320px} } /* phones: the map keeps its height under the operator line */
+/* round 12. The Runway 18 block: a closure in the window is the big line ("Closes tomorrow 07:00-16:00"), keyed by the
+   closed cells' red: a hollow ring while it is scheduled, a filled dot while it is in effect; the date, the routine state
+   and what it moves are the quiet lines. Its lines take the metrics of the left column's (the
+   switch line, its second line, the trust line), and the block sits on the left column's bottom edge. */
+.r18h .r18s b{display:block}
+.r18h .r18d{display:inline-block;box-sizing:border-box;width:12px;height:12px;margin:0 10px 0 0;border-radius:50%;border:2.5px solid var(--red);background:var(--red);vertical-align:1px}
+.r18h .r18d.ring{background:transparent}
+.r18h .r18n{margin:0}
+.r18h .r18w,.r18h .r18i{display:block;padding-left:0}
+@media (min-width:900px){
+  .r18h .r18d{margin:0 8px 0 0;vertical-align:1px} /* inline before the headline, inside the column (never in the gutter) */
+  .lede.lede{grid-template-columns:minmax(0,17fr) 0 minmax(0,7fr)!important;padding-bottom:16px}
+  /* the block spans the left column's height, each line on its partner's baseline (alignR18): the label on the
+     headline's, the closure on the switch line's, the quiet line on its second line's, what it moves on the trust line's */
+  .lede .r18h{grid-area:1/3/-1/4;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start}
+  .lede .r18h .r18n{display:contents}
+  .lede .r18h .r18s,.lede .r18h .r18w,.lede .r18h .r18i{margin-top:0}
+  .r18h .r18s b{font-size:18px;line-height:24px} /* one type step (siteui.TYPE) under the switch line, so the two never compete */
+  .r18h .r18w{margin-top:2px;line-height:20px} /* each line its text height: the gaps the block spreads are the gaps you see */
+  .r18h .r18i{margin-top:8px;line-height:20px}
+}
+@media (min-width:900px) and (max-height:860px){ .lede .r18h .r18w{margin-top:0} .lede .r18h .r18i{margin-top:0} }
+/* round 12: the 48 h chart about two thirds of the main row (hourly cells ~16 px at 1440), the row names' column to its
+   longest name */
+@media (min-width:900px){ .tl,.tl.noev{grid-template-columns:112px minmax(0,1fr)} }
+/* round 13: "Open in 3D" a quiet text link in the trust line's "how we measure" style (the header tab is the button) */
+.c3d .m3d{height:auto;margin:0 0 0 auto;padding:0;border-radius:0;box-shadow:none;background:none;color:var(--ink2);font-size:13px;font-weight:400;line-height:20px;text-decoration:none}
+.c3d .m3d .u{text-decoration:underline;text-decoration-color:rgb(var(--ink-rgb) / .4);text-decoration-thickness:1px;text-underline-offset:4px}
+.c3d .m3d:hover{background:none;color:var(--ink)}
+.c3d .m3d:hover .u{text-decoration-color:currentColor}
+/* round 13: the readout on the title's line when it fits (placeReadout), on the title's baseline, 16 px after it */
+@media (min-width:900px){
+  .tlc.roinl .hd #hdsel.readout{flex:1 1 auto;min-width:0;margin:0 4px;height:24px;line-height:24px;align-self:center;position:relative;top:1px} /* 16 px after the title with the row gap (12), on its baseline */
+  .tlc.roinl .hd #hdsel .ro{line-height:24px;white-space:nowrap}
+  .tlc.roinl .hd #hdsel .rback{position:absolute;right:0;top:50%;transform:translateY(-50%);margin:0}
+  .tlc.roinl .hd #zoom{margin-left:0}
+}
+/* round 13: the night bands behind the bars (the lanes isolate, so -1 stays above the card) */
+.lanes{isolation:isolate}
+#nbands{z-index:-1}
+/* a 24 px band between the direction bar and the chance plot (round 13: 18), where the peak note sits above the top
+   gridline with the 3D view's air under the bar */
+@media (min-width:900px){ #lpg,.tl.r18on #lpg{margin-top:24px} #hlsw{margin-top:24px} }
+/* the "18 closed" tag in the Runway 18 lane: the row gives it 8 px more above its cells (16 px tag, 4 px over the chance
+   plot's baseline, sitting on the 3 px bracket) */
+@media (min-width:480px){ .tl.r18on,.tl.noev.r18on{--r18row:38px!important} .tl.r18on #l18{margin-top:28px} .tl.r18on #hl18{position:relative;top:9px} } /* 4 px more over the cells (from the chance plot): the "18 closed" tag 3 px clear of its bracket */
+/* the switch chip and the official tag 4 px over the direction bar */
+#lod .pgtag{top:-18px}
+#ev .mk.r18.inlane{z-index:7}
+#ev .mk.r18.inlane.edge{transform:none} #ev .mk.r18.inlane.edge:active{transform:scale(.95)} /* phones: placed by its left edge */
+/* the flight-path card's operator line: what flies now, then what would fly if switched, each clause kept whole */
+.c3d .mif .mi0,.c3d .mif .mi1{display:block}
+.c3d .mif .nw{white-space:nowrap}
+@media (max-width:479px){ .c3d .mif .mi0{display:none} }
+/* the footer: the backtest note ends on the right content edge whatever the right column's width */
+@media (min-width:900px){ .pfoot>span:first-child{grid-template-columns:minmax(0,1fr) auto} .pfoot .fl+.fl{padding-left:24px} }
+@media (max-width:479px){
+  .r18h .r18d{width:9px;height:9px;border-width:2px;margin:0 6px 0 0;vertical-align:0}
 }
 """
 
@@ -1423,13 +1794,17 @@ const pOf = (h, od) => (od === 25 ? h.p25 : 1 - h.p25);
 const idxOf = t => H.findIndex(h => Date.parse(h.t) === Date.parse(t));
 try { if (innerWidth >= 480) document.getElementById('tzl').textContent = `Local (${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value})`; } catch {}
 document.addEventListener('click', e => { // "How this works" opens a popover, so the card never clips it
-  { const a = e.target.closest('a.beat'); if (a) { e.preventDefault(); const c = $('rec'); c.scrollIntoView({ behavior: still.matches ? 'auto' : 'smooth', block: 'center' }); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); return; } } // the proof's claim links to its evidence
+  { const a = e.target.closest('a.beat'); if (a) { e.preventDefault(); openRec(); return; } } // the trust line links to its evidence: the accuracy detail view
+  { const d = $('recdlg'); if (d && d.open && (e.target === d || e.target.closest('.recx'))) { d.close(); return; } } // closes on its button or a click outside the card
   { const dp = document.getElementById('dbpop'); if (dp && !e.target.closest('#dbib,#dbpop')) { dp.hidden = true; document.getElementById('dbib')?.setAttribute('aria-expanded', 'false'); } } // the (i) popover closes on a tap elsewhere
   const b = e.target.closest('.howbtn'), p = $('howpop');
   if (b) { const r = b.getBoundingClientRect(), z = zoom(); p.hidden = !p.hidden; p.style.left = `${r.left / z}px`; p.style.top = `${(r.bottom + 6) / z}px`; return; }
   if (!e.target.closest('#howpop')) p.hidden = true;
 });
 const nowIdx = () => Math.max(0, Math.min(H.length - 1, Math.floor((Date.now() - Date.parse(H[0].t)) / 36e5))); // the hour we are in
+// the current slot's name: a forecast hour runs from its valid time (fra.dataset: label index = hour start) for one hour, so
+// the first slot of a fresh forecast (lead 1 h) starts after the issue; named by its window, never as a later clock time
+const slotLab = t => { const a = Date.parse(t); return `${hm(a)}\u2013${hm(a + 36e5)}`; }; // the current slot as its one-hour window (the card title already says what comes next)
 
 // ---- events = timeline markers: the predicted direction change, Runway 18 closures
 function events() {
@@ -1462,49 +1837,55 @@ function renderOD() {
   const twS = h.ws === undefined ? 'n/a' : `${Math.round(h.ws)}\u202fkt from ${compass(h.wd)} (${String(h.wd).padStart(3, '0')}°)`;
   const ok = h.p18 >= 0.5, r18 = [`Runway 18 West${now ? '' : ` at ${hm(h.t)}`}`, `<span class="status ${ok ? 'open' : 'closed'}">${ok ? 'Open' : 'Closed'}</span><span class="dd2">take-offs to the south only</span>`, `Closure chance ${now ? 'now' : `at ${hm(h.t)}`}: ${pct(1 - h.p18)}. It closes when the wind across it is too strong.`];
   const windT = 'The official rule switches direction when the tailwind stays above 1\u202fkt for more than 30 minutes, or at once from 10\u202fkt';
-  const twS2 = h.ws === undefined ? 'n/a' : `${tw === null ? '' : `${Math.abs(tw)}\u202fkt ${tw > 0 ? 'tailwind' : 'headwind'} on ${two(od)}`} <small>wind ${compass(h.wd)} ${Math.round(h.ws)}\u202fkt</small>`;
+  const twS2 = h.ws === undefined ? 'n/a' : `${tw === null ? '' : `${tw > 0 ? 'tailwind' : 'headwind'} ${Math.abs(tw)}\u202fkt on ${two(od)}`} <small>from ${compass(h.wd)} · ${String(h.wd).padStart(3, '0')}°</small>`;
   const oth = x => Math.min(x.p25, 1 - x.p25), pkH = H.slice(nowIdx()).reduce((a, x) => (oth(x) > oth(a) ? x : a), H[nowIdx()]);
   void twS2; void windT;
-  const facts = [['Last switch', D.since ? `${dayf(D.since)}, ${hm(D.since)} <small>flown ${D.od_now === 25 ? 'West' : 'East'} for ${dur}</small>` : 'n/a', 'The last change of the operating direction actually flown (radar tracks)'],
-    (() => { if (!now) { if (h.ws === undefined) return [`Wind at ${dayf(h.t).split(' ')[0]} ${hm(h.t)}`, 'n/a']; // hovered or pinned: the wind for that hour
-        return [`Wind at ${dayf(h.t).split(' ')[0]} ${hm(h.t)} <small>(forecast)</small>`, `${Math.abs(tw)}\u202fkt ${tw > 0 ? 'tailwind' : 'headwind'} on ${two(od)} <small>${compass(h.wd)} ${Math.round(h.ws)}\u202fkt · ${String(Math.round(h.wd)).padStart(3, '0')}°</small>`, `ECMWF forecast for this hour. ${windT}`]; }
-      const h2 = H[Math.min(H.length - 1, nowIdx() + 24)]; if (!h2 || h2.ws === undefined) return ['Wind in 24\u202fh', 'n/a'];
-      const t2 = Math.round(comp(h2, h2.od === 25 ? 249 : 69));
-      const h0 = H[nowIdx()], t0 = h0 && h0.ws !== undefined ? Math.round(comp(h0, h0.od === 25 ? 249 : 69)) : null; // the second line: what changes against now (real forecast values)
-      return ['Wind in 24\u202fh <small>(forecast)</small>', `${Math.abs(t2)}\u202fkt ${t2 > 0 ? 'tailwind' : 'headwind'} on ${two(h2.od)} <small>${compass(h2.wd)} ${Math.round(h2.ws)}\u202fkt · ${String(Math.round(h2.wd)).padStart(3, '0')}°</small>`, 'ECMWF forecast for 24 hours from now']; })(),
-    !D.change && (() => { const n0 = nowIdx(); return H.slice(n0).some(x => Math.min(x.p25, 1 - x.p25) >= 0.2); })() ? (() => { // a possible switch named in the hero: here, how long the current direction is safe
-      const n0 = nowIdx(); let k = n0; while (k + 1 < H.length && pOf(H[k + 1], D.od_now) >= 0.9) k++;
-      return [`Steady ${word(D.od_now)}`, `until at least ${dayf(H[k].t).split(' ')[0]} ${hm(plus1h(H[k].t))} <small>each hour ≥90\u202f% sure</small>`, 'The last hour up to which every forecast hour is at least 90 % sure of the current direction']; })() :
-    D.change ? [T.nextsw, `${dhm(D.change.t)} <small>to ${word(D.od_now === 25 ? 7 : 25)} · ≈${Math.max(0, Math.round((Date.parse(D.change.t) - Date.now()) / 36e5))}\u202fh from now</small>`, 'From the forecast for each hour. Runway 18 is on the map and in the 3D view.'] : (() => { // no switch expected: the closest call, the same operating-hours peak as the chart's "Highest" note
-      const n0 = nowIdx(), ci = H.reduce((m, x, k) => (k >= n0 && !night(x.t) && (m < 0 || oth(x) > oth(H[m])) ? k : m), -1); if (ci < 0) return [T.nextsw, 'none within 48\u202fh'];
-      return ['Closest call', `${dayf(H[ci].t).split(' ')[0]} ${hm(H[ci].t)} <small>${pct(oth(H[ci]))} ${word(D.od_now === 25 ? 7 : 25)} · ${ci >= H.length - 1 ? 'last hour of forecast' : `in ${ci - n0}\u202fh`}</small>`, 'The operating hour (outside the 23:00 to 05:00 night ban) with the highest chance of a switch: no switch is expected within 48 h. Click to show it.', ` class="ccell" role="button" tabindex="0" data-i="${ci}"`]; })(),
-  ];
-  if ($('eyebrow')) $('eyebrow').innerHTML = D.since ? `<span class="ebl">Runway direction now · </span><span class="nw">since ${dayf(D.since)}<span class="ebl">, ${hm(D.since)}</span></span>` : 'Runway direction now';
+  // no wind line in the 48 h card's foot: the readout carries the next hour's headwind and the chart its 48 h course
+  if ($('eyebrow')) $('eyebrow').innerHTML = D.since ? `<span class="ebl">Runway direction now · </span><span class="nw">since ${dayf(D.since)}<span class="ebl">, ${hm(D.since)}</span></span>${hrs === null ? '' : `<span class="nw"> · ${dur}</span>`}` : 'Runway direction now'; // how long it has held: the kicker's last part
   { const twH = h.ws === undefined ? null : Math.round(-comp(h, od === 25 ? 249 : 69)), osw = Math.min(h.p25, 1 - h.p25);
     // the readout under the card title: the hour under the cursor (or now), always the same four facts
-    const nb = !now && night(h.t), nk = nb ? H.findIndex((x, k) => k > sel && !night(x.t)) : -1;
+    const si = now ? nowIdx() : sel, nb = night(h.t), nk = nb ? H.findIndex((x, k) => k > si && !night(x.t)) : -1; // a night hour reads as the night ban whether it is now or pinned (as in 3D)
     const ph2 = matchMedia('(max-width:479px)').matches, tlab = t => (ph2 ? `${dayf(t).split(' ')[0]} ${hm(t)}` : dhm(t)); // phones: the weekday and the time
     if (nb) $('oduse').innerHTML = `<b>${tlab(h.t)}</b> · ${nk >= 0 ? T.night_next.replace('{od}', two(H[nk].od)).replace('{t}', hm(H[nk].t)).replace(/^N/, 'n') : 'night ban'}`; else // the shared night phrase (siteui.COPY.night_next) // the night ban: what happens next, not a direction nobody flies
-    $('oduse').innerHTML = `<b>${now ? `Now, ${hm(h.t)}` : tlab(h.t)}</b> · ${now ? `${pct(pOf(h, od))} ${word(od)}` : `${pct(pOf(h, D.od_now === 25 ? 7 : 25))} chance of ${word(D.od_now === 25 ? 7 : 25)}`}${twH === null ? '' : ` · ${twH >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(twH)}\u202fkt`}`; } // headwind on phones too, as in 3D
-  $('odfacts').innerHTML = facts.map(([k, v, tt, at]) => `<div${tt ? ` title="${tt}"` : ''}${at || ''}><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+    $('oduse').innerHTML = `<b>${now ? slotLab(h.t) : tlab(h.t)}</b> · ${now ? `${pct(pOf(h, od))} ${word(od)}` : `${pct(pOf(h, D.od_now === 25 ? 7 : 25))} chance of ${word(D.od_now === 25 ? 7 : 25)}`}${twH === null ? '' : ` · ${twH >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(twH)}\u202fkt`}`; } // headwind on phones too, as in 3D
 }
-function renderR18() {
-  const now = sel < 0, h = now ? H[nowIdx()] : H[sel], ok = h.p18 >= 0.5, day1 = H.slice(nowIdx());
-  let sub;
-  if (!now) sub = `Closure chance at ${hm(h.t)}: ${pct(1 - h.p18)}`;
-  else if (ok) sub = day1.every(x => x.p18 >= 0.5) ? `Closure chance under ${Math.max(5, Math.ceil(Math.max(...day1.map(x => 1 - x.p18)) * 100 / 5) * 5)}\u202f% per hour` : `Closure chance now: ${pct(1 - h.p18)}`;
-  else { const back = H.findIndex(x => x.p18 >= 0.5); sub = back < 0 ? 'Not expected back within 48\u202fh' : `Likely usable again ${dhm(H[back].t)}`; }
-  const most = D.traffic ? Math.max(...D.traffic.perHour.map(n => Math.round(n / 2 * (D.traffic.share18 || 0)))) : 0;
-  const what = `<div class="quiet">Take-offs to the south only. If it closes, they move to the Centre runway${most ? ` (up to about ${most} an hour)` : ''}.</div>`;
-  const W = r18Windows(), dep18 = D.traffic ? D.traffic.share18 : null;
-  if (W.length) {
-    const [a, b] = W.find(([, e]) => e >= Math.max(0, sel)) || W[0], win = H.slice(a, b + 1);
-    const tw = Math.max(-99, ...win.filter(x => x.ws !== undefined).map(x => comp(x, 180)));
-    const moved = dep18 ? Math.max(...win.map(x => Math.round(D.traffic.perHour[fraHour(x.t)] / 2 * dep18))) : 0;
-    $('r18foot').innerHTML = `<div class="alert"><b>Not usable ${dhm(win[0].t)} to ${hm(plus1h(win[win.length - 1].t))}</b>`
-      + `<span>${moved > 0 ? `About ${moved} departures an hour move to the Centre runway` : 'Inside the night ban, so no departures move'}`
-      + `${tw >= 5 ? `, tailwind up to ${Math.round(tw)}\u202fkt` : ''}</span></div>`;
-  } else $('r18foot').innerHTML = '';
+function r18Now() { // the Runway 18 status at the current hour (both pages, siteui.COPY.r18_*): the next closure in the window,
+  // scheduled or in effect, or none; never the hovered hour
+  const n0 = nowIdx(), W = r18Windows().find(([, e]) => e >= n0), dep18 = D.traffic ? D.traffic.share18 : null;
+  if (!W) { // open throughout: the highest closure chance of a daytime hour, then what it carries at the busiest
+    const day = H.slice(n0).filter(x => !night(x.t)), worst = day.length ? Math.max(...day.map(x => 1 - x.p18)) : 0;
+    const most = dep18 && day.length ? Math.max(...day.map(x => Math.round(D.traffic.perHour[fraHour(x.t)] / 2 * dep18))) : 0;
+    return { state: 'none', big: T.r18_open.replace('{n}', H.length - n0), lines: [T.r18_open_max.replace('{p}', pct(worst)), ...(most > 0 ? [T.r18_carries.replace('{n}', most)] : [])] }; }
+  const [a, b] = W, win = H.slice(Math.max(a, n0), b + 1), s = H[a].t, e = plus1h(H[b].t), dk = t => fmt({ year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t));
+  const moved = dep18 ? Math.max(...win.map(x => Math.round(D.traffic.perHour[fraHour(x.t)] / 2 * dep18))) : 0;
+  const end = dk(e) === dk(s) ? hm(e) : `${dayf(e).split(' ')[0]} ${hm(e)}`; // an end on another day carries its weekday
+  const mv = moved > 0 ? T.r18_moves.replace('{n}', moved) : T.r18_moves0;
+  if (a <= n0) return { state: 'now', big: T.r18_until.replace('{b}', dk(e) === dk(Date.now()) ? hm(e) : `${dayf(e).split(' ')[0]} ${hm(e)}`), lines: [mv] };
+  // the quiet line: the relative day, then the at-risk hours drawn next to the closure in the lane (open below 90 %, outside
+  // the night ban) as the "at risk" range, then the routine state
+  const nd = Math.round((Date.parse(dk(s).split('/').reverse().join('-')) - Date.parse(dk(Date.now()).split('/').reverse().join('-'))) / 864e5);
+  const risk = x => x.p18 >= 0.5 && x.p18 < 0.9 && !night(x.t); let a2 = a, b2 = b; while (a2 - 1 > n0 && risk(H[a2 - 1])) a2--; while (b2 + 1 < H.length && risk(H[b2 + 1])) b2++;
+  const e2 = plus1h(H[b2].t), may = a2 < a || b2 > b ? T.r18_may.replace('{a}', hm(H[a2].t)).replace('{b}', dk(e2) === dk(H[a2].t) ? hm(e2) : `${dayf(e2).split(' ')[0]} ${hm(e2)}`) : '';
+  const rel = [T.r18_rel[Math.min(nd, 2)].replace('{n}', nd), may, T.r18_date].filter(Boolean).join(' · ');
+  return { state: 'sched', big: T.r18_closes.replace('{date}', dayf(s)).replace('{a}', hm(s)).replace('{b}', end), lines: [rel, mv] };
+}
+function renderR18() { // the hero's Runway 18 block: a closure in the window is the big line (a hollow ring while scheduled, a filled
+  // dot while in effect, both the closed cells' red); the routine state is the quiet part
+  const el = $('r18h'); if (!el) return;
+  const r = r18Now(), mk = r.state === 'none' ? '' : `<i class="r18d${r.state === 'sched' ? ' ring' : ''}" aria-hidden="true"></i>`;
+  el.dataset.state = r.state;
+  el.innerHTML = `<div class="r18l">Runway 18</div><div class="r18s"><b>${mk}${r.big}</b></div>${(r.lines || []).length ? `<p class="r18n">${r.lines.map((t, k) => `<span class="${k === r.lines.length - 1 && (r.state !== 'none' || k) ? 'r18i' : 'r18w'}">${t}</span>`).join('')}</p>` : ''}`;
+  el.title = 'Take-offs to the south only. It closes when the wind across it is too strong; its departures then use the Centre runway.';
+  alignR18();
+}
+function alignR18() { // desktop: each Runway 18 line on the baseline of its partner in the left column: the label on the
+  // headline's, the closure on the switch line's, the quiet line on its second line's, what it moves on the trust line's
+  const el = $('r18h'); if (!el) return; const ls = [...el.querySelectorAll('.r18l, .r18s, .r18w, .r18i')]; ls.forEach(e => { e.style.marginTop = ''; });
+  if (NARROW.matches) return;
+  const base = e => { const s = document.createElement('span'); s.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline'; e.appendChild(s); const y = s.getBoundingClientRect().top; s.remove(); return y; };
+  for (const [a, b] of [['.r18l', '#answer > span:not(.dbadge)'], ['.r18s b', '#subhead .sh1'], ['.r18w', '#subhead .sh2'], ['.r18i', '#trust']]) {
+    const x = el.querySelector(a), y = document.querySelector(b), box = x && (x.closest('.r18s') || x); if (!x || !y || !x.offsetWidth || !y.offsetWidth) continue;
+    const d = (base(y) - base(x)) / zoom(); box.style.marginTop = `${Math.max(0, parseFloat(getComputedStyle(box).marginTop) + d).toFixed(2)}px`; }
 }
 function impact(t) {
   if (night(t)) return 'Night ban from 23:00 to 05:00, no scheduled traffic';
@@ -1549,7 +1930,12 @@ function renderChange() {
     $('gochg').onclick = () => { setPlaying(0); go(i); };
     const wd = t => `${dayf(t).split(' ')[0]} ${hm(t)}`;
     $('answer').innerHTML = `${badge(D.od_now)}<span><span class="ff">Frankfurt </span>flies ${word(D.od_now)}</span>${arrow(D.od_now)}`;
-    $('subhead').innerHTML = T.out_expected.replace('{to}', word(to)).replace('{t}', wd(D.change.t)) + (H.length - 1 - idxOf(D.change.t) <= 1 ? T.out_edge : '');
+    // the switch with its timing and certainty, from numbers already on the page: the hours to go, and the highest hourly
+    // chance of the new direction (the chart's "Highest" note) and when it is reached
+    const oth = x => pOf(x, to), n0 = nowIdx(), pk = H.reduce((m, x, k) => (k >= n0 && !night(x.t) && (m < 0 || oth(x) > oth(H[m])) ? k : m), -1), inH = Math.round((Date.parse(D.change.t) - Date.now()) / 36e5);
+    const pkT = pk < 0 ? null : H[pk].t;
+    const cert = [inH > 0 ? `in \u2248${inH}\u202fh` : '', pkT ? T.peak_hi.replace('{to}', word(to)).replace('{p}', pct(oth(H[pk]))).replace('{t}', dhm(pkT).replace(/ \d+ \w+,/, '')) : ''].filter(Boolean).map(x => `<span class="nw">${x}</span>`).join(' · '); // the charts' peak (number and Day HH:MM) tied to the switch: "81 % chance of West by Sat 17:00"
+    $('subhead').innerHTML = `<span class="sh1">${T.out_expected.replace('{to}', word(to)).replace('{t}', `<span class="nw">${dhm(D.change.t)}</span>`)}${H.length - 1 - idxOf(D.change.t) <= 1 ? T.out_edge : ''}</span>${cert ? `<span class="sh2">${cert}</span>` : ''}`; // one format for the switch instant in prose: "Sat 7 Nov, 14:00"
     $('disagree').hidden = true;
   } else {
     const pg = pgDiff(), end = dhm(plus1h(H[H.length - 1].t));
@@ -1585,19 +1971,22 @@ const badge = od => `<span class="rw dbadge" style="--dc:${col(od)}">${two(od)}<
 const arrow = od => `<svg class="arr" viewBox="0 0 34 24" aria-hidden="true"><path d="${od === 25 ? 'M31 12H4M12 4l-8 8 8 8' : 'M3 12h27M22 4l8 8-8 8'}"/></svg>`;
 const INAA = 'the <abbr title="INAA: the official operating-direction forecast published by the Umwelthaus (Forum Flughafen und Region)">official forecast (INAA)</abbr>';
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function renderProof(R, hasP, per) { // the claim next to the answer: hours right over all lead times, against the official forecast
-  const el = $('proof'); if (!el) return;
-  if (!R.length) { el.innerHTML = ''; return; }
+addEventListener('keydown', e => { const d = $('recdlg'); if (e.key === 'Escape' && d && d.open) { e.preventDefault(); e.stopImmediatePropagation(); d.close(); } }, true); // Esc closes the detail view first (the timeline's Esc is "back to now")
+function openRec() { // the accuracy detail view: drawn when it opens (a closed dialog has no size to lay out in)
+  const d = $('recdlg'); if (!d) return; if (!d.open) d.showModal(); renderRecord(); $('rec').querySelector('.recx')?.focus({ preventScroll: true });
+}
+function renderProof(R, hasP, per) { // one quiet line under the outlook: hours right over all lead times and a link to the detail view (which compares with the official forecast)
+  const el = $('trust'); if (!el) return;
+  if (!R.length) { el.innerHTML = ''; if ($('trustph')) $('trustph').innerHTML = ''; return; }
   const p = v => Math.round(v * 100), rng = a => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? `${lo}` : `${lo}–${hi}`; };
-  const beats = hasP && R.every(r => r.acc > r.prog), L = R.map(r => r.lead);
-  el.innerHTML = `<div class="pfe">Accuracy</div><div class="pf1"><b>${rng(R.map(r => p(r.acc)))} %</b></div>`
-    + `<div class="pfm">of hours correct, ${Math.min(...L)}–${Math.max(...L)}\u202fh ahead${hasP ? ` · <span class="pfo" title="INAA / Umwelthaus">official forecast: <b class="of">${rng(R.map(r => p(r.prog)))}\u202f%</b></span>` : ''}</div>`
-    + (hasP && beats ? `<div class="pf3"><a class="beat" href="#rec"><span class="u">${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f% fewer wrong hours</span><span class="ar"> →</span></a></div>` : '') + `${((D.quality || {}).test_info || {}).days ? `<div class="pfb">Backtest: ${Math.round(D.quality.test_info.days / 30.4)} months, walk-forward</div>` : ''}`; // the gain, linked to the accuracy card
-  if ($('pinl')) $('pinl').innerHTML = `<span class="pl1"><span class="nw"><b class="pn">${rng(R.map(r => p(r.acc)))}\u202f%</b> right</span>${hasP ? `<span class="nw"> · official <b class="of">${rng(R.map(r => p(r.prog)))}\u202f%</b></span>` : ''}</span>${hasP && beats ? `<a class="pl2 beat" href="#rec"><span class="nw">${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f%</span> fewer wrong hours\u00a0→</a>` : ''}`; // phones: two lines, the number first
+  const L = R.map(r => r.lead);
+  el.innerHTML = `<span class="nw">Hours correct ${rng(R.map(r => p(r.acc)))}\u202f%,</span> <span class="nw">${Math.min(...L)}–${Math.max(...L)}\u202fh ahead</span>` // the official comparison is in the detail view
+    + ` · <a class="beat" href="#rec" aria-haspopup="dialog"><span class="u">how we measure</span>${arr(7)}</a>`;
+  if ($('trustph')) $('trustph').innerHTML = el.innerHTML; // phones: the same line as a footnote under the cards (the first screen keeps the chart)
 }
 function renderRecord() { // walk-forward backtest of the official forecast: hours right per lead time, next to the official forecast (INAA)
   const Q = D.quality || {}, R = (Q.od25 || []).filter(r => r.acc !== null && r.acc !== undefined), el = $('rec');
-  if (!R.length) { el.innerHTML = '<div class="lbl">Track record</div><div class="quiet">No backtest available.</div>'; return; }
+  if (!R.length) { el.innerHTML = '<div class="lbl">How reliable is this?</div><div class="quiet">No backtest available.</div>'; renderProof(R, false, ''); return; }
   const p = v => Math.round(v * 100), r24 = R.find(r => r.lead === 24) || R[R.length - 1], hasP = R.every(r => r.prog !== null && r.prog !== undefined);
   const beats = hasP && R.every(r => r.acc > r.prog), ti = Q.test_info, S = Q.switch;
   const a = ti && new Date(ti.start), b = ti && new Date(a.getTime() + ti.days * 864e5);
@@ -1605,7 +1994,7 @@ function renderRecord() { // walk-forward backtest of the official forecast: hou
   const NB = ' ', er = v => (1 - v) * 100, fewer = r => Math.round((1 - er(r.acc) / er(r.prog)) * 100), sw = S && S.model && S.prog;
   const mon = per.replace(/ \d{4}$/, '');
   const beatsR = hasP && R.every(r => r.acc > r.prog);
-  el.innerHTML = `<div class="acchd"><div class="lbl">Accuracy by lead time</div>${hasP ? '<span class="acck"><span class="k"><i class="km"></i>ours</span><span class="k"><i class="ko"></i>official</span></span>' : ''}</div>`
+  el.innerHTML = `<div class="acchd"><div class="lbl">How reliable is this?<small>hours correct by lead time</small></div>${hasP ? '<span class="acck"><span class="k"><i class="km"></i>ours</span><span class="k"><i class="ko"></i>official</span></span>' : ''}<button class="recx" aria-label="Close" title="Close (Esc)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>`
     + (hasP && beatsR ? '' : '')
     + `<div class="db" id="db"></div>`
     + (sw ? `<dl class="accst" title="Backtest over ${ti ? Math.round(ti.days / 30.4) : ''} months (${mon})"><div><dd>${S.model.fa}</dd><dt><span class="nw">false switch alarms</span> <span class="nw">in ${ti ? Math.round(ti.days / 30.4) : ''}${NB}months</span></dt><dt class="ofl">official: <b class="of">${S.prog.fa}</b> alarms</dt></div>`
@@ -1614,30 +2003,33 @@ function renderRecord() { // walk-forward backtest of the official forecast: hou
     const box = $('db'), W0 = box.clientWidth || 400, narrow = W0 < 380;
     const ctx = renderRecord.cx || (renderRecord.cx = document.createElement('canvas').getContext('2d'));
     ctx.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; const lw = Math.max(ctx.measureText('Ahead').width, ...R.map(r => ctx.measureText(`${r.lead}${NB}h`).width));
-    const w24 = ctx.measureText(`${r24.lead}${NB}h`).width; ctx.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; const PLAN = narrow ? '' : ' · planning horizon', tagW = 0; // the 24 h row says why it matters, in its own cell
+    const w24 = ctx.measureText(`${r24.lead}${NB}h`).width; ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif'; const PLAN = narrow ? '' : ' · planning horizon', tagW = 0; // the 24 h row says why it matters, in its own cell
     const lwP = Math.max(lw, w24 + ctx.measureText(PLAN).width);
     ctx.font = '400 13px "IBM Plex Sans", system-ui, sans-serif'; const fwm = Math.ceil(Math.max(...R.map(r => ctx.measureText(`${Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)}${NB}%`).width), ctx.measureText('Fewer errors').width + 16)) + 4;
     const L = Math.ceil(lwP) + 16, OV = 28, /* the 100 % line stays clear of the Fewer errors column */ FW = narrow ? Math.max(60, fwm) : 72, /* desktop: the column as wide as its numbers; the header reaches left over the plot's header row */ TG = tagW ? 12 + tagW : 0; // 40 px for the official values left of their dots, 36 for ours on the right
-    const AX = Math.max(80, Math.min(9999, W0 - L - OV - (FW ? 8 + FW : 0) - TG)), FX = L + AX + OV + (FW ? 8 + FW : 0), W = Math.min(W0, FX + TG), top = 22;
+    const AX = Math.max(80, Math.min(9999, W0 - L - OV - (FW ? 8 + FW : 0) - TG)), FX = L + AX + OV + (FW ? 8 + FW : 0), W = Math.min(W0, FX + TG), TK = 4, BOT = TK + 14, AV = box.clientHeight || 0, top = narrow ? 22 : (AV - 26 - BOT) / R.length >= 21 ? 26 : (AV - 22 - BOT) / R.length >= 19 ? 22 : 20; // a little more air under the header when the card has room
     const lo = 86, hi = 100, X = v => L + (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * AX;
-    const RH = narrow ? 26 : Math.max(20, Math.min(30, Math.floor(((box.clientHeight || 0) - 22 - 17) / R.length))), Y0 = R.map((_, k) => top + k * RH), yB = top + R.length * RH, H = yB + 15;
+    // under the plot: 4 px tick marks through the baseline, the values directly under them (baseline 16 px below the axis)
+    // desktop: the rows share whatever height the card leaves (rounded per row, so the rules stay on the pixel grid)
+    const RH = narrow ? 26 : Math.max(19, Math.min(30, (AV - top - BOT) / R.length)), Y0 = R.map((_, k) => top + Math.round(k * RH)), yB = top + Math.round(R.length * RH), H = yB + BOT;
     let g = '';
     R.forEach((r, k) => { if (k) g += `<line x1="0" x2="${W}" y1="${Y0[k] + 0.5}" y2="${Y0[k] + 0.5}" class="dbrule"/>`; });
     ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif'; const pcW = ctx.measureText('% of hours correct').width; ctx.font = '500 12px "IBM Plex Sans", system-ui, sans-serif';
     const HD = 'Fewer errors'; void pcW; // one short header at every width, with its (i)
     g += `<text x="0" y="${top - 8}" class="dbt">Ahead</text><text x="${L + AX / 2}" y="${top - 8}" text-anchor="middle" class="dbt">% of hours correct</text>`; // centred over the plot
-    for (const v of [88, 92, 96, 100]) /* one 86-100 domain at every width, across the whole middle column; a faint line at every labelled tick, on the pixel grid */ g += `<line x1="${Math.round(X(v)) + 0.5}" x2="${Math.round(X(v)) + 0.5}" y1="${top}" y2="${yB}" class="dbg"/><text x="${X(v)}" y="${yB + 4 + 9}" text-anchor="middle" class="dbt tk">${v}${NB}%</text>`;
+    for (const v of [88, 92, 96, 100]) /* one 86-100 domain at every width, across the whole middle column; a faint line at every labelled tick, on the pixel grid */ g += `<line x1="${Math.round(X(v)) + 0.5}" x2="${Math.round(X(v)) + 0.5}" y1="${top}" y2="${yB}" class="dbg"/><line x1="${Math.round(X(v)) + 0.5}" x2="${Math.round(X(v)) + 0.5}" y1="${yB}" y2="${yB + TK}" class="dbtm"/><text x="${X(v)}" y="${yB + TK + 12}" text-anchor="middle" class="dbt tk">${v}${NB}%</text>`;
     g += `<line x1="${L}" x2="${L + AX}" y1="${yB + 0.5}" y2="${yB + 0.5}" class="dbax"/>`; // the axis spans exactly the rows' x-range
-    if (FW) g += `<text x="${FX - 15}" y="${top - 8}" text-anchor="end" class="dbt hd">${HD}</text>`;
+    if (FW) g += `<text x="${FX - 22}" y="${top - 8}" text-anchor="end" class="dbt hd">${HD}</text>`; // 6 px before the (i), which ends on the column's right edge
+    ctx.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; const ko = (x0, y, t, end) => { const w = ctx.measureText(t).width + 4; return `<rect class="dbko" x="${(end ? x0 - w + 2 : x0 - 2).toFixed(1)}" y="${y - 10}" width="${w.toFixed(1)}" height="18"/>`; }; // the text's full line box (ascent and descent) // a card-colour knockout: no gridline runs through a value
     R.forEach((r, k) => {
-      const y = Y0[k] + RH / 2, a = p(r.acc), o = hasP ? p(r.prog) : null;
+      const y = Math.round((Y0[k] + (k + 1 < R.length ? Y0[k + 1] : yB)) / 2), a = p(r.acc), o = hasP ? p(r.prog) : null;
       g += `<text x="0" y="${y + 4}" class="dbl">${r.lead}${NB}h${r === r24 ? `<tspan class="dbplan">${PLAN}</tspan>` : ''}</text>`;
-      if (o !== null) g += `<line x1="${X(o)}" x2="${X(a)}" y1="${y}" y2="${y}" class="dbs"/><circle cx="${X(o)}" cy="${y}" r="5" class="dbo"/><text x="${X(o) - 11}" y="${y + 4}" text-anchor="end" class="dbv o">${o}${NB}%</text>`;
-      g += `<circle cx="${X(a)}" cy="${y}" r="5.5" class="dbm"/><text x="${X(a) + 11.5}" y="${y + 4}" class="dbv">${a}${NB}%</text>`;
+      if (o !== null) g += `<line x1="${X(o)}" x2="${X(a)}" y1="${y}" y2="${y}" class="dbs"/><circle cx="${X(o)}" cy="${y}" r="5" class="dbo"/>${ko(X(o) - 11, y, `${o}${NB}%`, true)}<text x="${X(o) - 11}" y="${y + 4}" text-anchor="end" class="dbv o">${o}${NB}%</text>`;
+      g += `<circle cx="${X(a)}" cy="${y}" r="5.5" class="dbm"/>${ko(X(a) + 11.5, y, `${a}${NB}%`, false)}<text x="${X(a) + 11.5}" y="${y + 4}" class="dbv">${a}${NB}%</text>`;
       if (o !== null && FW) g += `<text x="${FX}" y="${y + 4}" text-anchor="end" class="dbf"><title>${fewer(r)}${NB}% fewer wrong hours than the official forecast, ${r.lead}${NB}h ahead</title><tspan class="dbfn">${fewer(r)}${NB}%</tspan></text>`;
     });
     box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hours correct per lead time, ours against the official forecast">${g}</svg>`
-      + (FW ? `<button class="dbib" id="dbib" style="left:${FX - 12}px;top:${top - 18}px" aria-label="What fewer errors than official means" aria-expanded="false" aria-controls="dbpop">i</button>`
+      + (FW ? `<button class="dbib" id="dbib" style="left:${FX - 24}px;top:${top - 27}px" aria-label="What fewer errors than official means" aria-expanded="false" aria-controls="dbpop"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.75"/><path d="M8 7.2v4.3"/><circle class="dot" cx="8" cy="4.9" r="1"/></svg></button>`
       + `<div class="dbpop" id="dbpop" role="tooltip" hidden style="top:${top + 2}px">Share of the official forecast\u2019s wrong hours we avoid. ${fewer(r24)}\u202f% fewer = ${fewer(r24)} of every 100 errors gone (${r24.lead}\u202fh ahead).</div>` : '');
     const ib = $('dbib'), pop = $('dbpop'); // a real popover: hover, focus and tap
     if (ib) { const show = on => { pop.hidden = !on; ib.setAttribute('aria-expanded', on); };
@@ -1723,7 +2115,7 @@ function fitTag(tg, xa, lim) { // shared with 3D: the tag never runs into the sw
   tg.textContent = 'Official'; tg.style.left = `${Math.max(0, lim - tg.offsetWidth)}px`; tg.style.right = 'auto'; tg.classList.remove('ra'); }
 function pgTag(xa, Wl, ta, tb) { // the official window: as much of "Official: switch Fri 19:00–Sat 10:00" as fits, the full text in the title
   const d = t => dayf(t).split(' ')[0], hh = t => String(hourOf(t)).padStart(2, '0'), full = `Official: switch ${d(ta)} ${hh(ta)}:00–${d(tb)} ${hh(tb)}:00`;
-  const ctx = pgTag.cx || (pgTag.cx = document.createElement('canvas').getContext('2d')); ctx.font = '500 11px "IBM Plex Sans", system-ui, sans-serif';
+  const ctx = pgTag.cx || (pgTag.cx = document.createElement('canvas').getContext('2d')); ctx.font = '500 12px "IBM Plex Sans", system-ui, sans-serif';
   const ph = matchMedia('(max-width:479px)').matches, room = Wl - xa, mid = ST.pgtag.long.replace('{da}', d(ta)).replace('{ha}', hh(ta)).replace('{db}', d(tb)).replace('{hb}', hh(tb)), wd = q => ctx.measureText(q).width + 12;
   const fit = [mid].find(q => wd(q) <= room), txt = fit || (ph ? mid : 'Official'), /* one wording on both pages (siteui.STYLE.pgtag) */ w = wd(txt), ra = !fit; // left-aligned at the window start when it fits up to the plot edge; else right-aligned at the plot edge with a tick at the window start
   const m2 = (ST.pgtag.mid || 'Official').replace('{db}', d(tb)).replace('{hb}', hh(tb));
@@ -1740,6 +2132,7 @@ function renderTimeline() {
   $('tlh').textContent = `Next ${span} hours`;
   off = Math.max(0, Math.min(off, H.length - span));
   const hs = H.slice(off, off + span), { g, cw } = geom(), x = i => i * (cw + g);
+  const NX = innerWidth < 480 && nowIdx() >= off && nowIdx() < off + span ? Math.min(160, Math.max(0, x(nowIdx() - off) - g / 2)) : 0; $('tl').style.setProperty('--nowx', `${NX}px`); // phones: row names and value labels start right of the Now line, wherever it is (an older run puts it inside the plot)
   const every = span === 48 ? 6 : span === 24 ? 3 : 2;
   lanes.style.setProperty('--g', `${g}px`);
   let ru = '';
@@ -1751,7 +2144,7 @@ function renderTimeline() {
   ctx.font = '600 12px "IBM Plex Sans", system-ui, sans-serif';
   let nowX = -1e9;
   if (ni >= off && ni < off + span) { const nx = x(ni - off) - g / 2; ru += `<span class="nowtag" style="left:${nx}px" title="Current hour; forecast issued ${hm(D.issue)}">Now</span>`; nowX = nx; } // on the hour row, at the now line
-  ctx.font = '600 11px "IBM Plex Sans", system-ui, sans-serif'; const nowW = ctx.measureText('Now').width + 10; ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif';
+  ctx.font = '600 12px "IBM Plex Sans", system-ui, sans-serif'; const nowW = ctx.measureText('Now').width + 10; ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif';
   hs.forEach((h, i) => {
     const hr = hourOf(h.t), c = x(i) - g / 2; // the hour starts at its cell's left edge, like the night bands
     const lw = ctx.measureText(hf(hr)).width / 2, nearNow = false; void lw; void nowW; void nowX; // the Now collision is measured on the real boxes after layout (below)
@@ -1768,32 +2161,38 @@ function renderTimeline() {
   $('tl').classList.toggle('noev', !ev.length);
   $('ev').innerHTML = ev.filter(e => e.i >= off && e.i < off + span)
     .map(e => `<button class="mk ${e.kind}" data-i="${e.i}" style="left:${e.kind === 'pg' ? x(Math.min(e.end, off + span - 1) - off) + cw : x(e.i - off) + cw / 2}px${e.od ? `;--dc:${col(e.od)}` : ''}" title="Show ${dhm(H[e.i].t)}">${e.label}</button>`).join('');
+  if (innerWidth >= 480) $('ev').querySelectorAll('.mk:not(.r18)').forEach(m => { m.style.top = `${$('lod').offsetTop - $('ev').offsetTop - m.offsetHeight - 4}px`; }); // on the switch chip's baseline: 4 px over the direction bar
   const sure = h => Math.max(h.p25, 1 - h.p25) >= 0.75, differs = h => { const s = prog(h); return s === null ? '' : s === 0 ? (sure(h) ? 'm' : '') : s !== h.od ? (s === 25 ? 'w' : 'e') : ''; };
   const small = h => Math.min(h.p25, 1 - h.p25) >= 0.1; // below 90% confidence: faded
   const pgI = new Set((pgDiff() || {}).idx || []);
   const pgRuns = pgRunsOf(hs);
   // INAA flags a possible switch here: an orange bracket above the strip (a comparison, not an alarm)
   const segL = []; { let i = 0; while (i < hs.length) { let j = i; while (j + 1 < hs.length && hs[j + 1].od === hs[i].od) j++;
-    let a = i; while (a <= j && night(hs[a].t)) a++; let b = a; while (b + 1 <= j && !night(hs[b + 1].t)) b++;
-    if (a <= j && b - a >= 4) segL.push(`<span class="dlab ${hs[i].od === 25 ? 'w' : 'e'}" style="left:${Math.max(x(a), nowX) + 8}px">${hs[i].od === 25 ? `${arr(25)}25 West` : `07 East${arr(7)}`}</span>`); i = j + 1; } }
+    const lw = (() => { ctx.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; const w0 = ctx.measureText(`${two(hs[i].od)} ${word(hs[i].od)}`).width + 35; ctx.font = '400 12px "IBM Plex Sans", system-ui, sans-serif'; return w0; })(); // text, arrow and chip padding
+    // one rule on both pages: at the band start when its first solid run (no night hatch) is >= the label's width + 8 px,
+    // else at the start of the first run that is (8 px in); it never sits on the start of a night band
+    let a = i, b = i - 1; for (let q = i; q <= j;) { while (q <= j && night(hs[q].t)) q++; let r = q; while (r + 1 <= j && !night(hs[r + 1].t)) r++; if (q > j) break; if (x(r) + cw - Math.max(x(q), nowX) >= lw + 8) { a = q; b = r; break; } q = r + 1; }
+    if (b >= a && a <= j) segL.push(`<span class="dlab ${hs[i].od === 25 ? 'w' : 'e'}" style="left:${Math.max(x(a), nowX) + 8}px">${hs[i].od === 25 ? `${arr(25)}25 West` : `07 East${arr(7)}`}</span>`); i = j + 1; } }
   $('lod').innerHTML = pgR.map(([a, b]) => `<span class="pgline" style="left:${x(a)}px;width:${x(b) - x(a) + cw}px" title="Official forecast (INAA): possible switch"></span>${pgTag(x(a), $('lod').clientWidth, hs[a].t, plus1h(hs[b].t))}`).join('') + segL.join('') + hs.map(h => `<div class="${h.p25 >= 0.5 ? 'w' : 'e'}${night(h.t) ? ' n' : small(h) ? ' lo' : ''}" title="${night(h.t) ? 'Night ban, no scheduled flights' : `${pct(Math.min(h.p25, 1 - h.p25))} chance of the other direction`}"></div>`).join('');
   { // the predicted switch (one rule on both pages, siteui.STYLE.switch_tab_min): its segment at least 24 px wide (into the 24 px kept free
     // right of every row), faded like any hour under 90 % sure, and always its "to 25" chip on the tag band's baseline
-    lanes.querySelectorAll(':scope > .swchip').forEach(c => c.remove());
+    lanes.querySelectorAll(':scope > .swchip, :scope > .swtick, :scope > .swstem').forEach(c => c.remove());
     const Wl = $('lod').clientWidth, TMIN = ST.switch_tab_min || 24, odS = D.od_now === 25 ? 7 : 25, ci = D.change ? (k => (k < 0 ? -1 : k))(hs.findIndex(h => h.od === odS)) : -1; // the first hour in the other direction
     if (ci > 0 && ci < hs.length) { let e2 = ci; while (e2 + 1 < hs.length && hs[e2 + 1].od === hs[ci].od) e2++;
       const segW = x(e2) + cw - x(ci), w2 = Math.max(TMIN, segW), lo = hs.slice(ci, e2 + 1).some(h => small(h)), od2 = odS;
       if (segW < TMIN) $('lod').insertAdjacentHTML('beforeend', `<i class="swtab ${od2 === 25 ? 'w' : 'e'}${lo ? ' lo' : ''}" style="left:${Math.min(x(ci), Wl - TMIN)}px;width:${Math.min(w2, Wl)}px;background:${col(od2)}" title="The switch to ${two(od2)} starts here; the forecast ends ${dhm(plus1h(hs[hs.length - 1].t))}"></i>`);
-      $('lod').insertAdjacentHTML('beforeend', `<span class="swchip" style="left:${x(ci)}px;--dc:${col(od2)}" data-i="${ci + off}">to ${two(od2)}</span>`);
+      $('lod').insertAdjacentHTML('beforeend', `<span class="swchip ${od2 === 25 ? 'w' : 'e'}" style="left:${x(ci)}px;--dc:${col(od2)}" data-i="${ci + off}" title="Switch to ${two(od2)} expected ${dhm(hs[ci].t)}">to ${two(od2)}<span class="swt"> · ${dhm(hs[ci].t).replace(/ \d+ \w+,/, '')}</span></span>`);
       const chip = $('lod').querySelector('.swchip'), cwid = chip.offsetWidth, cl = Math.max(0, Math.min(x(ci), Wl - cwid)); /* inside the axis, like the segment */ chip.style.left = `${cl}px`;
-      { const lod = $('lod'); lanes.querySelectorAll(':scope > .swchip').forEach(c => c.remove()); lanes.appendChild(chip); chip.style.left = `${lod.offsetLeft + cl}px`; chip.style.top = `${lod.offsetTop - 14}px`; } // in the lanes, above the cursor line: a solid chip the line never splits
+      { const lod = $('lod'); lanes.querySelectorAll(':scope > .swchip').forEach(c => c.remove()); lanes.appendChild(chip); chip.style.left = `${lod.offsetLeft + cl}px`; chip.style.top = `${lod.offsetTop - chip.offsetHeight - 4}px`; /* 4 px of air over the bar */
+        if (cl < x(ci) - 1) { const tk = document.createElement('i'); tk.className = 'swtick'; tk.style.cssText = `left:${lod.offsetLeft + x(ci)}px;top:${lod.offsetTop}px;height:${lod.offsetHeight}px`; lanes.appendChild(tk); }
+        { const st = document.createElement('i'); st.className = 'swstem'; const cc = lod.querySelectorAll(':scope > div')[ci]; st.style.cssText = `left:${lod.offsetLeft + (cc ? cc.offsetLeft : x(ci)) - 0.5}px;top:${chip.offsetTop + chip.offsetHeight}px;height:${Math.max(0, lod.offsetTop - chip.offsetTop - chip.offsetHeight)}px;background:${col(od2)}`; lanes.appendChild(st); } } // a 1 px stem from the chip down to the switch moment, as the "18 closed" tag has // a chip pushed left of its hour (near the axis end): a dark tick across the bar marks the switch hour itself // in the lanes, above the cursor line: a solid chip the line never splits
       for (const tg of $('lod').querySelectorAll('.pgtag')) fitTag(tg, +tg.dataset.x, cl - 4); } } // the tag steps down its ladder and ends 4 px before the chip: one row, one baseline
   { // switch chance per hour: a 40 px row on 0 to 20% while the peak is small (same scale as the 3D view), 80 px on 0 to 100% when a real switch is in view
     const oth = h => (D.od_now === 25 ? 1 - h.p25 : h.p25) /* one meaning across the window: p(the direction other than the one flown at its start), never min(p, 1-p) */, W = $('lod').clientWidth, peak = Math.max(...H.map(oth)), SC = swScale(peak), TOP = SC.top;
     $('tl').style.setProperty('--swh', `${SC.h}px`);
     const LH = $('lpg').clientHeight || SC.h, LS = 0, PH = LH - LS, pk = hs.reduce((m, h, i) => (!night(h.t) && (night(hs[m].t) || oth(h) > oth(hs[m])) ? i : m), 0), yv = v => LH - Math.min(1, v / TOP) * PH, gy = Math.max(LS + 0.5, yv(SC.grid));
     const bar = o => (o < ST.switch.min_bar ? 0 : Math.max(2, Math.min(1, o / TOP) * PH)); // under 1 % (siteui.SWITCH.min_bar, both pages): only the baseline
-    const IN = matchMedia('(max-width:479px)').matches, tX = IN ? 3 : -4, tA = IN ? 'start' : 'end'; // phones: the ticks inside the plot's left edge
+    const IN = matchMedia('(max-width:479px)').matches, tX = IN ? 5 + NX : -4, tA = IN ? 'start' : 'end'; // phones: the ticks inside the plot's left edge, 4 px clear of the Now line
     let ov = `<text x="${tX}" y="${LH - 3}" text-anchor="${tA}" class="gt halo">0</text><line x1="0" x2="${W}" y1="${gy}" y2="${gy}" class="grid half"/>` /* the mid gridline, dotted and unlabelled: only 0 and the top carry values */
       + (TOP > SC.grid + 1e-9 ? `<line x1="0" x2="${W}" y1="${LS + 0.5}" y2="${LS + 0.5}" class="grid half"/><text x="${tX}" y="${LS + (IN ? 12 : 6)}" text-anchor="${tA}" class="gt halo">${Math.round(TOP * 100)}\u202f%</text>` : '') /* the scale's top: a faint line and its value */
       + `<line x1="0" x2="${W}" y1="${LH - 0.5}" y2="${LH - 0.5}" class="base calm"/>`;
@@ -1803,13 +2202,28 @@ function renderTimeline() {
     else if (oth(hs[pk]) >= 0.01) { // the peak, annotated clear of the gridline
       // just above the tallest bar, centred on it, always inside its own row
       const t = peakNote(oth(hs[pk]), hs[pk].t, false);
-      const lx = x(pk) + cw / 2, by = LH - bar(oth(hs[pk])), ty = -3 /* the baseline just above the axis top: never on a bar */, ctx4 = renderTimeline.cx; ctx4.font = '400 11px "IBM Plex Sans", system-ui, sans-serif'; const tw4 = ctx4.measureText(t).width, flip = lx - 8 - tw4 < 4;
-      ov += `<g class="pk" id="pkl" data-x="${W - 60}" data-w="120"><title>Highest hourly chance outside the night ban (23:00 to 05:00, no flights). The 48 h figure in the outlook tooltip is calibrated on past switches, so it can be lower.</title><path d="M${(lx + (flip ? 4 : -4)).toFixed(1)} ${ty - 4}L${lx.toFixed(1)} ${ty - 4}L${lx.toFixed(1)} ${(by - 3).toFixed(1)}" class="pkl"/><circle cx="${lx.toFixed(1)}" cy="${(by - 2).toFixed(1)}" r="2" class="pkd"/><text x="${(lx + (flip ? 8 : -8)).toFixed(1)}" y="${ty}" text-anchor="${flip ? 'start' : 'end'}" class="halo">${t}</text></g>`; // a leader from the note down to a dot on the peak bar
+      const lx = x(pk) + cw / 2, by = LH - bar(oth(hs[pk])), ctx4 = renderTimeline.cx; ctx4.font = '400 12px "IBM Plex Sans", system-ui, sans-serif'; const tw4 = ctx4.measureText(t).width;
+      // the note sits inside the plot, in a 14 px band along its top, ending 6 px before the first bar that reaches into
+      // that band: clear of the direction bar, the switch chip and every bar; its capitals 4 px under the top gridline
+      const BAND = 19, topOf = j => LH - bar(oth(hs[j])); let R = lx - 8;
+      // desktop, when the band between the direction bar and the plot holds it: the note above the top gridline (its
+      // descenders >= 2 px over it, its capitals >= 3 px under the bar), the leader along the note's mid-height (always
+      // above the plot, so >= 4 px over every bar top) and a short vertical tick down to the peak dot
+      const gapUp = $('lpg').offsetTop - $('lod').offsetTop - $('lod').offsetHeight;
+      if (!IN && gapUp >= 17 && R - tw4 >= 4) { const bl = -5, ly = bl - 4, dy = by - 2;
+        const lead = `M${(R + 3).toFixed(1)} ${ly}L${lx.toFixed(1)} ${ly}L${lx.toFixed(1)} ${(dy - 3).toFixed(1)}`;
+        ov += `<g class="pk up" id="pkl" data-x="${W - 60}" data-w="120"><title>Highest hourly chance outside the night ban (23:00 to 05:00, no flights). The 48 h figure in the outlook tooltip is calibrated on past switches, so it can be lower.</title><path d="${lead}" class="pkl"/><circle cx="${lx.toFixed(1)}" cy="${dy.toFixed(1)}" r="2" class="pkd"/><rect class="pko" x="${(R - tw4 - 3).toFixed(1)}" y="${bl - 11}" width="${(tw4 + 5).toFixed(1)}" height="13"/><text x="${R.toFixed(1)}" y="${bl}" text-anchor="end" class="halo">${t}</text></g>`; }
+      else { for (let it = 0; it < hs.length; it++) { let moved = false; for (let j = 0; j < pk; j++) if (topOf(j) < BAND + 1 && x(j) + cw > R - tw4 - 2 && x(j) - 6 < R) { R = x(j) - 6; moved = true; } if (!moved) break; }
+      if (R - tw4 >= 4) { // a 1 px leader from the note's end to the peak dot: at the note's mid-height, lifted over any bar between them
+        const ly = BAND - 9, dy = by - 2, mid = hs.map((h2, j) => j).filter(j => j < pk && x(j) + cw > R + 3 && x(j) < lx - 3), yL = Math.max(1, Math.min(ly, dy, ...mid.map(j => topOf(j) - 3))); // never under the dot: the leader stays above the peak bar
+        const lead = `M${(R + 3).toFixed(1)} ${ly}` + (yL < ly ? `L${(R + 3).toFixed(1)} ${yL.toFixed(1)}` : '') + (dy - yL > 4 ? `L${lx.toFixed(1)} ${yL.toFixed(1)}L${lx.toFixed(1)} ${(dy - 3).toFixed(1)}` : `L${(lx - 3).toFixed(1)} ${yL.toFixed(1)}`);
+        ov += `<g class="pk" id="pkl" data-x="${W - 60}" data-w="120"><title>Highest hourly chance outside the night ban (23:00 to 05:00, no flights). The 48 h figure in the outlook tooltip is calibrated on past switches, so it can be lower.</title><path d="${lead}" class="pkl"/><circle cx="${lx.toFixed(1)}" cy="${dy.toFixed(1)}" r="2" class="pkd"/><rect class="pko" x="${(R - tw4 - 3).toFixed(1)}" y="${BAND - 18}" width="${(tw4 + 5).toFixed(1)}" height="19"/><text x="${R.toFixed(1)}" y="${BAND - 4}" text-anchor="end" class="halo">${t}</text></g>`; }
+      else ov += `<g class="pk" id="pkl" data-x="${W - 60}" data-w="120"><circle cx="${lx.toFixed(1)}" cy="${(by - 2).toFixed(1)}" r="2" class="pkd"/></g>`; } // no room in the band: the dot alone (the value is in the tooltip of the bar)
     }
     const wash = pgRunsOf(hs).map(([a, b]) => `<rect x="${x(a)}" y="${LS}" width="${x(b) - x(a) + cw}" height="${PH}" class="pgwash"/>`).join('');
     ov = wash + ov;
     const oname = otherName(hs); $('hlsw').innerHTML = `${T.switch} ${oname}`;
-    $('lpg').innerHTML = hs.map(h => { const o = oth(h); return `<div title="${dhm(h.t)}: ${pct(o)} chance of ${oname} that hour"><i style="height:${(bar(o) || 1).toFixed(1)}px;${bar(o) ? '' : 'opacity:.3!important;'}background:${night(h.t) ? 'color-mix(in srgb,var(--risk) 45%,var(--card))' : pgI.has(H.indexOf(h)) ? 'var(--risk-w,var(--risk))' : 'var(--risk)'};opacity:${night(h.t) ? 1 : o >= 0.2 || h === hs[pk] ? 1 : 0.85}"${h === hs[pk] ? ' class="pkb"' : night(h.t) ? ' class="nt"' : ''}></i></div>`; }).join('') // neutral graphite: not a direction colour, not INAA orange, not the tailwind red (same in 3D)
+    $('lpg').innerHTML = hs.map(h => { const o = oth(h); return `<div title="${dhm(h.t)}: ${pct(o)} chance of ${oname} that hour"><i style="height:${(bar(o) || 1).toFixed(1)}px;${bar(o) ? '' : 'opacity:.3!important;'}background:${pgI.has(H.indexOf(h)) ? 'var(--risk-w,var(--risk))' : 'var(--risk)'};opacity:${o >= 0.2 || h === hs[pk] ? 1 : 0.85}"${h === hs[pk] ? ' class="pkb"' : ''}></i></div>`; }).join('') /* night hours keep their tone: the night band sits behind the bars (#nbands), never a paler bar that reads as "less sure" */ // neutral graphite: not a direction colour, not INAA orange, not the tailwind red (same in 3D)
       + `<span><svg width="${W}" height="${LH}" aria-hidden="true">${ov}</svg></span>`;
   }
 
@@ -1819,61 +2233,93 @@ function renderTimeline() {
     if (!have.length) $('lwd').innerHTML = '';
     else {
       const hw_ = h => -comp(h, h.od === 25 ? 249 : 69), vals = have.map(hw_); // + = headwind (fine), - = tailwind
-      const hi = Math.max(12, Math.ceil(Math.max(...vals))), lo = Math.min(-4, Math.floor(Math.min(...vals) - 1)); // about -4 to 12 kt: the tailwind zone (-1 to -4) gets ~11 px
-      const top = 6, bot = hw - 2, y0 = bot - 22, y = v => (v >= 0 ? top + (hi - Math.min(hi, v)) / hi * (y0 - top) : y0 + Math.min(1.1, -v) * 13); // the limit (-1 kt) 13 px under the 0 line // headwind above 0 to scale; tailwind below 0 at 10 px per kt (the limit 10 px under 0), clipped at 2 kt
+      // one linear scale from tailwind (below 0) to headwind: the limit (-1 kt) sits 1 kt under the 0 line, as far as 1 kt
+      // is anywhere on the plot; the scale reaches far enough down for the limit's label to sit under its line (13 px)
+      const top = 6, bot = hw - 2, B = bot - top, hi = Math.max(12, Math.ceil(Math.max(...vals))), dMin = Math.max(2, Math.ceil(14 * (hi + 1) / Math.max(1, B - 14)));
+      const lo = Math.min(-1 - dMin, Math.floor(Math.min(...vals)) - 1), k = B / (hi - lo), y = v => top + (hi - Math.max(lo, Math.min(hi, v))) * k;
       renderTimeline.hwY = i => (hs[i] && hs[i].ws !== undefined ? y(hw_(hs[i])) : null);
       let d = '', pen = false;
       hs.forEach((h, i) => { if (h.ws === undefined) { pen = false; return; } d += `${pen ? 'L' : 'M'}${(x(i) + cw / 2).toFixed(1)} ${y(hw_(h)).toFixed(1)}`; pen = true; });
       const step = hi - lo > 24 ? 10 : 5, ticks = [];
-      for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) if (v === 0 || v === 10) ticks.push(v); // 0 and 10
+      for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) if (v === 0 || v === 10 || (v === 5 && innerWidth >= 480 && y(0) - y(10) >= 20)) ticks.push(v); // 0 and 10; desktop: a 5 kt grid line too (unlabelled: three labels in 20 px would touch)
       const band = '';
       // tailwind beyond the switch limit: shaded, so the side of the line that matters is obvious
       $('lwd').innerHTML = `<svg width="${W}" height="${hw}" viewBox="0 0 ${W} ${hw}" aria-hidden="true">${band}`
-        + `<rect x="0" y="${y(-1)}" width="${W}" height="4" class="zone"/>` /* a 4 px red band under the limit: drawn on purpose, not a stray line */
-        + ticks.map(v => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="${v ? 'grid' : 'zero'}"/>`).join('')
+        + `<rect x="0" y="${y(-1)}" width="${W}" height="${Math.max(4, hw - y(-1))}" class="zone"/>` /* the area past the switch limit, lightly shaded (neutral grey) */
+        + ticks.map(v => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="${v ? 'grid' : 'zero'}" data-v="${v}"/>`).join('')
 
-        + (matchMedia('(max-width:479px)').matches ? `<line x1="0" x2="${W - 32}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="${W}" y="${(y(-1) + 4).toFixed(1)}" text-anchor="end" class="limt kn" id="limt" data-x="${W - 14}" data-w="28">limit</text>`
-          : `<line x1="0" x2="${W}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="-5" y="${(y(-1) + 4).toFixed(1)}" text-anchor="end" class="limt kn" id="limt" data-x="-99" data-w="0">limit</text>`) // desktop: in the tick column, like the other values // the dashed line ends where its label starts: never on top of each other
+        + (matchMedia('(max-width:479px)').matches ? `<line x1="${5 + NX + 72}" x2="${W}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="${5 + NX}" y="${(y(-1) + 13).toFixed(1)}" text-anchor="start" class="limt kn" id="limt" data-x="${5 + NX + 34}" data-w="68"><title>${T.limit}. ${T.limit_tip}</title>limit \u22121\u202fkt</text>` // phones: the limit label at the plot's left, under the 0 (the line dips toward the limit near a switch, at the right end)
+          : (() => { // desktop: inside the plot, just above the dashed line at its left end (the gutter keeps the numeric ticks
+            // only), at the leftmost spot where the headwind line stays clear of the label's box (the line dips toward the
+            // limit before a switch, usually at the right end); 6 px in from the Now line
+            const LW = 64, by = y(-1) + 13, top = y(-1) + 1, xs = have.map(h => [x(hs.indexOf(h)) + cw / 2, y(hw_(h))]); // under the line, in the shaded zone: above it the 0 line is only 1 kt away
+            const yAt = px => { for (let q = 1; q < xs.length; q++) if (xs[q][0] >= px) { const [a, b] = [xs[q - 1], xs[q]], f = (px - a[0]) / ((b[0] - a[0]) || 1); return a[1] + (b[1] - a[1]) * Math.max(0, Math.min(1, f)); } return xs.length ? xs[xs.length - 1][1] : 0; };
+            const free = l => { for (let px = l - 4; px <= l + LW + 4; px += 2) if (yAt(px) > top - 3) return false; return true; };
+            let L = 6; while (L + LW < W - 4 && !free(L)) L += cw;
+            if (L + LW >= W - 4) L = 6;
+            return `<line x1="0" x2="${W}" y1="${y(-1)}" y2="${y(-1)}" class="lim"/><text x="${L.toFixed(1)}" y="${by.toFixed(1)}" text-anchor="start" class="limt kn inplot" id="limt" data-x="${(L + LW / 2).toFixed(1)}" data-w="${LW}"><title>${T.limit}. ${T.limit_tip}</title>limit \u22121\u202fkt</text>`; })())
         + `<path class="ln-w" d="${d}"/>`
         + (() => { const ni = nowIdx() - off; if (ni < 0 || ni >= hs.length || hs[ni].ws === undefined) return ''; const px = x(ni) + cw / 2, py = y(hw_(hs[ni]));
           return `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3" class="nowpt"/>`; })() // the dot at Now; its value is in the readout
-        + ticks.map(v => `<text x="${matchMedia('(max-width:479px)').matches ? 3 : -5}" y="${y(v) + (matchMedia('(max-width:479px)').matches ? -3 : 4)}" text-anchor="${matchMedia('(max-width:479px)').matches ? 'start' : 'end'}" class="ax halo">${v ? Math.abs(v) : '0'}</text>`).join('') + '</svg>'; // the scale in the gutter, outside the plot
+        + ticks.filter(v => v !== 5).map(v => `<text x="${matchMedia('(max-width:479px)').matches ? 5 + NX : -5}" y="${y(v) + (matchMedia('(max-width:479px)').matches ? -3 : 4)}" text-anchor="${matchMedia('(max-width:479px)').matches ? 'start' : 'end'}" class="ax halo">${v ? Math.abs(v) : '0'}</text>`).join('') + '</svg>'; // the scale in the gutter, outside the plot, the 0 line labelled (the limit's label sits under its own line)
     }
     const r18 = hs.some(h => !night(h.t) && h.p18 < 0.9);
-    $('tl').style.setProperty('--r18row', r18 ? '36px' : '0px'); $('hl18').style.display = r18 ? '' : 'none'; $('l18').style.display = r18 ? '' : 'none'; // rows are placed explicitly, so a hidden row leaves no gap
+    $('tl').style.setProperty('--r18row', r18 ? '36px' : '0px'); $('tl').classList.toggle('r18on', r18); $('hl18').style.display = r18 ? '' : 'none'; $('l18').style.display = r18 ? '' : 'none'; // rows are placed explicitly, so a hidden row leaves no gap
   }
   { // legend: only what the shown hours contain
     const L = [];
     [7, 25].forEach(o => L.push([`<i style="background:${col(o)}"></i>`, `${two(o)} ${o === 25 ? 'West' : 'East'}`, '', o === 25 ? 'west' : 'east'])); // both, always (same legend set as the 3D view)
     if (hs.some(h => !night(h.t) && small(h))) L.push(['<i class="losw" style="background:var(--east)"></i>', T.faded, '', 'faded']);
     if (pgRuns.length) L.push(['<i class="pgbsw"></i>', T.inaa_flag, '', 'official']);
-    if (hs.some(h => h.p18 < 0.5)) L.push(['<i style="background:var(--red)"></i>', 'Runway 18 closed', '', 'r18closed']);
-    if (hs.some(h => h.p18 >= 0.5 && h.p18 < 0.9)) L.push(['<i class="risksw"></i>', 'Runway 18, 10 to 50\u202f% closure chance', '', 'r18risk']);
+    { // Runway 18, one item (siteui.COPY.r18_*), worded as in the 3D view at every width
+      const cx = hs.some(h => h.p18 < 0.5), rk = hs.some(h => h.p18 >= 0.5 && h.p18 < 0.9);
+      if (cx || rk) L.push([`${cx ? '<i style="background:var(--red)"></i>' : ''}${rk ? '<i class="risksw"></i>' : ''}`, cx && rk ? T.r18_both : cx ? T.r18_closed : T.r18_risk, T.r18_tip, 'r18']); }
     if (hs.some(h => night(h.t))) L.push(['<i style="background:var(--hatch-bg),var(--east)"></i>', T.night, '', 'night']);
-    if (hs.some(h => h.ws !== undefined) && !NARROW.matches) L.push(['<i class="limsw"></i>', T.limit, T.limit_tip, 'limit']); // phones: the in-plot "limit" label explains it
+    // the headwind limit is named in its plot ("limit", with the rule in its tooltip) at every width: the legend keeps one row
     { const ORD = ST.legend_order || []; L.sort((a, b) => ORD.indexOf(a[3]) - ORD.indexOf(b[3])); } // one order on both pages (siteui.STYLE.legend_order)
     $('tlf').innerHTML = L.map(([i, s, tt]) => `<span${tt ? ` title="${tt}"` : ''}>${i}${s}</span>`).join('');
-    { const tl = $('tl'), lg = $('tlf'); if (NARROW.matches) { if (lg.parentElement !== tl) tl.appendChild(lg); lg.classList.add('inbar'); const lod = $('lod'); lg.style.top = `${lod.offsetTop + lod.offsetHeight + 8}px`; tl.style.setProperty('--lgh', `${lg.offsetHeight + 10}px`); } // phones: the legend right under the direction bar
-      else { if (lg.parentElement === tl) tl.after(lg); lg.classList.remove('inbar'); lg.style.top = ''; tl.style.setProperty('--lgh', '0px'); } }
+    { const tl = $('tl'), lg = $('tlf'); if (lg.parentElement === tl) tl.after(lg); lg.classList.remove('inbar'); lg.style.top = ''; tl.style.setProperty('--lgh', '0px'); } // every width: the legend under the last chart row, clear of the Now and cursor lines
   }
-  let bands = '', a = -1;
+  let bands = '', nbands = '', a = -1;
   hs.forEach((h, i) => {
     if (night(h.t) && a < 0) a = i;
     if (a >= 0 && (!night(h.t) || i === hs.length - 1)) {
       const b = night(h.t) ? i : i - 1;
-      bands += `<div class="night" style="left:${x(a) - g / 2}px;width:${x(b) - x(a) + cw + g}px"></div>`; a = -1;
+      nbands += `<div class="night" style="left:${x(a) - g / 2}px;width:${x(b) - x(a) + cw + g}px"></div>`; a = -1;
     }
   });
   if (nowIdx() >= off && nowIdx() < off + span) bands += `<div class="nowl" style="left:${x(nowIdx() - off) - g / 2}px"></div>`; // over every row (z-index above the lanes)
-  $('bands').innerHTML = bands;
+  $('bands').innerHTML = bands; $('nbands').innerHTML = nbands; // the night bands behind every row's marks, the now line over them
   $('mids').innerHTML = hs.map((h, i) => (i && hourOf(h.t) === 0 ? `<div class="mid" style="left:${x(i) - g / 2}px"></div>` : '')).join(''); // midnight: one hairline behind every row (labels mask it; same alpha as the 3D view)
-  { const b = $('bands'), lw = $('lwd'); b.style.bottom = 'auto'; b.style.height = `${Math.max(0, lw.offsetTop + lw.offsetHeight - b.offsetTop)}px`; $('mids').style.height = b.style.height; } // the now line ends with the last row
+  { const b = $('bands'), lw = $('lwd'); b.style.bottom = 'auto'; b.style.height = `${Math.max(0, lw.offsetTop + lw.offsetHeight - b.offsetTop)}px`; $('mids').style.height = b.style.height; $('nbands').style.bottom = 'auto'; $('nbands').style.height = b.style.height; } // the now line ends with the last row
   lanes.querySelectorAll('.mk').forEach(m => {
     m.addEventListener('pointerdown', e => { e.stopPropagation(); setPlaying(0); go(+m.dataset.i); }); // respond on press
     m.addEventListener('click', e => { if (!e.detail) { setPlaying(0); go(+m.dataset.i); } }); // keyboard
   });
   drawHead();
+  requestAnimationFrame(placeR18); // after layout
 }
+function placeR18() { // every width: the "18 closed" tag in the Runway 18 lane, on a bracket over the first closed run (between
+    // the chance plot's baseline and the cells, no leader); the top annotation lane carries only the switch chip
+    const b = $('bands'), t = $('ev').querySelector('.mk.r18'), cs = [...$('l18').querySelectorAll(':scope > div.x')], c = cs[0]; if (!b || !t || !c || !c.offsetWidth) return;
+    b.querySelectorAll('.r18brk').forEach(e => e.remove()); // placed again once the web font is in (the row name's width changes)
+    const z = zoom(), B = b.getBoundingClientRect(), C = c.getBoundingClientRect(), V = $('ev').getBoundingClientRect(), L = $('lod').getBoundingClientRect();
+    let E = 0; while (E + 1 < cs.length && cs[E + 1].getBoundingClientRect().left - cs[E].getBoundingClientRect().right < 4 * z) E++; // the first closed run
+    const R2 = cs[E].getBoundingClientRect(), bt = (C.top - B.top) / z - 4;
+    b.insertAdjacentHTML('beforeend', `<div class="r18brk" style="left:${(C.left - B.left) / z}px;width:${(R2.right - C.left) / z}px;top:${bt}px"></div>`);
+    t.classList.add('inlane'); t.style.top = `${(C.top - V.top) / z - 7.5 - t.offsetHeight}px`; // 3.5 px clear of its bracket (the bracket 4 px over the cells)
+    if (innerWidth >= 480) { // the row name sits left of the axis: centred on the run, inside the axis
+      t.classList.remove('edge');
+      const nm = (() => { const e = $('hl18'); if (!e || !e.offsetWidth) return null; const rg = document.createRange(); rg.selectNodeContents(e); const q = [...rg.getClientRects()].filter(r => r.width); return q.length ? Math.max(...q.map(r => r.right)) : null; })();
+      const w = t.offsetWidth, cx = ((C.left + R2.right) / 2 - V.left) / z, lo = Math.max((L.left - V.left) / z, nm === null ? -1e9 : (nm - V.left) / z + 4.5) + w / 2, hi = (L.right - V.left) / z - w / 2;
+      t.style.left = `${Math.max(lo, Math.min(hi, cx))}px`; return; }
+    // phones: the row name shares the lane and moves with the Now line, so the tag is placed by its left edge (no centring,
+    // so a late font swap cannot shift it): at the bracket start; if that would come within 4 px of the name, 4 px after
+    // the name; if that runs past the plot end, 4 px before the name (never left of the plot)
+    const nb = (() => { const e = $('hl18'); if (!e || !e.offsetWidth) return null; const rg = document.createRange(); rg.selectNodeContents(e); const q = [...rg.getClientRects()].filter(r => r.width); return q.length ? [Math.min(...q.map(r => r.left)), Math.max(...q.map(r => r.right))] : null; })();
+    const w = t.getBoundingClientRect().width, pl = L.left, pr = L.right; let x0 = Math.max(C.left, pl);
+    if (nb && x0 < nb[1] + 4 && x0 + w > nb[0] - 4) { x0 = nb[1] + 4; if (x0 + w > pr) x0 = Math.max(pl, nb[0] - 4 - w); }
+    t.classList.add('edge'); t.style.left = `${(x0 - V.left) / z}px`; }
 
 // playhead: 1:1 under the pointer; keys, play and markers glide it on a critically damped spring (response 0.3 s)
 // that always starts from where it is, so it can be redirected mid-flight
@@ -2000,7 +2446,7 @@ function renderUpdated() {
   const today = dayf(D.issue) === dayf(new Date());
   const nx = new Date(Math.ceil((Date.now() - 18e5 + 1) / 36e5) * 36e5 + 18e5); // the archive job runs every hour at :30 (fra-archive.timer)
   $('upd').title = `Forecast run issued ${hm(D.issue)}; the next run is published around ${hm(nx)}`;
-  $('upd').innerHTML = `<i class="${age < 90 ? 'ok' : 'old'}"></i><span class="frs"><span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `${dayf(D.issue)}, `}${hm(D.issue)}</b><span class="fw"> · next <b>${hm(nx)}</b>${age < 90 ? ' · live' : ''}</span></span>`; // one template on both pages // the age in the tooltip, refreshed every minute
+  $('upd').innerHTML = `<i class="${age < 90 ? 'ok' : 'old'}"></i><span class="frs"><span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `<span class="fw">${dayf(D.issue)}, </span><span class="fi">${dayf(D.issue).split(' ')[0]} </span>`}${hm(D.issue)}</b><span class="fw"> · next <b>${hm(nx)}</b></span>${age < 90 ? ' · live' : ''}</span>`; // "live" on phones too // one template on both pages // the age in the tooltip, refreshed every minute // an older run: its weekday only on phones, so the brand keeps its width
   void ageS;
 }
 setInterval(renderUpdated, 60000);
@@ -2075,7 +2521,7 @@ function hull(P) { // convex hull (monotone chain) of [x, y] points
 function renderMap() {
   const el = $('map'); if (!el || !D.geo) return;
   const now = sel < 0, h = now ? H[nowIdx()] : H[sel], od = now ? D.od_now : h.od, r18 = h.p18 >= 0.5, M = mapPaths(od, r18);
-  const nbm = !now && night(h.t); $('mapwhen').textContent = nbm ? `${dhm(h.t)} · night ban, no flights` : `${now ? 'now' : dhm(h.t)} · landings from the ${od === 25 ? 'east' : 'west'}`; // 07: approaches come in from the west
+  const nbm = !now && night(h.t); $('mapwhen').textContent = innerWidth < 480 ? (nbm ? `${dhm(h.t)} · night ban, no flights` : `${now ? 'now' : dhm(h.t)} · landings from the ${od === 25 ? 'east' : 'west'}`) : now ? 'now' : dhm(h.t); // desktop: the hour in the title row and what flies in the operator line under it (the column is narrow); phones: both in the title row, the map keeps its height
   $('mlgapp').setAttribute('stroke', `var(--${od === 25 ? 'west' : 'east'}-line)`);
   const near = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
   const towns = TOWNS.map(t => ({ ...t, under: M.seg.some(g => g.kind === 'app' && near(t.p, g.a, g.b) < 1500) })).filter(t => t.under); // only the towns flown over
@@ -2090,16 +2536,16 @@ function renderMap() {
      } // drawn again at the new size
   const W = el.clientWidth, Hh = el.clientHeight; if (!W || !Hh) return;
   const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0])), y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
-  const PV = 16, KH = NARROW.matches ? PV : Math.max(8, (el.closest('.c3d')?.querySelector('.mlg')?.offsetHeight || 0) + 12), /* the key row at the bottom stays clear */ k = Math.min((W - 2 * PAD) / (x1 - x0), (Hh - PV - KH) / (y1 - y0)), /* the legend row stays clear */ /* a 10 % larger drawing collides with the key at 1280: kept at 24 px */ ox = (W - (x1 - x0) * k) / 2, /* the airport ends at the right padding; the approaches run on to the left */ /* desktop: the airport at the right edge, the approaches fill the left */ oy = PV + (Hh - PV - KH - (y1 - y0) * k) / 2;
+  const PV = NARROW.matches ? 16 : 12 /* desktop: 12 px under the intro as over the key, so the drawing is centred between them */, KH = NARROW.matches ? PV : Math.max(8, (el.closest('.c3d')?.querySelector('.mlg')?.offsetHeight || 0) + 12), /* the key row at the bottom stays clear */ k = Math.min((W - 2 * PAD) / (x1 - x0), (Hh - PV - KH) / (y1 - y0)) * (NARROW.matches ? 1 : 0.95), /* the legend row stays clear */ /* desktop: 5 % under the fit, so the arrowheads at the airport's east end keep apart and the lines end inside the padding */ /* a 10 % larger drawing collides with the key at 1280: kept at 24 px */ ox = (W - (x1 - x0) * k) / 2, /* the airport ends at the right padding; the approaches run on to the left */ /* desktop: the airport at the right edge, the approaches fill the left */ oy = PV + (Hh - PV - KH - (y1 - y0) * k) / 2;
   const X = p => ox + (p[0] - x0) * k, Y = p => oy + (y1 - p[1]) * k, Xinv = (sx, sy) => [x0 + (sx - ox) / k, y1 - (sy - oy) / k], xy = p => `${X(p).toFixed(1)} ${Y(p).toFixed(1)}`;
   const KB = (() => { const kb = el.closest('.c3d')?.querySelector('.mlg'); if (!kb || NARROW.matches) return null; const z = zoom(), a = kb.getBoundingClientRect(), m = el.getBoundingClientRect(); return [(a.left - m.left) / z - 10, (a.top - m.top) / z - 10, (a.right - m.left) / z + 10, (a.bottom - m.top) / z + 10]; })();
   for (const sg of M.seg) if (sg.kind === 'app') { // draw each approach on until it meets the padding edge (left or bottom), so the lines fill the card without being cut
     const ux = sg.a[0] - sg.b[0], uy = sg.a[1] - sg.b[1], L0 = Math.hypot(ux, uy), dx = ux / L0, dy = uy / L0;
     const sx = X(sg.a), sy = Y(sg.a), ex = dx * k, ey = -dy * k; // screen px per metre along the line
-    let t = 1e9; const IN = 0; /* on to the card edge, clipped there */ if (ex < 0) t = Math.min(t, (IN - sx) / ex); if (ex > 0) t = Math.min(t, (W - IN - sx) / ex); if (ey < 0) t = Math.min(t, (IN - sy) / ey);  // both lines end 24 px inside the card
-    if (t > 0 && t < 1e9) { const L0p = Math.hypot(X(sg.a) - X(sg.b), Y(sg.a) - Y(sg.b)), Ltot = L0p + t * k, keep = Ltot; sg.a = [sg.b[0] + (sg.a[0] - sg.b[0]) * keep / L0p, sg.b[1] + (sg.a[1] - sg.b[1]) * keep / L0p]; } // a quarter shorter than the run to the edge (they fade out there)
+    let t = 1e9; const IN = 8; /* on to 8 px inside the card's padding: no line touches the padding */ if (ex < 0) t = Math.min(t, (IN - sx) / ex); if (ex > 0) t = Math.min(t, (W - IN - sx) / ex); if (ey < 0) t = Math.min(t, (IN - sy) / ey);  // both lines end 24 px inside the card
+    if (t < 1e9 && Math.hypot(X(sg.a) - X(sg.b), Y(sg.a) - Y(sg.b)) + t * k > 0) { const L0p = Math.hypot(X(sg.a) - X(sg.b), Y(sg.a) - Y(sg.b)), Ltot = L0p + t * k, keep = Ltot; /* longer or shorter: a path already past the inset is cut back to it */ sg.a = [sg.b[0] + (sg.a[0] - sg.b[0]) * keep / L0p, sg.b[1] + (sg.a[1] - sg.b[1]) * keep / L0p]; } // a quarter shorter than the run to the edge (they fade out there)
     if (KB) { const L1 = Math.hypot(sg.a[0] - sg.b[0], sg.a[1] - sg.b[1]); let q = 0; // stop before the key
-      const SB = [W - 16 - 2000 * k - 44, KB[1] - 30, W, KB[1]]; for (; q < L1; q += 20) { const px = X(sg.b) + (X(sg.a) - X(sg.b)) * q / L1, py = Y(sg.b) + (Y(sg.a) - Y(sg.b)) * q / L1; if ((px > KB[0] && px < KB[2] && py > KB[1] && py < KB[3]) || (px > SB[0] && px < SB[2] && py > SB[1] && py < SB[3])) break; } // stop before the key and the scale
+      const SB = [W - 16 - 2000 * k - 84, KB[1] - 30, W, KB[1]]; for (; q < L1; q += 20) { const px = X(sg.b) + (X(sg.a) - X(sg.b)) * q / L1, py = Y(sg.b) + (Y(sg.a) - Y(sg.b)) * q / L1; if ((px > KB[0] && px < KB[2] && py > KB[1] && py < KB[3]) || (px > SB[0] && px < SB[2] && py > SB[1] && py < SB[3])) break; } // stop before the key and the scale
       if (q < L1) sg.a = [sg.b[0] + (sg.a[0] - sg.b[0]) * q / L1, sg.b[1] + (sg.a[1] - sg.b[1]) * q / L1]; }
   }
   const c = `var(--${od === 25 ? 'west' : 'east'}-line)`;
@@ -2116,15 +2562,22 @@ function renderMap() {
       const lines2 = M.seg.map(g => [X(g.a), Y(g.a), X(g.b), Y(g.b)]), tw = towns.map(t => [X(t.p), Y(t.p)]), RP = RIVER.map(r => [X(r), Y(r)]);
       const dseg = (px, py, [ax, ay, bx, by]) => { const vx = bx - ax, vy = by - ay, f = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(px - ax - vx * f, py - ay - vy * f); };
       let best = null;
-      for (let k2 = 0; k2 < RP.length - 1; k2++) for (let f = 0; f <= 1; f += 0.25) { const qx = RP[k2][0] + (RP[k2 + 1][0] - RP[k2][0]) * f, qy = RP[k2][1] + (RP[k2 + 1][1] - RP[k2][1]) * f + 12;
-        if (qx < 20 || qx > Math.min(...M.rw.flatMap(r => [X(r.a), X(r.b)])) - 70 || qy < 14 || qy > Hh - 40 || (D.geo.area.length && inPoly(Xinv(qx, qy), D.geo.area))) continue;
-        const c = Math.min(...lines2.map(l => dseg(qx + 12, qy - 4, l)), ...tw.map(([tx, ty]) => Math.hypot(tx - qx - 12, ty - qy + 4)));
+      // the label's box (about 30 x 11 px) just under or just over the line; scored by its box's distance to every path
+      // and town marker, so no stroke runs into a letter
+      const bxd = (q, [ax, ay, bx, by]) => { let m = 1e9; for (let f = 0; f <= 1; f += 0.02) { const px = ax + (bx - ax) * f, py = ay + (by - ay) * f; m = Math.min(m, Math.hypot(Math.max(q[0] - px, 0, px - q[2]), Math.max(q[1] - py, 0, py - q[3]))); } return m; };
+      for (let k2 = 0; k2 < RP.length - 1; k2++) for (let f = 0, fs = 8 / (Math.hypot(RP[k2 + 1][0] - RP[k2][0], RP[k2 + 1][1] - RP[k2][1]) || 8); f <= 1; f += fs) for (const dy of [13, -6]) { const qx = RP[k2][0] + (RP[k2 + 1][0] - RP[k2][0]) * f, qy = RP[k2][1] + (RP[k2 + 1][1] - RP[k2][1]) * f + dy, q = [qx - 1, qy - 10, qx + 31, qy + (dy < 0 ? 1 : 3)]; /* "Main": capitals and x-height, no descenders */
+        if (qx < 24 || qx > Math.min(...M.rw.flatMap(r => [X(r.a), X(r.b)])) - 70 || qy < 14 || qy > Hh - 40 || (D.geo.area.length && inPoly(Xinv(qx, qy), D.geo.area))) continue;
+        const near = RP.slice(0, -1).map((r0, k3) => bxd(q, [r0[0], r0[1], RP[k3 + 1][0], RP[k3 + 1][1]])); if (Math.min(...near) < 1.5) continue; // never on its own line
+        const c = Math.min(...lines2.map(l => bxd(q, l)), ...tw.map(([tx, ty]) => Math.hypot(Math.max(q[0] - tx, 0, tx - q[2]), Math.max(q[1] - ty, 0, ty - q[3])) - 10)) - (dy < 0 ? 1 : 0); void dseg;
         if (!best || c > best.c) best = { qx, qy, c }; }
-      return `<path class="river" d="M${RIVER.map(q => xy(q)).join('L')}"/>` + (best && best.c > 16 ? `<text class="rvl" x="${best.qx.toFixed(1)}" y="${best.qy.toFixed(1)}">Main</text>` : ''); })()}` + g + `<path class="area" d="${d}Z"/>`; // the Main at every size (clipped by the frame), its label where it fits; then the airport outline
-    { const KM = [1, 2, 3, 5, 10].find(v => v * 1000 * k >= 40) || 10, km2 = Math.round(KM * 1000 * k), sc = $('mscl'); /* a bar of at least 40 px */ if (sc) sc.innerHTML = `<span>N\u00a0↑</span><span class="msb"><b>${KM}\u00a0km</b><svg width="${km2 + 2}" height="5" viewBox="0 0 ${km2 + 2} 5" aria-hidden="true"><path d="M1 4h${km2}M1 1v3M${km2 + 1} 1v3"/></svg></span>`; /* the distance over its bar: narrow enough for the key row */ let inRow = true; if (sc) { sc.hidden = false; const k0 = sc.parentElement.firstElementChild; inRow = false; void k0; sc.hidden = true; /* the scale sits in the drawing's bottom-right corner, never squeezed into the key row */ }
-      if (!inRow) { const sx = W - 8 - km2, sy = (KB ? KB[1] + 10 : Hh) - 8; g += `<g class="scl"><path d="M${sx} ${sy}h${km2}M${sx} ${sy - 3}v3M${sx + km2} ${sy - 3}v3"/><text x="${sx - 6}" y="${sy}" text-anchor="end">N ↑  ${KM} km</text></g>`; } /* no room in the key row with 10 px gaps: at the map's bottom-right instead */ } // north and the scale: the key row's right end
+      return `<path class="river" d="M${RIVER.map(q => xy(q)).join('L')}"/>` + (best && best.c > 4 ? `<text class="rvl" x="${best.qx.toFixed(1)}" y="${best.qy.toFixed(1)}">Main</text>` : ''); })()}` + g + `<path class="area" d="${d}Z"/>`; // the Main at every size (clipped by the frame), its label where it fits; then the airport outline
+    { const KM = [1, 2, 3, 5, 10].find(v => v * 1000 * k >= 40) || 10, km2 = Math.round(KM * 1000 * k), sc = $('mscl'); /* a bar of at least 40 px */ if (sc) sc.innerHTML = `<span>N\u00a0↑</span><span class="msb"><b>${KM}\u202fkm</b><svg width="${km2 + 2}" height="5" viewBox="0 0 ${km2 + 2} 5" aria-hidden="true"><path d="M1 4h${km2}M1 1v3M${km2 + 1} 1v3"/></svg></span>`; /* the distance over its bar: narrow enough for the key row */ let inRow = true; if (sc) { sc.hidden = false; const k0 = sc.parentElement.firstElementChild; inRow = false; void k0; sc.hidden = true; /* the scale sits in the drawing's bottom-right corner, never squeezed into the key row */ }
+      if (!inRow) { const sx = W - 8 - km2, sy = (KB ? KB[1] + 10 : Hh) - 8, cx = renderMap.cx || (renderMap.cx = document.createElement('canvas').getContext('2d')); cx.font = '400 13px "IBM Plex Sans", system-ui, sans-serif';
+        const kw = cx.measureText(`${KM}\u202fkm`).width, ax = Math.round(sx - 8 - kw - 16) + 0.5; // north: a drawn 14 px arrow with its N, 16 px left of the distance; the bar 2 px thick with 6 px end ticks
+        g += `<g class="scl"><path class="sbar" d="M${sx} ${sy}h${km2}M${sx} ${sy - 5}v6M${sx + km2} ${sy - 5}v6"/><text x="${sx - 8}" y="${sy + 1}" text-anchor="end">${KM}\u202fkm</text>`
+          + `<path class="narw" d="M${ax} ${sy + 1}V${sy - 13}M${ax - 4.5} ${sy - 8.5}L${ax} ${sy - 13}L${ax + 4.5} ${sy - 8.5}"/><text class="nlbl" x="${ax - 8}" y="${sy + 1}" text-anchor="end">N</text></g>`; } /* no room in the key row with 10 px gaps: at the map's bottom-right instead */ } // north and the scale: the key row's right end
   }
-  const SEG = []; // every stroke on screen, for the label pass
+  const SEG = [], GAPP = []; // every stroke on screen, for the label pass; the other direction's dashed approaches
   // town markers at their place, at least 22 px apart (pushed apart along the line between them)
   const R = 5.5, MK = towns.map(t => ({ t, x: X(t.p), y: Y(t.p) }));
   for (const m of MK) for (const sg of M.seg.filter(g => g.kind === 'app')) { const ax = X(sg.a), ay = Y(sg.a), bx = X(sg.b), by = Y(sg.b), vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy || 1, f = Math.max(0, Math.min(1, ((m.x - ax) * vx + (m.y - ay) * vy) / L2)), px = ax + vx * f, py = ay + vy * f, d = Math.hypot(m.x - px, m.y - py);
@@ -2132,8 +2585,10 @@ function renderMap() {
   // markers stay at the towns' true positions (same lat/lon and projection as the 3D view); only the names move
   for (let i = 0; i < MK.length; i++) for (let j = i + 1; j < MK.length; j++) { const a2 = MK[i], b2 = MK[j], dx = b2.x - a2.x, dy = b2.y - a2.y, d = Math.hypot(dx, dy) || 1, mv = Math.min(4, Math.max(0, (19 - d) / 2)); if (mv > 0) { a2.x -= dx / d * mv; a2.y -= dy / d * mv; b2.x += dx / d * mv; b2.y += dy / d * mv; } } // two close markers step apart, at most 4 px each
   { const oth25 = od === 25 ? 7 : 25, i0 = now ? nowIdx() : sel, show = H.slice(i0).some(x => x.od === oth25) || H.slice(i0).some(x => (od === 25 ? x.p25 : 1 - x.p25) <= 0.8); // the other direction's landings, faint: only when a switch away from the shown direction is expected or possible (>= 20 %)
-    const kg = el.closest('.c3d')?.querySelector('#mlggh'); if (kg) { kg.hidden = !show; kg.querySelector('path').setAttribute('stroke', `var(--${oth25 === 25 ? 'west' : 'east'}-line)`); kg.lastChild.textContent = `${oth25 === 25 ? 'West' : 'East'} approaches (if switched)`; } // never the same sample as "Landings"
-    if (show) for (const sg of mapPaths(oth25, r18).seg.filter(q => q.kind === 'app')) { const ux = sg.a[0] - sg.b[0], uy = sg.a[1] - sg.b[1], L0 = Math.hypot(ux, uy), far = [sg.b[0] + ux / L0 * 3500, sg.b[1] + uy / L0 * 3500]; g += `<path class="gapp" style="stroke:var(--${oth25 === 25 ? 'west' : 'east'}-line)" d="M${xy(far)}L${xy(sg.b)}"/>`; } }
+    { const mi = $('mapif'); if (mi) { const lt = o => `landings from the ${o === 25 ? 'east' : 'west'},</span> <span class="nw">take-offs ${o === 25 ? 'west' : 'east'}</span>`; /* each sentence one line in the card's width */ // 07: approaches come in from the west
+        mi.hidden = innerWidth < 480 && (!show || nbm); mi.innerHTML = nbm ? '<span class="mi0">Night ban, no flights</span>' : `<span class="mi0"><span class="nw">${lt(od).replace(/^l/, 'L')}</span>${show ? `<span class="mi1"><span class="nw">If switched: ${lt(oth25)}</span>` : ''}`; } } // the operator's reading of the solid and the faint dashed paths
+    const kg = el.closest('.c3d')?.querySelector('#mlggh'); if (kg) { kg.hidden = !show; kg.querySelector('path').setAttribute('stroke', `var(--${oth25 === 25 ? 'west' : 'east'}-line)`); kg.lastChild.textContent = `${oth25 === 25 ? 'West' : 'East'} (if switched)`; } // never the same sample as "Landings"
+    if (show) for (const sg of mapPaths(oth25, r18).seg.filter(q => q.kind === 'app')) { const ux = sg.a[0] - sg.b[0], uy = sg.a[1] - sg.b[1], L0 = Math.hypot(ux, uy), far0 = [sg.b[0] + ux / L0 * 40000, sg.b[1] + uy / L0 * 40000], fx = X(far0) - X(sg.b), fy = Y(far0) - Y(sg.b), fit8 = Math.min(1, ...[fx > 0 ? (W - 8 - X(sg.b)) / fx : fx < 0 ? (8 - X(sg.b)) / fx : 1, fy > 0 ? (Hh - 8 - Y(sg.b)) / fy : fy < 0 ? (8 - Y(sg.b)) / fy : 1].map(v => Math.max(0, v))), far = [sg.b[0] + (far0[0] - sg.b[0]) * fit8, sg.b[1] + (far0[1] - sg.b[1]) * fit8]; /* on to the card's edge, ending 8 px inside it */ g += `<!--gapp${GAPP.length}-->`; GAPP.push([X(far), Y(far), X(sg.b), Y(sg.b), `var(--${oth25 === 25 ? 'west' : 'east'}-line)`]); SEG.push([X(far), Y(far), X(sg.b), Y(sg.b), null, null, 1, 'go']); } } // a plate may sit over it (on a 2 px halo), at a small cost: clear spots still win // drawn after the plates are placed (they keep clear of these dashes too)
   for (const s of M.seg) { // chevrons: landings point at the runway, take-offs away from it
     const ax = X(s.a), ay = Y(s.a), bx = X(s.b), by = Y(s.b), L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
     // landing chevrons where the path is farthest from any town (their names go near the towns)
@@ -2163,28 +2618,7 @@ function renderMap() {
     const d = segHit(ax, ay, bx, by, q) ? 0 : Math.min(ptBox(ax, ay, q), ptBox(bx, by, q), ...[[q[0], q[1]], [q[2], q[1]], [q[0], q[3]], [q[2], q[3]]].map(([x, y]) => ptSeg(x, y, ax, ay, bx, by)));
     return d - (sg[6] || 1.5);
   };
-  const PAR = M.rw.filter(r => r.des !== '18'), thrOf = r => { const ax = X(r.a), ay = Y(r.a), bx = X(r.b), by = Y(r.b), af = od === 25 ? ax >= bx : ax <= bx; return af ? [ax, ay] : [bx, by]; };
-  const PT = PAR.map(r => ({ r, t: thrOf(r) })).sort((p1, p2) => p1.t[1] - p2.t[1]);
-  const grouped = PT.length === 3 && PT.slice(1).some((q, i) => Math.hypot(q.t[0] - PT[i].t[0], q.t[1] - PT[i].t[1]) < 24); // the parallel thresholds too close for three badges
-  if (grouped) { // one stacked chip "07L / 07C / 07R" (top to bottom, as the runways lie) beside the thresholds, a bracket spanning the three runway ends
-    const cw = 32, ch = 40, low = PT[2].t, apps = M.seg.filter(g => g.kind === 'app').map(g => [X(g.a), Y(g.a), X(g.b), Y(g.b)]);
-    const lineY = x => Math.max(-1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : -1e9))); // the lowest landing path at x
-    let bestC = null;
-    const lineT = x => Math.min(1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : 1e9))); // the highest landing path at x
-    for (const side of [-1, 1]) for (let dx = -110; dx <= 10; dx += 6) for (let dy = 0; dy <= 70; dy += 4) { // below the lowest landing path (else above the highest), near the thresholds, clear of every stroke and marker
-      const cx0 = low[0] + dx - cw, cy0 = side > 0 ? Math.max(lineY(cx0), lineY(cx0 + cw)) + 8 + dy : Math.min(lineT(cx0), lineT(cx0 + cw)) - 8 - ch - dy, q = [cx0, cy0, cx0 + cw, cy0 + ch];
-      if (!isFinite(cy0)) continue;
-      if (q[0] < 8 || q[2] > W - 8 || q[1] < 8 || q[3] > (KB ? KB[1] + 6 : Hh) - 4) continue;
-      let cost = Math.hypot(q[2] - low[0], (side > 0 ? q[1] : q[3]) - low[1]) + (side > 0 ? 60 : 0); /* above the highest landing path, by the west end of the 07 runways */
-      for (const sg of SEG) if (segBox(sg, q) < 4) cost += 3000;
-      for (const m of MK) if (ov(q, [m.x - R - 4, m.y - R - 4, m.x + R + 4, m.y + R + 4])) cost += 3000;
-      for (const z of placed) if (ov(q, z)) cost += 3000;
-      if (!bestC || cost < bestC.cost) bestC = { cost, cx0, cy0 }; }
-    const { cx0, cy0 } = bestC || { cx0: low[0] - 6 - cw, cy0: low[1] - ch / 2 }, lx = Math.min(Math.max(low[0], cx0), cx0 + cw), ly = cy0 > low[1] ? cy0 : cy0 + ch; // a short leader from the chip to the thresholds
-    gp += `<path class="rwld" d="M${lx.toFixed(1)} ${ly.toFixed(1)}L${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)} ${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}"/><circle class="rwldd" cx="${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)}" cy="${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}" r="2"/><rect class="rwhalo" x="${(cx0 - 3).toFixed(1)}" y="${(cy0 - 3).toFixed(1)}" width="${cw + 6}" height="${ch + 6}" rx="5"/><rect class="rwp" x="${cx0.toFixed(1)}" y="${cy0.toFixed(1)}" width="${cw}" height="${ch}" rx="3"/>` + PT.map((q, k) => `<text class="rwt rwt11" x="${(cx0 + cw / 2).toFixed(1)}" y="${(cy0 + 13 + k * 12).toFixed(1)}" text-anchor="middle">${q.r.des}</text>`).join('');
-    placed.push([cx0 - 2, cy0 - 2, cx0 + cw + 2, cy0 + ch + 2]);
-  }
-  for (const r of [...M.rw].filter(r => !(grouped && r.des !== '18')).sort((a, b) => /C/.test(b.des) - /C/.test(a.des))) { // designator plates (the centre runway first, it has the fewest free spots): past the runway end no path uses, else the clearest spot along it
+  const platesFor = (list, placed) => { let gp = '', worst = 0; for (const r of [...list].sort((a, b) => (/C/.test(b.des) - /C/.test(a.des)) || ((a.des === '18') - (b.des === '18')))) { // designator plates (the centre runway first, it has the fewest free spots; Runway 18 last, so the parallels keep their thresholds): past the runway end no path uses, else the clearest spot along it
     const w = r.des.length * 8 + 8, ax = X(r.a), ay = Y(r.a), bx = X(r.b), by = Y(r.b), L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
     const want = r.out ? [X(r.at) + r.out[0] * (w / 2 + 6), Y(r.at) - r.out[1] * (w / 2 + 6)] : r.side ? [X(r.at) + r.side[0] * 16, Y(r.at) - r.side[1] * 16] : null;
     const cand = []; void want;
@@ -2199,6 +2633,10 @@ function renderMap() {
     { const ha = Math.abs(dirIn[0]) * w / 2 + Math.abs(dirIn[1]) * 9 + 4; // one rule on both pages: 4 px before the threshold on the runway's axis; sideways only as far as a path needs
       for (const o of [0, 18, -18]) cand.push([thr[0] - dirIn[0] * ha + nx * o, thr[1] - dirIn[1] * ha + ny * o, Math.abs(o) / 3]); } // on the axis, 4 px before the threshold; sideways when a landing path arrives there
     for (const [t, pen] of [[w / 2 + 4, 10], [w / 2 + 16, 20], [w / 2 + 28, 30]]) for (const [o, sd, pe] of [[o0, 1, 0], [o0 + 8, 1, 25], [o0, -1, 60], [o0 + 8, -1, 80]]) cand.push([thr[0] + dirIn[0] * t + nx * o * sd, thr[1] + dirIn[1] * t + ny * o * sd, pen + pe]); // else beside the runway, just inside the threshold
+    for (let f = 0.1; f <= 0.91; f += 0.05) for (const [o, pe] of [[o0 - 4, 0], [o0, 6], [o0 + 6, 12]]) cand.push([thr[0] + dirIn[0] * L * f + nx * o, thr[1] + dirIn[1] * L * f + ny * o, 50 + pe + 40 * f]); // else beside its own strip, further along it (as in the 3D view)
+    if (r.des === '18') for (let f = 0.1; f <= 0.91; f += 0.025) for (let o = o0 - 4; o <= o0 + 10; o += 1) for (const sd of [1, -1]) cand.push([thr[0] + dirIn[0] * L * f + nx * o * sd, thr[1] + dirIn[1] * L * f + ny * o * sd, 50 + 2 * (o - o0 + 4) + (sd < 0 ? 20 : 0) + 40 * f]); // Runway 18 (placed after the parallels): the closest clear spot beside its strip, either side
+    { const fe = [thr[0] + dirIn[0] * L, thr[1] + dirIn[1] * L]; // else past the far end, on or near the axis (the centre runway between two dashed approaches)
+      for (const t of [w / 2 + 4, w / 2 + 10, w / 2 + 16, w / 2 + 24]) for (const o of [0, -4, 4, -8, 8, -12, 12, -16, 16]) cand.push([fe[0] + dirIn[0] * t + nx * o, fe[1] + dirIn[1] * t + ny * o, 90 + t + Math.abs(o)]); }
     for (let gx = -70; gx <= 70; gx += 10) for (let gy = -40; gy <= 40; gy += 6) cand.push([thr[0] + gx, thr[1] + gy, 120 + Math.hypot(gx, gy)]); // crowded: the nearest free spot to the threshold
     let best = null;
     for (const [px, py, pen] of cand) {
@@ -2206,20 +2644,64 @@ function renderMap() {
       let cost = pen;
       if (q[0] < 12 || q[2] > W - 12 || q[1] < 8 || q[3] > Hh - 4) cost += 1e4; /* every plate (07C too) 12 px inside the card's sides */ // never touching the card's top padding
       for (const z of placed) if (ov(q, [z[0] - 2, z[1] - 2, z[2] + 2, z[3] + 2])) cost += 8000;
-      for (const sg of SEG) { const own = sg[6] === 4 && Math.abs(sg[0] - ax) < 0.01 && Math.abs(sg[1] - ay) < 0.01; if (segBox(sg, q) < (own ? -0.5 : 4)) cost += 3000; } /* its own runway: it sits at its end */ // >= 4 px from every stroke, arrow and approach line, its own runway included
+      for (const sg of SEG) { const own = sg[6] === 4 && Math.abs(sg[0] - ax) < 0.01 && Math.abs(sg[1] - ay) < 0.01, d = segBox(sg, q); if (d < (own ? 2 : 6)) cost += sg[7] === 'go' ? 30 : 3000; } /* an "if switched" approach: the plate may sit over it, on its halo */ /* its own runway: it sits at its end */ // >= 4 px from every stroke, arrow and approach line, its own runway included
       /* on the airport is fine (as in the 3D view): every plate stays at its threshold */
       for (const m of MK) if (ov(q, [m.x - R - 3, m.y - R - 3, m.x + R + 3, m.y + R + 3])) cost += 2000;
+      for (const o of M.rw) { if (o === r) continue; const oax = X(o.a), oay = Y(o.a), obx = X(o.b), oby = Y(o.b), oL = Math.hypot(obx - oax, oby - oay) || 1, ex = (obx - oax) / oL * 16, ey = (oby - oay) / oL * 16; // never on another runway's line or its run-out: a plate there reads as that runway's
+        if (segBox([oax - ex, oay - ey, obx + ex, oby + ey, null, null, 2.5], q) < 12) cost += 2500; }
+      { const dOwn = ptSeg(px, py, ax, ay, bx, by); if (M.rw.some(o => o !== r && ptSeg(px, py, X(o.a), Y(o.a), X(o.b), Y(o.b)) < dOwn)) cost += 5000; /* nearest its own runway */
+        if (segBox([ax, ay, bx, by], q) > 14) cost += 1500; } /* beside its own strip, not adrift */
+      if (r.des !== '18') cost += ptBox(thr[0], thr[1], q); /* a parallel runway: among clear spots, the one nearest its landing threshold */
       if (!best || cost < best.cost) best = { cost, px, py };
     }
-    const { px, py } = best;
+    const { px, py } = best; if (r.des !== '18') worst = Math.max(worst, best.cost);
     placed.push([px - w / 2 - 2, py - 11, px + w / 2 + 2, py + 11]);
-    gp += `<rect class="rwp" x="${(px - w / 2).toFixed(1)}" y="${(py - 9).toFixed(1)}" width="${w}" height="18" rx="3"${r.closed ? ' style="fill:var(--red)"' : ''}/><text class="rwt" x="${px.toFixed(1)}" y="${(py + 4).toFixed(1)}" text-anchor="middle">${r.des}</text>`;
+    { const q = [px - w / 2, py - 9, px + w / 2, py + 9], d = ptBox(thr[0], thr[1], q); // a parallel runway's plate more than 6 px from its threshold: a 1 px leader tick from the plate to it
+      if (r.des !== '18' && d > 6) { const cx = Math.max(q[0] + 3, Math.min(q[2] - 3, thr[0])), cy = Math.max(q[1], Math.min(q[3], thr[1])), L2 = Math.hypot(thr[0] - cx, thr[1] - cy) || 1, ex = thr[0] - (thr[0] - cx) / L2 * 3, ey = thr[1] - (thr[1] - cy) / L2 * 3;
+        gp += `<path class="rwtk" data-des="${r.des}" d="M${cx.toFixed(1)} ${cy.toFixed(1)}L${ex.toFixed(1)} ${ey.toFixed(1)}"/>`; } }
+    { const q = [px - w / 2, py - 9, px + w / 2, py + 9]; if (GAPP.some(([gx0, gy0, gx1, gy1]) => segBox([gx0, gy0, gx1, gy1, null, null, 1], q) < 2)) gp += `<rect class="rwph" x="${(px - w / 2 - 2).toFixed(1)}" y="${(py - 11).toFixed(1)}" width="${w + 4}" height="22" rx="5"/>`; } // over an "if switched" line: a 2 px halo in the map's colour, the line visibly passing under the plate
+    gp += `<rect class="rwp${r.closed ? ' cl' : ''}" x="${(px - w / 2).toFixed(1)}" y="${(py - 9).toFixed(1)}" width="${w}" height="18" rx="3"${r.closed ? ' style="fill:var(--red);stroke:none"' : ''}/><text class="rwt${r.closed ? ' cl' : ''}" x="${px.toFixed(1)}" y="${(py + 4).toFixed(1)}" text-anchor="middle">${r.des}</text>`;
+  } return { gp, worst }; };
+  { // each runway's plate beside its own strip (as in the 3D view); when the map is too small for that, one stacked chip at the parallel thresholds
+    const tryP = placed.slice(), ind = platesFor(M.rw, tryP), grouped = ind.worst >= 1000 && M.rw.filter(r => r.des !== '18').length === 3; // a parallel plate found no clear spot beside its strip
+    if (!grouped) { gp += ind.gp; placed.splice(0, placed.length, ...tryP); }
+    else {
+      const PAR = M.rw.filter(r => r.des !== '18'), thrOf = r => { const ax = X(r.a), ay = Y(r.a), bx = X(r.b), by = Y(r.b), af = od === 25 ? ax >= bx : ax <= bx; return af ? [ax, ay] : [bx, by]; };
+      const PT = PAR.map(r => ({ r, t: thrOf(r) })).sort((p1, p2) => p1.t[1] - p2.t[1]);
+      if (grouped) { // one stacked chip "07L / 07C / 07R" (top to bottom, as the runways lie) beside the thresholds, a bracket spanning the three runway ends
+        const cw = 34, ch = 44, low = PT[2].t, apps = M.seg.filter(g => g.kind === 'app').map(g => [X(g.a), Y(g.a), X(g.b), Y(g.b)]);
+        const lineY = x => Math.max(-1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : -1e9))); // the lowest landing path at x
+        let bestC = null;
+        const lineT = x => Math.min(1e9, ...apps.map(([ax, ay, bx, by]) => (Math.min(ax, bx) <= x && x <= Math.max(ax, bx) && bx !== ax ? ay + (by - ay) * (x - ax) / (bx - ax) : 1e9))); // the highest landing path at x
+        for (const side of [-1, 1]) for (let dx = -160; dx <= 10; dx += 6) for (let dy = 0; dy <= 90; dy += 4) { // below the lowest landing path (else above the highest), near the thresholds, clear of every stroke and marker
+          const cx0 = low[0] + dx - cw, cy0 = side > 0 ? Math.max(lineY(cx0), lineY(cx0 + cw)) + 8 + dy : Math.min(lineT(cx0), lineT(cx0 + cw)) - 8 - ch - dy, q = [cx0, cy0, cx0 + cw, cy0 + ch];
+          if (!isFinite(cy0)) continue;
+          if (q[0] < 8 || q[2] > W - 8 || q[1] < 8 || q[3] > (KB ? KB[1] + 6 : Hh) - 4) continue;
+          let cost = Math.hypot(q[2] - low[0], (side > 0 ? q[1] : q[3]) - low[1]) + (side > 0 ? 60 : 0); /* above the highest landing path, by the west end of the 07 runways */
+          for (const sg of SEG) if (segBox(sg, q) < 8) cost += 3000; /* 8 px clear of every path: the chip never overprints a line */
+          for (const m of MK) if (ov(q, [m.x - R - 4, m.y - R - 4, m.x + R + 4, m.y + R + 4])) cost += 3000;
+          for (const z of placed) if (ov(q, z)) cost += 3000;
+          if (!bestC || cost < bestC.cost) bestC = { cost, cx0, cy0 }; }
+        const { cx0, cy0 } = bestC || { cx0: low[0] - 6 - cw, cy0: low[1] - ch / 2 }, lx = Math.min(Math.max(low[0], cx0), cx0 + cw), ly = cy0 > low[1] ? cy0 : cy0 + ch; // a short leader from the chip to the thresholds
+        gp += `<path class="rwld" d="M${lx.toFixed(1)} ${ly.toFixed(1)}L${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)} ${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}"/><circle class="rwldd" cx="${(cy0 > low[1] ? low[0] : PT[0].t[0]).toFixed(1)}" cy="${(cy0 > low[1] ? low[1] + 3 : PT[0].t[1] - 3).toFixed(1)}" r="2"/><rect class="rwhalo" x="${(cx0 - 3).toFixed(1)}" y="${(cy0 - 3).toFixed(1)}" width="${cw + 6}" height="${ch + 6}" rx="5"/><rect class="rwp" x="${cx0.toFixed(1)}" y="${cy0.toFixed(1)}" width="${cw}" height="${ch}" rx="3"/>` + PT.map((q, k) => `<text class="rwt rwt11" x="${(cx0 + cw / 2).toFixed(1)}" y="${(cy0 + 15 + k * 13).toFixed(1)}" text-anchor="middle">${q.r.des}</text>`).join('');
+        placed.push([cx0 - 2, cy0 - 2, cx0 + cw + 2, cy0 + ch + 2]);
+      }
+
+      gp += platesFor(M.rw.filter(r => r.des === '18'), placed).gp;
+    }
   }
 
   [...MK].sort((a2, b2) => a2.t.p[0] - b2.t.p[0]).forEach((m, k) => { m.no = k + 1; }); // numbered west to east, the same on both pages
-  for (const m of MK) g += `<circle class="tnum" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="7.5"/><text class="tnumt" x="${m.x.toFixed(1)}" y="${(m.y + 3.8).toFixed(1)}" text-anchor="middle">${m.no}</text>`;
+  for (const m of MK) g += `<circle class="tnumh" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="10.25"/><circle class="tnum" cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="7.5"/><text class="tnumt" x="${m.x.toFixed(1)}" y="${(m.y + 3.8).toFixed(1)}" text-anchor="middle">${m.no}</text>`;
   { const kt = el.closest('.c3d')?.querySelector('#mlgtowns'); if (kt) kt.innerHTML = [...MK].sort((a2, b2) => a2.no - b2.no).map(m => `<span class="tk"><i>${m.no}</i>${m.t.n}</span>`).join(''); }
   // the towns are named in the key row (numbered); the subtitle keeps the short form
+  { // the other direction's dashed approaches: one continuous dashed line from the card's edge to the threshold; a plate
+    // over it sits on top with a 2 px map-colour halo (the plate pass adds it). Only the outer start gives way, 9 px clear
+    // of any take-off arrowhead, so a dash never touches an arrow
+    const heads = [...(g + gp).matchAll(/<path class="arw"[^>]* d="([^"]+)"/g)].map(m => { const v = (m[1].match(/-?[\d.]+/g) || []).map(Number), xs = v.filter((_, k) => k % 2 === 0), ys = v.filter((_, k) => k % 2 === 1); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; });
+    GAPP.forEach(([ax, ay, bx, by, col], i) => { const L = Math.hypot(bx - ax, by - ay) || 1, n = Math.ceil(L * 2);
+      let f0 = 0; for (let k = 0; k <= n; k++) { const f = k / n; if (heads.some(q => ptBox(ax + (bx - ax) * f, ay + (by - ay) * f, q) < 9)) f0 = (k + 1) / n; }
+      g = g.replace(`<!--gapp${i}-->`, f0 < 1 ? `<path class="gapp" data-l="${ax.toFixed(1)} ${ay.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}" style="stroke:${col};stroke-dashoffset:${(-f0 * L).toFixed(1)}" d="M${(ax + (bx - ax) * f0).toFixed(1)} ${(ay + (by - ay) * f0).toFixed(1)}L${bx.toFixed(1)} ${by.toFixed(1)}"/>` : ''); }); }
   g += gp; // plates on top
   el.innerHTML = `<svg width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" aria-hidden="true" class="${od === 25 ? 'w' : 'e'}${nbm ? ' nb' : ''}"><defs><clipPath id="mclip"><rect x="0" y="0" width="${W}" height="${Math.max(0, KB ? KB[1] + 6 : Hh)}"/></clipPath><filter id="mblur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="8"/></filter><mask id="medge" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${Hh}"><rect x="4" y="12" width="${Math.max(0, W - 16)}" height="${Math.max(0, (KB ? KB[1] + 6 : Hh) - 28)}" fill="#fff" filter="url(#mblur)"/></mask><linearGradient id="mfadeg" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${Math.min(0.5, 72 / W).toFixed(3)}" stop-color="#fff" stop-opacity="1"/></linearGradient><mask id="mfade" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${Hh}"><rect x="0" y="0" width="${W}" height="${Hh}" fill="url(#mfadeg)"/></mask></defs><g clip-path="url(#mclip)">${g.replace(/<path class="(river|app)"/g, '<path mask="url(#medge)" class="$1"')}</g></svg>`; // the river and the landing paths fade out over ~24 px at the edges
 }
@@ -2227,15 +2709,8 @@ function renderMap() {
 function renderAll() {
   press($('tz'), $('tz').querySelector(`[data-v=${tz === 'UTC' ? 'utc' : 'local'}]`));
   renderUpdated(); renderRecord(); renderChange(); renderTimeline(); renderOD(); renderR18(); renderMap(); renderAlerts(); renderLiveRecord();
-  try { alignProof(); } catch {}
 }
 function zoom() { return parseFloat(document.body.style.zoom) || 1; }
-function alignProof() { // the proof number sits on the headline's baseline: measured with zero-height inline markers
-  const pf = document.querySelector('.proof .pf1'), hd = $('answer'); if (!pf || !hd || NARROW.matches) return;
-  document.querySelector('.proof').style.setProperty('--pfb', '0px');
-  const mk = el => { const i = document.createElement('i'); i.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline'; el.appendChild(i); const y = i.getBoundingClientRect().bottom; i.remove(); return y; };
-  const d = (mk(hd.querySelector(':scope > span:not(.dbadge)') || hd) - mk(pf.querySelector('b') || pf)) / zoom(); document.querySelector('.proof').style.setProperty('--pfb', `${d.toFixed(2)}px`); // the headline's words, not its badge (a transform: no reflow)
-}
 const NARROW = matchMedia('(max-width: 899px)');
 function fit() { // desktop: laid out at >= 1280 px wide, scaled to the window (up to the height that still fits one
   // screen, ~800 px); the page keeps its natural height and scrolls on tall windows. Phones: one column, no scaling
@@ -2244,18 +2719,29 @@ function fit() { // desktop: laid out at >= 1280 px wide, scaled to the window (
   else { const z = Math.max(1, Math.min(1.5, innerWidth / 1280, innerHeight / 810)); b.style.zoom = z.toFixed(4); b.style.width = `${innerWidth / z}px`; }
   b.style.height = '';
   MAIN.style.setProperty('--rowh', '21px');
+  { const ft = document.querySelector('.pfoot > span:first-child'), rc = document.querySelector('.c3d'); // the footer's second line starts under the flight-path card
+    if (ft && rc && !NARROW.matches) ft.style.setProperty('--fc2', `${Math.max(0, (rc.getBoundingClientRect().left - ft.getBoundingClientRect().left) / (parseFloat(b.style.zoom) || 1)).toFixed(1)}px`); }
   if (!NARROW.matches) { // spread the spare height of a tall window over the grid rows, so nothing piles up under the footer
     const z = parseFloat(b.style.zoom) || 1, spare = innerHeight - b.getBoundingClientRect().height - 12 * z; /* the footer keeps >= 12 px to the window's bottom */
-    if (spare > 0) MAIN.style.setProperty('--rowh', `${Math.min(22.5, 21 + spare / z / ROWS).toFixed(2)}px`); // a little air on a laptop; tall windows keep content-sized cards
+    if (spare > 0) MAIN.style.setProperty('--rowh', `${Math.min(24, 21 + spare / z / ROWS).toFixed(2)}px`); // a little air on a laptop; tall windows keep content-sized cards
+    else if (spare < 0) MAIN.style.setProperty('--rowh', `${Math.max(20, 21 + spare / z / ROWS).toFixed(2)}px`); // a short window (1366 x 768): the cards give up to 1 px a row so the page stays one screen
   }
-  renderTimeline(); renderMap(); renderRecord(); document.querySelectorAll('.seg').forEach(thumb); alignProof();
+  placeReadout(); alignR18(); renderTimeline(); renderMap(); if ($('recdlg')?.open) renderRecord(); document.querySelectorAll('.seg').forEach(thumb);
+}
+function placeReadout() { // the 48 h card's header as in 3D: the title, then the readout on its line when it fits (a 420 px slot,
+  // room for the longest readout and "Back to now"), the controls at the right; otherwise the readout is the second line
+  const hd = document.querySelector('.tlc .hd'), ro = $('hdsel'), h2 = $('tlh'), zm = $('zoom'), card = document.querySelector('.tlc'); if (!hd || !ro || !h2 || !zm) return;
+  const below = () => { if (ro.parentElement === hd) hd.after(ro); card.classList.remove('roinl'); };
+  if (NARROW.matches) return below();
+  if (ro.parentElement !== hd) h2.after(ro); card.classList.add('roinl');
+  if ((zm.getBoundingClientRect().left - h2.getBoundingClientRect().right) / zoom() - 32 < 420) below();
 }
 
 // ---- layout: panels on a 24 x 30 grid; Layout mode drags them (move) or their corner (resize), the others make room
 const COLS = 24, ROWS = 23, MAIN = document.querySelector('main'), GHOST = $('ghost');
-const PANELS = { rec: ['Accuracy', 8, 10], tl: ['Forecast', 13, 14], v3d: ['Map', 6, 9] }; // name, min w, min h
+const PANELS = { tl: ['Forecast', 13, 14], v3d: ['Map', 6, 9] }; // name, min w, min h (the accuracy card is the detail view, off the grid)
 // the default: one hero across the top, the timeline and the paths map below it
-const DEF = { rec: { x: 14, y: 0, w: 10, h: 12 }, tl: { x: 0, y: 0, w: 14, h: 23 }, v3d: { x: 14, y: 12, w: 10, h: 11 } }; // the facts are the chart card's footer
+const DEF = { tl: { x: 0, y: 0, w: 17, h: 23 }, v3d: { x: 17, y: 0, w: 7, h: 23 } }; // the 48 h chart about two thirds, the flight-path map a compact schematic in the right column
 const CELL = {};
 document.querySelectorAll('.cell').forEach(c => {
   const k = c.dataset.p, mv = document.createElement('div');
@@ -2294,7 +2780,7 @@ function pushEdge(T, id, d, A) { // the far edge of T[id] moved by d (T[id] alre
 }
 function loadLay() {
   try {
-    const L = JSON.parse(store.get('fra-layout30') || 'null');
+    const L = JSON.parse(store.get('fra-layout32') || 'null');
     if (L && Object.keys(PANELS).every(k => L[k] && ['x', 'y', 'w', 'h'].every(q => Number.isInteger(L[k][q])))
       && fits(L) && !overlaps(L)) return L;
   } catch {}
@@ -2348,7 +2834,7 @@ MAIN.addEventListener('pointerdown', e => {
     mv.removeEventListener('pointermove', move); mv.removeEventListener('pointerup', up); mv.removeEventListener('pointercancel', up);
     c.style.transform = ''; c.classList.remove('lift'); document.body.classList.remove('rzing');
     const T = settle(clone(LAY), null); if (fits(T)) LAY = T;
-    applyLay(); store.set('fra-layout30', JSON.stringify(LAY)); $('rzreset').hidden = !custom();
+    applyLay(); store.set('fra-layout32', JSON.stringify(LAY)); $('rzreset').hidden = !custom();
   };
   mv.addEventListener('pointermove', move); mv.addEventListener('pointerup', up); mv.addEventListener('pointercancel', up);
 });
@@ -2365,11 +2851,11 @@ function setEdit(on) {
   setTimeout(show);
 }
 $('rzbtn').onclick = () => setEdit(!document.body.classList.contains('edit'));
-$('rzreset').onclick = () => { LAY = clone(DEF); store.set('fra-layout30', ''); applyLay(); setEdit(true); };
+$('rzreset').onclick = () => { LAY = clone(DEF); store.set('fra-layout32', ''); applyLay(); setEdit(true); };
 addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('edit')) setEdit(false); });
 applyLay();
 addEventListener('resize', fit);
-try { document.fonts.ready.then(() => { alignProof(); renderMap(); }); } catch {} // again once the web font is in: the metrics change
+try { document.fonts.ready.then(() => { alignR18(); renderMap(); placeR18(); }); } catch {} // again once the web font is in: the metrics change
 setPlaying(0);
 renderAll();
 fit();
@@ -2390,23 +2876,19 @@ __BAR__
   <div class="eyebrow" id="eyebrow">Runway direction now</div>
   <h1 class="headline" id="answer"></h1>
   <p class="subhead" id="subhead"></p>
-  <p class="pinl" id="pinl"></p>
-  <p class="expl">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</p>
+  <p class="trust" id="trust"></p>
   <p class="disagree" id="disagree" hidden></p>
   </div>
   <i class="ldiv" aria-hidden="true"></i>
-  <aside class="proof" id="proof" aria-label="Accuracy in the backtest"></aside>
+  <aside class="r18h" id="r18h" aria-label="Runway 18"></aside>
 </section>
 <main>
-  <div class="cell" data-p="rec">
-    <section class="card pc rec" aria-label="Track record" id="rec"></section>
-  </div>
   <div class="cell" data-p="tl">
     <section class="card tlc" aria-label="Next 48 hours">
       <div class="hd">
         <h2 id="tlh">Forecast</h2>
         <button class="btn" id="play" hidden></button>
-        <div class="seg" id="zoom" role="group" aria-label="Zoom"><i></i><button data-v="12">12 h</button><button data-v="24">24 h</button><button data-v="48" aria-pressed="true">48 h</button></div>
+        <div class="seg" id="zoom" role="group" aria-label="Zoom"><i></i><button data-v="12">12 h</button><button data-v="24">24 h</button><button data-v="48" aria-pressed="true">48 h</button></div>
       </div>
       <div class="readout" id="hdsel" aria-live="polite"><span class="tag" id="odtag" hidden>Now</span><span class="ro" id="oduse"></span><button class="rback" id="back" style="visibility:hidden">Back to now</button></div>
       <div class="tl" id="tl">
@@ -2416,7 +2898,7 @@ __BAR__
         <div class="hl" style="grid-row:6" title="The official rule switches direction when the tailwind stays above 1 kt for more than 30 minutes, or at once from 10 kt">Headwind (kt)</div>
         <div class="lanes" id="lanes" tabindex="0" role="slider" aria-label="Forecast hour" aria-valuemin="0" aria-valuemax="48"
           title="Hover to preview an hour, click or drag to hold it. Left and right arrows step 1 h, or 6 h with Shift. Up and down arrows jump to the previous or next event. Esc goes back to now.">
-          <div class="bands" id="bands"></div><div class="mids" id="mids"></div>
+          <div class="bands nbands" id="nbands"></div><div class="bands" id="bands"></div><div class="mids" id="mids"></div>
           <div class="ruler" id="ruler"></div>
           <div class="ev" id="ev"></div>
           <div class="ln lod" id="lod"></div>
@@ -2428,8 +2910,6 @@ __BAR__
       </div>
       <div class="tlf" id="tlf"></div>
       <div class="hero tfoot" aria-label="Conditions now">
-        <dl class="strip" id="odfacts"></dl>
-        <div class="r18note" id="r18foot"></div>
         <div hidden><div id="chgval"></div><div id="chgfoot"></div></div>
         <div hidden><span id="odnum"></span><span id="odword"></span><div id="oddesc"></div></div>
       </div>
@@ -2437,11 +2917,12 @@ __BAR__
   </div>
   <div class="cell" data-p="v3d">
     <section class="card c3d" aria-label="Landing and take-off paths">
-      <div class="mhd"><div class="lbl">Flight paths<small id="mapwhen">now</small></div><a class="m3d" id="open3d" href="airport3d.html" title="The airport in 3D at this forecast">3D view →</a></div>
+      <div class="mhd"><div class="lbl">Flight paths<small id="mapwhen">now</small></div><a class="m3d" id="open3d" href="airport3d.html" title="The airport in 3D at this forecast"><span class="u">Open in 3D</span><svg class="tarr" viewBox="0 0 34 24" aria-hidden="true"><path d="M3 12h27M22 4l8 8-8 8"/></svg></a></div>
+      <p class="mif" id="mapif" hidden></p>
       <div class="map" id="map" role="img" aria-label="Map of the landing and take-off paths at the shown hour"></div>
       <div class="mlg"><span><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--east)" stroke-width="2.5" stroke-dasharray="6 4" id="mlgapp"/></svg>Landings</span>
         <span><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--ink)" stroke-width="1.75"/></svg>Take-offs</span>
-        <span id="mlggh" hidden><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--west-line)" stroke-width="2" stroke-dasharray="6 4" opacity=".85"/></svg>West approaches (if switched)</span>
+        <span id="mlggh" hidden><svg viewBox="0 0 22 10"><path d="M1 5h20" stroke="var(--west-line)" stroke-width="2" stroke-dasharray="6 4" opacity=".85"/></svg>West (if switched)</span>
         <span class="mlgt" id="mlgtowns"></span>
         <span class="mscl" id="mscl"></span>
 </div>
@@ -2449,7 +2930,11 @@ __BAR__
   </div>
   <div class="ghost" id="ghost"></div>
 </main>
-<footer class="pfoot"><span>__FOOTER__</span>
+<dialog class="recdlg" id="recdlg" aria-label="How reliable is this?">
+  <section class="card pc rec" aria-label="How reliable is this?" id="rec"></section>
+</dialog>
+<p class="trust trustph" id="trustph"></p>
+<footer class="pfoot"><span>__FOOTER_LINES__</span>
   <button class="btn" id="rzreset" hidden title="Back to the default layout">Reset</button>
   <button class="btn" id="rzbtn" aria-pressed="false" title="Rearrange the panels: drag a panel to move it, or its corner to resize it. Esc when done."><span>Edit layout</span></button></footer>
 <div class="howpop" id="howpop" hidden>Our forecast blends two models trained on the directions actually flown at Frankfurt over the last 120 days; one of them runs 200 wind scenarios around the ECMWF and ICON forecasts. Calibrated out of sample and tested hour by hour on Jun to Oct 2026. INAA is the official operating-direction forecast published by the Umwelthaus. The live record since 1 Nov is only a few days long, too short to judge yet.</div>
@@ -2461,16 +2946,22 @@ __JS__</script>
 
 BAR_RIGHT = ('<span class="upd" id="upd" aria-live="polite"></span>'
 
-             '<button class="icon thm" id="theme" title="Light or dark" aria-label="Switch between light and dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>'
+             '<button class="icon thm" id="theme" title="Light / dark theme" aria-label="Light / dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>'
              '<div class="seg" id="tz" role="group" aria-label="Time zone"><i></i><button data-v="local" id="tzl">Local</button><button data-v="utc">UTC</button></div>')
+
+
+def backtest_months(d):
+    """Length of the walk-forward backtest in months (None when unknown), for the footer's backtest line."""
+    days = (((d or {}).get("quality") or {}).get("test_info") or {}).get("days")
+    return round(days / 30.4) if days else None
 
 
 def page(d):
     """The dashboard HTML for a payload() dict."""
     sw = lambda c: f'<i class="sw" style="background:var(--{c})"></i>'
     html = (PAGE.replace("__ISSUE__", pd.Timestamp(d["issue"]).strftime("%Y-%m-%d %H:%M UTC"))
-            .replace("__META__", siteui.meta("Dashboard · FRA Runway Direction Forecast")).replace("__FOOTER__", siteui.FOOTER)
-            .replace("__BASE__", siteui.BASE_CSS).replace("__CSS__", CSS + "@media (min-width:900px){" + siteui.header_css(dict(bar=".topbar", brand=".brand", nav=".topbar .nav", icon=".topbar .icon", seg="#tz", upd=".upd")) + ".topbar{margin-bottom:0}}")
+            .replace("__META__", siteui.meta("Dashboard · FRA Runway Direction Forecast")).replace("__FOOTER_LINES__", " ".join(f'<span class="fl">{t}</span>' for t in siteui.footer_lines(backtest_months(d))))
+            .replace("__BASE__", siteui.BASE_CSS).replace("__CSS__", CSS + "@media (min-width:900px){" + siteui.header_css(dict(bar=".topbar", brand=".brand", nav=".topbar .nav", icon=".topbar .icon", seg="#tz", upd=".upd", pill_bg="var(--card)", pill_sh="0 1px 2px rgba(20,20,22,.08),0 0 0 1px rgba(20,20,22,.05)", pill_ink="var(--ink)")) + ".topbar{margin-bottom:0}}")
             .replace("__BAR__", siteui.bar("forecast", BAR_RIGHT)).replace("__LAYOUT__", ICONS["layout"])
             .replace("__SW25__", sw("west")).replace("__SW07__", sw("east")).replace("__EXPAND__", ICONS["expand"])
             .replace("__ICONS__", json.dumps(ICONS)).replace("__COPY__", json.dumps(siteui.COPY)).replace("__STYLE__", json.dumps(siteui.STYLE)).replace("__T_switch__", siteui.COPY["switch"]).replace("__T_town__", siteui.COPY["town"]).replace("__T_per_hour__", siteui.COPY["per_hour"])
@@ -2485,7 +2976,7 @@ def write_atomic(path, text):
     tmp.replace(path)  # a browser polling the site never reads a half-written page
 
 
-def render_3d(path):
+def render_3d(path, months=None):
     """site/airport3d.html. A forecast issued by fra.archive is embedded together with the hackathon runs
     (data/forecast_*.csv) and the newest RUNS_3D issued runs, each with run_hours() wind; same page as
     fra.scene3d.render, which only knows data/forecast_*.csv."""
@@ -2510,7 +3001,7 @@ def render_3d(path):
             .replace("__FORECAST__", json.dumps(fcj, separators=(",", ":")))
             .replace("__COPY__", json.dumps(siteui.COPY, separators=(",", ":")))
             .replace("__META__", siteui.meta("3D view · FRA Runway Direction Forecast"))
-            .replace("__STYLE__", json.dumps(siteui.STYLE, separators=(",", ":")))
+            .replace("__STYLE__", json.dumps(dict(siteui.STYLE, footer_lines=list(siteui.footer_lines(months))), separators=(",", ":")))
             .replace("__BUNDLE__", scene3d.BUNDLE.read_text().replace("</script", "<\\/script")))
     out = SITE / "airport3d.html"
     write_atomic(out, siteui.snap_type(html))
@@ -2528,11 +3019,11 @@ def render(path):
     if og.exists():  # the share image, next to the pages so a relative og:image works wherever site/ is served
         (SITE / "og.png").write_bytes(og.read_bytes())
     try:
-        out3d = render_3d(path)
+        out3d = render_3d(path, backtest_months(d))
         if out3d:  # the same backtest numbers as the dashboard, for the 3D view's track-record line
             h = Path(out3d).read_text(encoding="utf-8")
             q = json.dumps(dict(quality=d.get("quality")), separators=(",", ":")).replace("</", "<\\/")
-            write_atomic(Path(out3d), h.replace("<script>window.FRA_SCENE=", f"<script>window.FRA_QUALITY={q}.quality;window.FRA_SINCE={json.dumps(d.get('since'))};window.FRA_PGWIN={json.dumps(dict(run=d.get('run'), win=d.get('pgwin') or []))};window.FRA_SCENE=", 1))
+            write_atomic(Path(out3d), h.replace("<script>window.FRA_SCENE=", f"<script>window.FRA_QUALITY={q}.quality;window.FRA_SINCE={json.dumps(d.get('since'))};window.FRA_PGWIN={json.dumps(dict(run=d.get('run'), win=d.get('pgwin') or []))};window.FRA_TRAFFIC={json.dumps(d.get('traffic'))};window.FRA_SCENE=", 1))
     except (SystemExit, Exception) as e:  # the 3D view needs the data/osm cache + web bundle
         print(f"3D view not rebuilt: {e}")
     return out, d

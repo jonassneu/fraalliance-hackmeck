@@ -1,7 +1,7 @@
 // Quiet solid panels over the scene, IBM Plex Sans / Mono like the dashboard, springs do the motion (no CSS keyframes).
 export const css = () => `
 /* one rule per selector and breakpoint where the cascade allows (consolidated) */
-#app{--label:#f0efec;--label2:#c3c2b7;--label3:#7d7c76;--sep:rgba(240,239,236,.1);--fill:rgba(240,239,236,.07);--fill2:rgba(240,239,236,.13);--tint:#f0efec;--mat:#1c1c1e;--mat-blur:none;--edge:rgba(240,239,236,.08);--bg:#0e0e0d;--ok:#3f7a52;--night:#3a3a38;--seg-thumb:#3a3a37;--chip:rgba(20,20,19,.82);--place:rgba(240,239,236,.75);--halo:0 1px 3px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.6);--inner:rgba(255,255,255,.16);--shadow:rgba(0,0,0,.45);--scrim:14,14,13;--scrim-a:.78;position:fixed;inset:0;overflow:hidden;background:var(--bg);color:var(--label);transition:background-color .3s;font:400 15px/1.4 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:0;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;user-select:none}
+#app{--label:#f0efec;--label2:#c3c2b7;--label3:#8f8e88;--sep:rgba(240,239,236,.1);--fill:rgba(240,239,236,.07);--fill2:rgba(240,239,236,.13);--tint:#f0efec;--mat:#1c1c1e;--mat-blur:none;--edge:rgba(240,239,236,.08);--bg:#0e0e0d;--ok:#3f7a52;--night:#3a3a38;--seg-thumb:#3a3a37;--chip:rgba(20,20,19,.82);--place:rgba(240,239,236,.75);--halo:0 1px 3px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.6);--inner:rgba(255,255,255,.16);--shadow:rgba(0,0,0,.45);--scrim:14,14,13;--scrim-a:.78;position:fixed;inset:0;overflow:hidden;background:var(--bg);color:var(--label);transition:background-color .3s;font:400 15px/1.4 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:0;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;user-select:none}
 #app canvas{display:block;touch-action:none}
 :where(#app) button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #app :focus-visible{outline:2px solid var(--tint);outline-offset:2px}
@@ -179,6 +179,7 @@ body.bare .popover{right:auto;left:calc(var(--pad-l,0px) + 1rem);bottom:calc(var
 .rose{position:absolute;left:1rem;bottom:10.25rem;transition:opacity .3s;width:4.25rem;height:4.25rem;border-radius:50%;display:grid;place-items:center;pointer-events:none}
 .rose b{position:absolute;font-size:11px;font-weight:600;color:var(--label2);will-change:transform}
 .rose b[data-d=N]{color:#d03b3b}
+#app:not(.light) .rose b[data-d=N]{color:#ef5b4f} /* dark: the lighter red, >= 4.5:1 on the scene */
 .rose i{position:absolute;width:2px;height:1.5rem;border-radius:1px;background:linear-gradient(#d03b3b 50%,var(--label3) 50%);will-change:transform}
 body.bare .rose{right:auto;left:calc(var(--pad-l,0px) + 1rem);bottom:calc(var(--pad-b,0px) + 3.75rem)}
 body.card .rose{right:.5rem;left:auto;top:.5rem;bottom:auto;transform:scale(.75);transform-origin:100% 0}
@@ -224,8 +225,9 @@ body.bare .aclegend{left:calc(var(--pad-l,0px) + 1rem + 13rem);bottom:calc(var(-
 .lbl.parrow svg{width:1.375rem;height:1.375rem;transform:rotate(var(--a,0deg));filter:drop-shadow(0 0 2px var(--bg))}
 body.card .lbl.town{font-size:11px}
 body.card .lbl.ptag,body.card .lbl.river,body.card .lbl.rwy{display:none}
-.marks i.o{background:var(--mat);box-shadow:inset 0 0 0 1px var(--label3)}
-.marks i.n{background:var(--night)}
+.marks i.o{background:var(--fill2)} /* open: a plain cell, as on the dashboard (an outlined pill read as a "0" at phone widths) */
+.marks i.n{opacity:.7} /* night ban: the hour's state, dimmed (dashboard: .l18 .n) */
+#app:not(.light) .marks i.o{background:#4a4b50} /* dark: open hours >= 1.5:1 on the card, as on the dashboard */
 .marks i.x{background:var(--closed)}
 .marks i.r{background:repeating-linear-gradient(135deg,var(--closed) 0 2px,transparent 2px 4px);box-shadow:inset 0 0 0 1px var(--closed)}
 .dkey .openk{background:var(--mat);box-shadow:inset 0 0 0 1px var(--label3)}
@@ -579,7 +581,7 @@ body.embed .pbar{display:none}
 .dock .rowlbl>span{left:0;right:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;height:auto;margin:0;font-size:13px;font-weight:500;color:var(--label);line-height:1.25}
 .dock .rowlbl small{display:block;font-size:13px;font-weight:400;color:var(--label2)}
 .dock .rowlbl #risk-l:not([hidden]){justify-content:flex-start}
-.dock .rowlbl #r18-l:not([hidden]){top:calc(34px + var(--mt) - 3px);height:auto;margin:0}
+.dock .rowlbl #r18-l:not([hidden]){top:calc(34px + var(--mt) - 3px);height:auto;margin:0;align-items:flex-start} /* left-aligned like the other row names */
 .dock .rowlbl #wind-l:not([hidden]){top:calc(34px + var(--wt));justify-content:flex-start}
 .dock .rowlbl [hidden]{display:none!important}
 .ticks{position:relative;height:34px;border-bottom:1px solid var(--sep);font-size:13px}
@@ -847,7 +849,8 @@ body.card .mapkey{display:none}
 body.card .mapchip{display:none}
 .prun{display:flex}
 #livedot{width:8px;height:8px;border-radius:50%;flex:none;margin-right:.375rem}
-#livedot.ok{background:#2e9d54}
+#livedot.ok{background:#5c9a0f} /* yellow-green, as on the dashboard (--live): never read as the West teal */
+#app:not(.light) #livedot.ok,body:has(#app:not(.light)) #livedot.ok{background:#8cc63f}
 #livedot.old{background:var(--label3)}
 .prun .age{font-weight:400;color:var(--label2)}
 @media (max-width:639px){
@@ -855,7 +858,7 @@ body.card .mapchip{display:none}
 }
 .track .pgl{font-size:11px;font-weight:600!important}
 @media (max-width:639px){
-  .pbar{align-items:center;display:grid!important;height:auto!important;gap:.375rem .75rem!important;padding:.5rem .75rem!important;align-content:start;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-areas:"brand thm tz" "tabs tabs run"!important;column-gap:8px!important}
+  .pbar{align-items:center;display:grid!important;height:auto!important;gap:.375rem .75rem!important;padding:.5rem .75rem!important;align-content:start;grid-template-columns:minmax(0,1fr) auto auto!important;grid-template-areas:"brand thm tz" "tabs run run"!important;column-gap:8px!important}
   .pbrand{flex-basis:auto;grid-area:brand;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}
   .pthm{grid-area:thm;display:grid!important;margin:0!important}
   .ptz{grid-area:tz;justify-self:end;display:flex!important;margin:0!important}
@@ -925,7 +928,7 @@ body.card .mapchip{display:none}
 .dtitle{font-size:15px;font-weight:600;color:var(--label);line-height:20px}
 .dhd .readout{font-size:13px;color:var(--label2)}
 .dhd .ro{min-width:0;overflow:visible;white-space:normal;text-overflow:clip}
-.dhd .ro b{font-weight:600;color:var(--label)}
+.dhd .ro b{font-weight:500;color:var(--label)} /* the readout regular, only its time in medium */
 .dhd .rback{flex:none;pointer-events:auto;height:28px!important;padding:0 12px!important;border-radius:8px!important;background:var(--fill)!important;box-shadow:none!important;font-size:13px;font-weight:500!important;color:var(--label)!important;line-height:28px!important}
 .dhd .rback:hover{background:var(--fill);color:var(--label)}
 .dhd .rback[hidden]{display:none}
@@ -952,7 +955,7 @@ body.card .mapchip{display:none}
   .dock .rowlbl>span{left:6px!important;right:auto!important;height:16px!important;font-size:11px;font-weight:600!important}
   .dock .rowlbl #dir-l{top:calc(34px + var(--dt) - 22px)!important}
   .dock .rowlbl #risk-l:not([hidden]){top:calc(34px + var(--rt) - 21px)!important;height:13px!important}
-  .dock .rowlbl #r18-l:not([hidden]){top:calc(34px + var(--mt) - 16px)!important}
+  .dock .rowlbl #r18-l:not([hidden]){top:calc(34px + var(--mt) - 21px)!important} /* 6 px above its cells, clear of the chance baseline */
   .dock .rowlbl small{display:none!important}
   .dhd .readout{font-size:11px}
   .dtitle{font-size:13px}
@@ -991,7 +994,7 @@ body.card .mapchip{display:none}
 .segs .dlab{position:absolute;top:50%;transform:translateY(-50%);z-index:2;pointer-events:none;padding-left:0}
 @media (max-width:639px){
   .attrib{z-index:6;pointer-events:none;left:.75rem!important;right:.75rem!important;bottom:.375rem!important;display:none!important}
-  .dock{padding:.625rem .75rem .5rem .625rem;border-radius:18px 18px 0 0!important;box-shadow:0 -8px 24px rgba(0,0,0,.12)!important;bottom:0!important;padding-left:16px!important;padding-right:16px!important;padding-top:8px!important;padding-bottom:16px!important}
+  .dock{padding:.625rem .75rem .5rem .625rem;border-radius:16px 16px 0 0!important;box-shadow:0 -8px 24px rgba(0,0,0,.12)!important;bottom:0!important;padding-left:16px!important;padding-right:16px!important;padding-top:8px!important;padding-bottom:16px!important}
 }
 .dock{position:absolute;gap:.875rem;display:grid;column-gap:.875rem;align-items:start;padding-top:10px!important;row-gap:4px!important;padding-bottom:16px!important}
 @media (max-width:599px){
@@ -1037,7 +1040,7 @@ body.card .mapchip{display:none}
 .lbl.town.num span{display:none!important}
 .lbl.town.num i{color:var(--bg);font:600 11px/1 "IBM Plex Sans",system-ui,sans-serif;font-style:normal}
 .row.mapkey .tkey{display:inline-flex;align-items:center;gap:4px}
-.row.mapkey .plk.gh{opacity:.6} /* the map draws these lines at 60 % */
+.row.mapkey .plk.gh{opacity:1} /* the map draws these lines at full strength (GHOST_OP): the dashes say hypothetical */
 .row.mapkey .tkey b{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--eastLine);color:var(--mat);font:600 11px/1 "IBM Plex Sans",system-ui,sans-serif}
 .prun .frs{color:var(--label2);font-variant-numeric:tabular-nums}
 .prun .frs b{font-weight:600;color:var(--label2)}
@@ -1182,7 +1185,8 @@ body.card .mapchip{display:none}
 .dkey .lessk{background:linear-gradient(90deg,color-mix(in srgb,var(--east) 38%,var(--mat)) 50%,color-mix(in srgb,var(--west) 38%,var(--mat)) 50%)!important;opacity:1!important}
 #app:not(.light) .dkey .lessk{background:linear-gradient(90deg,color-mix(in srgb,var(--east) 40%,var(--label)) 50%,color-mix(in srgb,var(--west) 40%,var(--label)) 50%)!important}
 .track .swchip{position:absolute;top:calc(var(--dt) - 15px);height:14px;padding:0 6px;border-radius:3px 3px 0 0;font:500 11px/14px "IBM Plex Sans",system-ui,sans-serif;color:#fff;background:var(--dc);z-index:8;white-space:nowrap;pointer-events:none}
-#app:not(.light) .track .swchip{color:#0f1a17}
+#app .track .swchip.w{color:#0f1a17} /* dark ink on teal, white on navy: >= 4.5:1 in both themes */
+#app .track .swchip.e{color:#fff}
 @media (max-width:599px){#track > #dkey.inbar{display:flex!important;position:absolute;left:0;right:0;top:calc(var(--dt) + var(--dh) + 6px);margin:0!important;z-index:7;background:var(--mat);flex-wrap:wrap;row-gap:2px;padding:2px 0;grid-column:auto!important}}
 .segs .swtab{position:absolute!important;top:0;bottom:0;flex:none!important;border-radius:0 6px 6px 0!important;z-index:2}
 .risk rect.hov{fill:var(--label)!important;opacity:1!important;filter:none!important}
@@ -1194,10 +1198,339 @@ body.card .mapchip{display:none}
 @media (min-width:640px){
   .row.mapkey.mapov .kbr{display:block!important;flex-basis:100%;height:0}
   .row.mapkey.mapov{border-radius:16px!important;padding:8px 14px!important}
-  .rail .row.mapkey.inrail{font-size:11px;gap:2px 12px;padding:10px 0 0!important;margin-top:0;border-top:1px solid var(--sep)!important;line-height:14px} /* a hairline and 12 px above the key */
+  .rail .row.mapkey.inrail{font-size:13px;gap:2px 12px;padding:10px 0 0!important;margin-top:0;border-top:1px solid var(--sep)!important;line-height:18px} /* a hairline and 12 px above the key */
   .rail .row.mapkey.inrail::before{display:none!important}
   .rail .hero .conditions .row.pdetrow{padding-top:0!important;padding-bottom:0!important}
   .rail .row.mapkey.inrail .tkey b{width:13px;height:13px}
   .rail .row.mapkey.inrail .kbr{display:block;flex-basis:100%;height:0}
+}
+@media (max-width:639px){
+  .row.mapkey.mapov{border-radius:16px!important} /* one corner radius for the cards and the bottom sheet */
+}
+@media (max-width:599px){ /* phones: every control in the header is a 44 px touch target, as on the dashboard */
+  .ptabs a{min-height:44px;display:inline-flex;align-items:center}
+  .ptz button{height:44px!important}
+  .pthm{height:44px!important}
+}
+/* the in-bar direction label on a solid chip of its bar colour, so the night hatch never runs behind it (as on the dashboard) */
+.segs .dlab{padding:3px 6px;margin-left:-6px;border-radius:3px;line-height:14px}
+.segs .dlab.e{background:var(--east)}
+.segs .dlab.w{background:var(--west);color:#10131c!important} /* dark ink on teal in both themes (>= 4.5:1), as the switch chip */
+/* the run picker in the dashboard's control style: a 2 px track round a raised 28 px pill, 8 px outer radius */
+.dmenu select{height:28px;margin:2px;padding:0 26px 0 10px!important;line-height:28px;border-radius:6px!important;background:var(--mat)!important;box-shadow:0 0 0 2px var(--fill2),0 1px 2px rgba(0,0,0,.12)!important}
+.dmenu select:hover{background:var(--mat)!important}
+.dmenu svg{right:10px!important}
+/* Runway 18 in use now, closed later: the closure in the secondary ink */
+#r18-v .r18c{font-size:13px;font-weight:400;color:var(--label2);white-space:nowrap;margin-left:4px}
+#r18-v:has(.r18c){display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:flex-end;white-space:nowrap}
+#r18-v:has(.r18c) .badge{white-space:nowrap}
+.row-main:has(.r18c) .row-title{white-space:nowrap}
+@media (max-width:599px){
+  /* the 48 h legend under the last row, full width */
+  .dock > .dkey{display:flex!important;grid-column:1/-1;grid-row:2;flex-direction:row;flex-wrap:wrap;gap:4px 12px;margin:10px 0 0;font-size:13px;white-space:normal;align-self:start}
+  /* "Back to now" on the readout line, over its right end: no reserved row under the readout */
+  .dhd .readout{position:relative;flex-wrap:nowrap!important}
+  .dhd .rback{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+  .dhd .readout{height:32px!important;align-items:center}
+  .dhd .readout .ro{white-space:normal!important;line-height:16px;max-height:32px;overflow:hidden}
+  .dhd .readout:has(.rback[style*="visible"]) .ro{padding-right:112px} /* pinned: up to two 16 px lines beside the button, in the same 32 px row */
+  /* segmented controls: the track shows 4 px round the selected pill */
+  .ptz,.ptabs{padding:4px!important}
+  /* Details: a pill-shaped button, a 44 px target */
+  #app .sbx>summary{min-height:44px;padding:0 14px 0 16px;border-radius:22px;background:var(--fill);box-shadow:inset 0 0 0 1px var(--sep);color:var(--label);gap:6px}
+}
+/* the switch chip names its hour (as on the dashboard); the tick marks the hour when the chip sits left of it */
+.track .swchip{top:calc(var(--dt) - 16px);height:16px;font-size:13px;line-height:16px}
+.track .swtick{position:absolute;top:var(--dt);height:var(--dh);width:2px;margin-left:-1px;background:var(--label);z-index:3;pointer-events:none}
+/* dark: the night band a step lighter than the card, with hairline edges (as on the dashboard) */
+#app:not(.light) .nights i{background:rgba(255,255,255,.06)!important;box-shadow:inset 1px 0 rgba(255,255,255,.09),inset -1px 0 rgba(255,255,255,.09)}
+/* axis values at the 13 px step on every width (as on the dashboard) */
+.dock .rgl0,.dock .rgl2{font-size:13px!important}
+@media (max-width:599px){
+  /* row names on a chip of the sheet's colour: day lines and night bands stop at the name */
+  .dock .rowlbl{z-index:5;pointer-events:none}
+  .dock .rowlbl>span{background:var(--mat);border-radius:4px;width:max-content;padding-right:6px}
+}
+/* Runway 18 in use now, closing later: one baseline for the check, "In use now" and the closure; a red dot keys the closure to the red cells */
+#r18-v:has(.r18c) .badge{display:inline-block;padding:0;background:none;line-height:20px}
+#r18-v .badge .ck{vertical-align:-3px;margin-right:4px}
+#r18-v:has(.r18c) .badge .ck{display:none}
+#r18-v .r18c .r18d{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--closed);margin:0 5px 0 0;vertical-align:1px}
+#r18-v:has(.r18c) .r18c{margin-left:0}
+.row-main:has(.r18c){gap:6px}
+/* the official amber one step darker in light mode (>= 6:1 on the card) */
+#app.light .pstat .pofl em,#app.light .sb3 em,#app.light .pofl2 em,#app.light .pstat .kv b small em{color:#8a5000}
+/* the peak note and the compass at the 12 px floor */
+.rpk{font-size:12px!important}
+.rose b{font-size:12px}
+@media (min-width:640px){
+  /* the left card's text inset equals the chart card's (24 px) */
+  .rail{width:22rem!important}
+  .rail .hero{padding-left:24px!important;padding-right:24px!important}
+  /* Details: an outlined pill, as on phones */
+  .rail .pdet>summary{width:auto!important;display:inline-flex;flex-direction:row-reverse;min-height:30px;padding:0 12px 0 14px;border-radius:15px;background:var(--fill);box-shadow:inset 0 0 0 1px var(--sep);gap:8px;color:var(--label)}
+  .rail .pdet>summary:hover{background:var(--fill2)}
+  .rail .pdet>summary::before{transform:rotate(45deg);margin:0 2px 3px}
+  .rail .pdet[open]>summary::before{transform:rotate(-135deg);margin:3px 2px 0}
+  /* how to move the map: one quiet line in the free area's bottom-right corner */
+  .hint3{position:absolute;right:1rem;bottom:calc(var(--dock-top-h,260px) + 10px);zoom:var(--hz,1);font-size:12px;line-height:16px;color:var(--label2);background:color-mix(in srgb,var(--mat) 82%,transparent);padding:2px 8px;border-radius:8px;pointer-events:none;white-space:nowrap;z-index:3}
+}
+@media (max-width:639px){.hint3{display:none}}
+body.card .hint3,body.bare .hint3{display:none}
+@media (max-width:599px){
+  /* the bottom sheet inset like the cards above it, every corner rounded */
+  .dock{left:8px!important;right:8px!important;bottom:8px!important;border-radius:16px!important;padding-left:12px!important;padding-right:12px!important}
+  /* the plot starts 38 px into the content: the Now pill keeps 12 px from the sheet's edge */
+  .dock .scrub,.dock .rowlbl{margin-left:38px!important}
+  .dock .scrub{width:calc(100% - 38px)!important}
+  /* value labels inside the plot, 4 px clear of the Now line (as on the dashboard) */
+  .dock .rgl0,.dock .rgl2{left:9px!important;right:auto!important;z-index:6}
+  /* row names at the 13 px step, each on a chip of its text width + 4 px */
+  .dock .rowlbl>span{font-size:13px!important;padding:0 2px!important;margin-left:-2px}
+  .dhd .readout .ro,#dro{font-size:13px!important}
+  /* the map key at the 12 px floor on one line of paths: inset 8 px like the cards above and below it */
+  .row.mapkey.mapov{font-size:12px!important;gap:4px 8px!important;padding:6px!important;left:8px!important;right:8px!important}
+  .row.mapkey.mapov span{gap:4px!important}
+  /* runway tags about a fifth smaller on the small map */
+  .lbl.rwy b{font-size:12px!important;line-height:14px;padding:1px 4px!important}
+}
+/* the Runway 18 row: "In use now" right-aligned like every other value, the later closure as a muted second line under it */
+#r18-v:has(.r18c){flex-direction:column;align-items:flex-end!important;justify-content:flex-start;row-gap:1px}
+#r18-v:has(.r18c) .r18c{line-height:16px}
+.row-main:has(.r18c){align-items:baseline}
+@media (min-width:640px){
+  /* one divider weight for every row of the left card */
+  .rail .row+.row::before,.rail .hsec,.rail .row.mapkey.inrail{border-top-width:1px!important;border-top-color:var(--sep)!important}
+  /* one page gutter: the cards and the buttons on the header's 24 px, the footer under them 12 px further down */
+  .rail{left:24px!important}
+  .dock{left:24px!important;right:24px!important;bottom:48px!important}
+  .attrib{line-height:16px!important;bottom:4px!important}
+  /* the space the closure line and the footer gap take, given back by the left card's spacing (it never scrolls) */
+  .rail .hero{padding-bottom:12px!important}
+  .rail .hero .dir{margin-top:2px!important}
+  .rail .hero .outl{margin-top:4px!important}
+  .rail .row.wind .row-sub{margin-top:2px!important}
+  .rail .pdet>summary{min-height:28px!important}
+  .rail .row.mapkey.inrail{padding-top:8px!important;line-height:16px!important}
+  .rail .row.mapkey.inrail>span{line-height:16px!important}
+  .stack{right:24px!important}
+  .rose{left:24px}
+  .hint3{right:24px}
+}
+@media (min-width:640px) and (min-height:801px){
+  /* the legend row 8 px further from the Runway 18 strip (short windows keep the space for the left card) */
+  .dock .dkey{margin-top:22px!important}
+}
+@media (min-width:640px) and (max-height:800px){
+  /* short windows (1366 x 768): the left card's spacing tightened so it never scrolls */
+  .rail .hero .outl{margin-top:2px!important}
+  .rail .hsec{margin-top:2px!important;padding-top:2px!important}
+  .rail .conditions>.row{padding-top:0!important;padding-bottom:0!important}
+  .rail .row-sub{line-height:16px!important}
+  .rail .row-sub+.row-sub{margin-top:0!important}
+  .rail .row.mapkey.inrail{padding-top:6px!important}
+  .rail .pdet{margin-top:2px!important}
+  .rail .hero{padding-bottom:8px!important}
+  .rail .kv{padding-top:1px!important;padding-bottom:1px!important}
+  .rail .hero{padding-top:6px!important}
+  .rail .hero .dir{margin-top:0!important}
+  .rail .row.mapkey.inrail{padding-top:4px!important}
+}
+@media (max-width:599px){
+  /* the map key: the bottom sheet's 12 px inset, two left-aligned rows (paths, then towns) */
+  .row.mapkey.mapov{padding:8px 12px!important;justify-content:flex-start!important;gap:4px 7px!important}
+  .row.mapkey.mapov .kbr{flex-basis:100%;height:0}
+  .row.mapkey.mapov .plk,.row.mapkey.mapov .tok{width:14px!important}
+  .row.mapkey.mapov span{gap:3px!important}
+  /* a thin Now line: still the darkest rule, no longer an axis */
+  .dock .nowline{width:1px!important;margin-left:-.5px!important}
+}
+/* the map hint on a quiet chip with a hairline edge, so it reads on the pale map */
+.hint3{background:color-mix(in srgb,var(--mat) 92%,transparent)!important;box-shadow:0 0 0 1px var(--sep)}
+/* one outlined control style on the 3D map and card: Reset view, Full screen and Details (28 px, a 14 px radius, a 1 px edge) */
+#app{--ctl-edge:color-mix(in srgb,var(--label) 24%,var(--mat))}
+@media (min-width:640px){
+  #app .stack.panel{background:none!important;box-shadow:none!important;border:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;gap:8px;overflow:visible!important;border-radius:0!important}
+  #app .stack .ib{height:28px!important;min-height:28px;box-sizing:border-box;padding:0 12px!important;border:1px solid var(--ctl-edge)!important;border-radius:14px!important;background:var(--mat)!important;color:var(--label)!important;font-size:13px;font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  #app .stack .ib:hover{background:var(--fill)!important}
+  #app .rail .pdet>summary{height:28px;min-height:28px!important;box-sizing:border-box;border:1px solid var(--ctl-edge)!important;border-radius:14px!important;background:var(--mat)!important;box-shadow:0 1px 2px rgba(0,0,0,.06)!important;color:var(--label)!important}
+  #app .rail .pdet>summary:hover{background:var(--fill)!important}
+  /* the run picker keeps the zoom pills' track (as on the dashboard), at the same 28 px height and text colour */
+  #app .dmenu select{color:var(--label)}
+  /* the map hint a step darker */
+  #app .hint3{color:color-mix(in srgb,var(--label2) 50%,var(--label))!important;background:color-mix(in srgb,var(--mat) 96%,transparent)!important}
+}
+/* runway tags on the light map: a white tag with a dark hairline and dark text, secondary to the path lines */
+#app.light .lbl.rwy b{background:#fff!important;color:#1b1c1e!important;box-shadow:inset 0 0 0 1px #55575d}
+@media (max-width:599px){
+  /* the map key is the map's footer: no card of its own, two left-aligned rows on a light wash just above the bottom sheet */
+  #app .row.mapkey.mapov{background:color-mix(in srgb,var(--mat) 82%,transparent)!important;box-shadow:none!important;border:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:3px 12px!important;bottom:calc(var(--dock-h,300px) + 4px)!important;border-radius:10px!important;row-gap:2px!important;line-height:16px}
+  /* the 48 h legend as an aligned grid: three columns with equal starts, the closure key across the last two */
+  #app .dock > .dkey{display:grid!important;grid-template-columns:repeat(3,minmax(8em,max-content));justify-content:space-between;column-gap:10px;row-gap:4px}
+  #app .dock > .dkey > .kr18{grid-column:span 2}
+}
+/* round 7, desktop: one chevron, theme glyph, footer air, the Now tag on its line, the map key as a strip on the map */
+@media (min-width:640px){
+  /* the theme toggle: an 18 px glyph at the other icons' 1.5 px stroke (24-unit box at 2 units), in the 32 px hit area */
+  .pthm svg{width:18px!important;height:18px!important}
+  /* the run picker: the Details chevron (a 5 px corner, 1.5 px strokes, pointing down) in the label colour; the zoom-pill
+     track kept, with the map buttons' 1 px edge colour round it */
+  #app .dmenu .chev,#app .rail .pdet>summary::before{box-sizing:content-box;width:5px;height:5px;border:0;border-right:1.5px solid var(--label);border-bottom:1.5px solid var(--label)}
+  #app .dmenu .chev{position:absolute;right:12px;top:50%;margin-top:-5px;transform:rotate(45deg);pointer-events:none}
+  #app .dmenu select{box-shadow:0 0 0 2px var(--fill2),0 0 0 3px var(--ctl-edge)!important}
+  /* the footer: 24 px under the chart card, 16 px over the window's bottom */
+  .dock{bottom:57px!important}
+  .attrib{bottom:16px!important}
+  /* the Now tag hangs off the top of its line, 3 px left of it (the dashboard's tag), the line up to the tag */
+  #app .dock .nowline{width:1.5px!important;margin-left:-.75px!important;top:-12px!important}
+  #app .ticks span.nowtick{transform:translateX(calc(-100% - 4px))!important}
+  /* the map key: a compact strip at the map's bottom-left, on the page gutter, 12 px over the chart card; one grid of
+     three columns (paths, then towns), on a light chip with a hairline edge like the map hint */
+  #app .row.mapkey.mapov{top:auto!important;bottom:calc(var(--dock-top-h,260px) + 12px)!important;width:auto!important;display:grid!important;grid-template-columns:repeat(3,minmax(8em,max-content));column-gap:16px!important;row-gap:2px!important;padding:3px 12px!important;border-radius:10px!important;background:color-mix(in srgb,var(--mat) 94%,transparent)!important;box-shadow:0 0 0 1px var(--sep)!important;font-size:13px!important;line-height:16px!important;white-space:nowrap!important}
+  #app .row.mapkey.mapov .kbr{display:none!important}
+  #app .row.mapkey.mapov .kbr+span{grid-column-start:1}
+  #app .row.mapkey.mapov:has(.gh){grid-template-columns:minmax(8em,max-content) minmax(8em,max-content) minmax(18.75em,max-content)}
+  /* (columns as wide as the longest town name, "Neu-Isenburg", and "East (if switched)": the key keeps its
+     width when hovering an hour shows other towns) */
+}
+/* round 8 (desktop): the Now tag points at its line; the chart card's bottom padding as its top; the run picker's
+   edge reads as one 1 px line (an opaque near-white track inside the buttons' edge colour); the theme toggle outlined
+   like a control; the footer as two short lines: the sources on the gutter, the backtest note ending on the chart
+   card's right edge */
+@media (min-width:640px){
+  #app .ticks span.nowtick{overflow:visible}
+  #app .ticks span.nowtick::after{content:'';position:absolute;left:100%;top:50%;margin-top:-4px;border-style:solid;border-width:4px 0 4px 4px;border-color:transparent;border-left-color:var(--label)}
+  #app .dock{padding-bottom:10px!important}
+  #app.light .dmenu select{box-shadow:0 0 0 2px color-mix(in srgb,var(--label) 3%,var(--mat)),0 0 0 calc(round(calc(2px * var(--hz,1) + 1px),1px) / var(--hz,1)) var(--ctl-edge)!important} /* an opaque, near-white track (a shadow spread paints under the ones listed before it: a translucent track lets the edge show through it); the edge's outer side on a device pixel */
+  #app .pthm{box-shadow:inset 0 0 0 1px var(--ctl-edge);border-radius:8px}
+  #app .pthm:hover{background:var(--fill)}
+  #app .pthm:focus-visible{outline:2px solid var(--label);outline-offset:2px;border-radius:8px}
+  .attrib .al{white-space:nowrap}
+}
+@media (min-width:1200px){
+  .attrib{right:24px!important;display:flex!important;justify-content:space-between;column-gap:24px}
+}
+/* round 9 (desktop). One radius for the secondary controls: Reset view, Full screen and Details take the segmented
+   controls' 8 px corners (the run picker's 6 px plus its 2 px track); the headline's drawn arrow; no unexplained wind glyph;
+   the switch chip and the official tag 3 px over the bar; the "18 closed" annotation as on the dashboard; neutral town
+   markers on a 2 px halo; the Main named; the 48 h legend on the row names' edge; the map key sized to its content */
+@media (min-width:640px){
+  #app .stack .ib,#app .rail .pdet>summary{border-radius:8px!important}
+  #app .dir .harr{width:1em;height:.7em;margin:0 0 0 .25em;stroke-width:3.4;vertical-align:.02em}
+  #app .wcomp{display:none!important}
+  #app .track .swchip{top:calc(var(--dt) - 19px)!important;border-radius:3px!important}
+  #app .track .pgl{top:calc(var(--dt) - 18px)!important;border-radius:3px!important}
+  #app .track .pgl.ra::after{bottom:-7px;height:7px}
+  #app .track .r18tag{position:absolute;z-index:8;height:16px;padding:0 6px;border-radius:3px;font:500 13px/16px "IBM Plex Sans",system-ui,sans-serif;white-space:nowrap;background:#2b2c2f;color:#f6f6f1;box-shadow:inset 0 -2px 0 var(--closed);pointer-events:none}
+  #app .track .r18lead{position:absolute;width:1px;background:var(--closed);opacity:.6;pointer-events:none;z-index:2}
+  #app .track .swstem{position:absolute;top:calc(var(--dt) - 3px);height:3px;width:1px;z-index:8;pointer-events:none}
+  #app .track .r18brk{position:absolute;height:3px;border:1px solid var(--closed);border-bottom:0;border-radius:2px 2px 0 0;opacity:.6;pointer-events:none;box-sizing:border-box;z-index:2}
+  #app .dock > .dkey{grid-column:2/-1!important} /* from the row names' column, the dashboard legend's edge */
+  #app .row.mapkey.mapov:has(.gh){grid-template-columns:minmax(8em,max-content) minmax(8em,max-content) var(--kc3,18.75em)!important}
+}
+#app .lbl.town.num i,#app:not(.light) .lbl.town.num i{background:var(--mat)!important;color:var(--label)!important;box-shadow:inset 0 0 0 1.5px var(--label2),0 0 0 2px var(--mat)!important}
+#app .row.mapkey .tkey b,#app:not(.light) .row.mapkey .tkey b{background:var(--mat)!important;color:var(--label)!important;box-shadow:inset 0 0 0 1.5px var(--label2)!important}
+#app .lbl.rvl{font:italic 600 13px "IBM Plex Sans",system-ui,sans-serif;color:#244f72;white-space:nowrap;pointer-events:none;text-shadow:0 0 1px var(--bg),0 0 2px var(--bg),0 0 3px var(--bg),0 0 5px var(--bg)} /* a darker blue on a light halo: >= 4.5:1 against the map behind it */
+#app:not(.light) .lbl.rvl{color:#8fb3d1}
+/* round 10 (desktop): the map key as wide as the info card above it (one left and one right edge): two rows (paths, then
+   towns) in three columns spread to both paddings */
+@media (min-width:640px){
+  #app .row.mapkey.mapov,#app .row.mapkey.mapov:has(.gh){width:var(--rail-w,352px)!important;max-width:none!important;box-sizing:border-box!important;grid-template-columns:repeat(3,max-content)!important;justify-content:space-between!important;column-gap:8px!important} /* the gap is a minimum: the columns spread to the paddings */
+}
+/* round 10: the peak note on a knockout of the card colour (no day line or gridline runs through its text) and a 1 px
+   leader from its end to the peak dot, as on the dashboard */
+#app .rpk{background:var(--mat);box-shadow:0 0 0 2px var(--mat)}
+#app .rpk:empty{display:none}
+.rpkh{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:6;transition:opacity .15s}
+.rpkh path{fill:none;stroke:var(--label2);stroke-width:1}
+.track .swstem{display:none}
+@media (min-width:640px){#app .track .swstem{display:block}}
+/* round 11: the Runway 18 row names what a closure moves, right-aligned under the closure; the map hint is plain grey
+   text on the map's halo (it is not a control); the accuracy row sits under Details */
+#r18-s.r18is{display:block;text-align:right;margin-top:1px}
+#r18-s .r18i{font-size:13px;line-height:16px;font-weight:400;color:var(--label2);white-space:nowrap}
+.pdet .acc{margin-top:6px}
+.pdet .acc .pstat{border-top:0;padding:0}
+@media (min-width:640px){
+  #app .rail>.hero{flex:1 0 auto} /* the card fills the rail, whose height sets one 12 px gap to the map key */
+  #app .hint3{font-size:13px!important;line-height:18px!important;padding:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;border:0!important;color:var(--label2)!important;text-shadow:var(--halo)}
+}
+/* round 11 (phones): the outlook names the switch as "Sat 7 Nov, 14:00": it keeps clear of the Details button on the
+   headline row: the compact card writes it "Switch to West · Sat 7 Nov, 14:00", one line beside the button */
+@media (max-width:639px){
+  .sumbar .sb2{padding-right:104px}
+  .sumbar .sb2 .nw,.rail .outl .nw{white-space:nowrap}
+}
+/* round 12 (desktop). The left stack on the 16 px page gutter: the card, the map key and the timeline 16 px apart; the card
+   wide enough for the kicker on one line, one padding on all four sides. The Runway 18 row as on the dashboard: the next
+   closure is the value (a hollow ring while scheduled, a filled dot while in effect), its date and what it moves the lines
+   under it. */
+@media (min-width:640px){
+  #app{--rail-w:400px}
+  #app .rail{width:25rem!important}
+  #app .rail .hero{padding:24px!important} /* the chart card's text inset, on all four sides */
+  #app .row.wind .row-main #wind-why{margin:0 auto 0 0;font-size:13px;text-align:left;white-space:nowrap}
+  #app .row.wind .row-main #wind-why::before{content:"· "}
+  #r18-v:has(.r18b){display:flex;flex-direction:column;align-items:flex-end}
+  .row-main:has(.r18b){align-items:baseline}
+  #app .row.mapkey.mapov{bottom:calc(var(--dock-top-h,260px) + 16px)!important}
+  /* the card is as tall as the stack allows: any spare height goes above the Details row, never under it */
+  #app .rail>.hero{display:flex!important;flex-direction:column}
+  #app .rail .hero>.conditions{flex:1 0 auto;display:flex;flex-direction:column}
+  #app .rail .conditions>.pdetrow{margin-top:auto}
+}
+#r18-v .r18d{display:inline-block;box-sizing:border-box;width:10px;height:10px;margin:0 8px 0 0;border-radius:50%;border:2px solid var(--closed);background:var(--closed);vertical-align:0}
+#r18-v .r18d.ring{background:transparent}
+#r18-v .badge.r18b{display:inline-block;white-space:nowrap} /* inline-block: the row keeps the text baseline, not the ring's */
+#r18-s.r18is{display:block;text-align:right} /* under the status, right-aligned with it, as the wind's compass line under its value */
+#r18-s .r18w,#r18-s .r18i{display:block;font-size:13px;line-height:16px;font-weight:400;color:var(--label2);white-space:nowrap}
+/* round 13 (desktop). The wind row: the label is "Wind now" alone, the compass wind a quiet line under the value. Every row of
+   the card one hairline and one pitch. The map key below the card on the card's surface, radius and shadow. */
+@media (min-width:640px){
+  #app .row.wind #wind-why{display:block;margin:0;line-height:15px;text-align:right;white-space:nowrap}
+  #app #r18-s .r18w,#app #r18-s .r18i{line-height:15px}
+  #app .rail .hero>.dir{margin-top:0!important} /* the headline's badge carries its own air under the kicker */
+  #app .row.wind #wind-why::before{content:none}
+  #app #r18-s.r18is,#app #r18-s .r18w,#app #r18-s .r18i{text-align:right}
+  #app .row.mapkey.mapov{background:var(--mat)!important;border:0!important;border-radius:16px!important;box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 1px var(--edge)!important}
+  #app .rail .hsec{margin-top:0!important;padding-top:0!important}
+  #app .rail .hsec.conditions{padding-top:0!important}
+  #app .rail .conditions>.row:not(.pdetrow):not(.mapkey){padding-top:4px!important;padding-bottom:4px!important}
+  /* the timeline card's header as on the dashboard: the title at the dashboard card title's inset from the card top (the
+     4 px come from the space under the header, so the card keeps its height) */
+  #app .dock .dhd{margin-top:4px!important;margin-bottom:-4px!important}
+}
+@media (min-width:640px) and (max-height:800px){
+  /* short windows (1366 x 768): one tighter pitch for every row; the compass wind is left to the map's wind chip, so the key
+     still fits under the card */
+  #app .rail .hsec{margin-top:0!important;padding-top:1px!important}
+  #app .rail .hero>.hsec:not(.conditions){margin-top:-2px!important}
+  #app .rail .hsec:not(.conditions) .kv{padding-bottom:2px!important}
+  #app .rail .hsec.conditions{padding-top:0!important}
+  #app .rail .conditions>.row:not(.pdetrow):not(.mapkey){padding-top:2px!important;padding-bottom:2px!important}
+  #app .row.wind #wind-why{display:none}
+}
+/* round 12: the switch chip and the official tag 4 px over the direction bar (4 px under the hour axis); its stem 4 px */
+@media (min-width:640px){
+  #app .track .swchip{top:calc(var(--dt) - 20px)!important}
+  #app .track .pgl{top:calc(var(--dt) - 19px)!important}
+  #app .track .swstem{top:calc(var(--dt) - 4px)!important;height:4px!important}
+}
+/* round 14 (desktop). The map key on the info card's content edges (its 24 px side padding), 6 px above and below its rows
+   (about 10 px to the glyphs, as the card's rows sit under their hairlines). The card: the kicker >= 6 px clear of the headline,
+   whose box is no taller than its badge; Details as far under its hairline as the other rows' text. The page keeps its
+   height (the key stays under the card): the kicker's line box and the rows' second lines give up their spare pixels. */
+@media (min-width:640px){
+  #app .row.mapkey.mapov,#app .row.mapkey.mapov:has(.gh){padding:12px 24px!important;row-gap:0!important}
+  #app .rail .hero>.eyebrow{line-height:15px}
+  #app .rail .hero>.dir{margin-top:7px!important;height:29px!important}
+  #app .rail .hero>.outl{margin-top:3px!important}
+  #app .row.wind #wind-why,#app #r18-s.r18is{margin-top:0!important}
+  #app .rail .hero .conditions>.row.pdetrow details.pdet{margin-top:7px!important}
+}
+/* round 15 (desktop). The map key 12 px over and under its rows; the 12 px come from the space under Details (24 -> 12), so
+   the gutters stay 16 px and the timeline card keeps its place */
+@media (min-width:640px){
+  #app:not(.keyfree) .rail .hero{padding-bottom:12px!important}
 }
 `;

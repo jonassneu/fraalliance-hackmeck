@@ -25,8 +25,8 @@ const LH = Q.get('palette') === 'lh' || Q.get('theme') === 'lh'; // dashboard pa
 // one validated pair carries meaning (blue = 25 west, amber = 07 east as on the dashboard; dataviz slots 1 + 4, CVD-checked in
 // both modes), status red = closed; everything else is warm neutral grey so colour only appears where it means something
 const MINIMAL = {
-  dark: { eastLine: '#a3adc2', westLine: '#5fcab5', east: '#2f4a7a', west: '#4dbfa7', r18: '#c3c2b7', closed: '#d03b3b', arr: '#199e70', dep: '#f0efec', ground: '#8a8984', air: '#c3c2b7' },
-  light: { eastLine: '#2c3e66', westLine: '#1f9e89', east: '#2c3e66', west: '#1f9e89', r18: '#52514e', closed: '#d03b3b', arr: '#1baf7a', dep: '#0b0b0b', ground: '#8a8984', air: '#9a9893' },
+  dark: { eastLine: '#a3adc2', westLine: '#5fcab5', ghostE: '#a3adc2', ghostW: '#5fcab5', east: '#2f4a7a', west: '#4dbfa7', r18: '#c3c2b7', closed: '#d03b3b', arr: '#199e70', dep: '#f0efec', ground: '#8a8984', air: '#c3c2b7' },
+  light: { eastLine: '#2c3e66', westLine: '#1f9e89', ghostE: '#2c3e66', ghostW: '#0c6355', east: '#2c3e66', west: '#1f9e89', r18: '#52514e', closed: '#d03b3b', arr: '#1baf7a', dep: '#0b0b0b', ground: '#8a8984', air: '#9a9893' },
 };
 const PALETTES = MINIMAL; // ?palette=lh kept for old links, same colours
 const LOOK = {
@@ -120,16 +120,17 @@ function resize() {
     if (rl) rl.classList.toggle('over', rl.scrollHeight > rl.clientHeight + 1); } // the fade only when the panel scrolls // the map-key overlay sits above the timeline
   const dockD = app.getBoundingClientRect().bottom - (document.querySelector('.dock')?.getBoundingClientRect().top ?? app.getBoundingClientRect().bottom - 200);
   const railR = (document.querySelector('.rail')?.getBoundingClientRect().right ?? 380) - app.getBoundingClientRect().left;
-  const P = BARE ? pad : view.card ? { top: 0, right: 0, bottom: 0, left: 0 } : narrow ? { top: railB + 16, right: 16, bottom: dockH + 16 + ((document.querySelector('.mapov')?.offsetHeight || 0) + 8), left: 16 }
-    : { top: ((document.querySelector('.pbar')?.getBoundingClientRect().bottom ?? 56) - app.getBoundingClientRect().top) + 32, right: 32, bottom: dockD + 16, left: Math.min(railR, w * 0.4) + 32 }; // 40 px clear of the timeline // phones: the band between header and timeline; desktop: clear of the panel, the header and the timeline
+  const P = BARE ? pad : view.card ? { top: 0, right: 0, bottom: 0, left: 0 } : narrow ? { top: railB + 12, right: 16, bottom: dockH + 4 + (document.querySelector('.mapov')?.offsetHeight || 0), left: 16 } /* phones: 12 px under the card; the key is the map's footer, so the map runs down to it */
+    : { top: ((document.querySelector('.pbar')?.getBoundingClientRect().bottom ?? 56) - app.getBoundingClientRect().top) + 16, right: 32, bottom: dockD + 8, left: Math.min(railR, w * 0.4) + 32 }; /* desktop: 16 px under the header and 8 px over the timeline (the airport fills more of the map) */ // 40 px clear of the timeline // phones: the band between header and timeline; desktop: clear of the panel, the header and the timeline
   { const pb = document.querySelector('.pbar'), rl = document.querySelector('.rail'), st = document.querySelector('.stack'); // 16 px under the header, the same as the left gap (phones: 8)
     if (pb && rl && !BARE && !view.card) { const t = Math.round(pb.getBoundingClientRect().bottom - app.getBoundingClientRect().top + (narrow ? 8 : 16)); rl.style.top = `${t / HZ}px`; if (st && !narrow) st.style.setProperty('top', `${t / HZ}px`, 'important'); } }
   BTN = null; if (!narrow && !BARE && !view.card) { const st = document.querySelector('.stack'); if (st && st.offsetWidth) { const r = st.getBoundingClientRect(), ar = app.getBoundingClientRect(); BTN = [r.left - ar.left - 40, r.bottom - ar.top + 40]; } } // the button corner: an exclusion, not a top inset
   freeArea = P; app.style.setProperty('--free-cx', `${Math.round(P.left + (w - P.left - P.right) / 2)}px`); app.style.setProperty('--free-l', `${Math.round(P.left)}px`); // the key pill centres under the free viewport
   // (the map key lives in the panel)
   { const rl = document.querySelector('.rail'), dk = document.querySelector('.dock'); // the panel never runs under the timeline
-    if (rl && dk && !narrow && !(typeof state !== 'undefined' && state.run && !isNowHour())) { app.classList.remove('keyfree'); /* placed from the idle panel only: hovering never moves the key */ const mk = document.getElementById('mapkey'); if (mk && mk.classList.contains('inrail')) { mk.classList.remove('inrail'); mk.classList.add('mapov', 'panel'); hud.appendChild(mk); } rl.style.minHeight = ''; const room = (dk.getBoundingClientRect().top - rl.getBoundingClientRect().top) / HZ - 12; rl.style.maxHeight = ''; /* measured in its under-the-panel layout */ const need = rl.scrollHeight, kh = (document.querySelector('.mapov')?.offsetHeight || 0) + 12;
-      rl.style.maxHeight = `${Math.max(200, room)}px`; const rb = rl.getBoundingClientRect(), ab = app.getBoundingClientRect(); void need; app.style.setProperty('--rail-b', `${Math.round((rb.bottom - ab.top) / HZ)}px`); app.classList.toggle('keyfree', rb.bottom + kh * HZ > dk.getBoundingClientRect().top - 12 * HZ); if (mk && app.classList.contains('keyfree')) { mk.classList.remove('mapov', 'panel'); mk.classList.add('inrail'); (rl.querySelector('.pdetrow') || rl.lastElementChild).after(mk); } /* no room under the panel: the key becomes the panel's last row, never a float in the scene */ { const r2 = rl.getBoundingClientRect(); rl.style.minHeight = `${Math.round(r2.height / HZ)}px`; app.style.setProperty('--rail-b', `${Math.round((r2.bottom - app.getBoundingClientRect().top) / HZ)}px`); } /* hover swaps the panel's content in place: never shorter than idle */ } /* panel first: when the key does not fit under it, the key moves into the free viewport */ }
+    if (rl && dk && !narrow && !(typeof state !== 'undefined' && state.run && !isNowHour())) { app.classList.remove('keyfree'); /* placed from the idle panel only: hovering never moves the key */ const mk = document.getElementById('mapkey'); if (mk && mk.classList.contains('inrail')) { mk.classList.remove('inrail'); mk.classList.add('mapov', 'panel'); hud.appendChild(mk); } rl.style.minHeight = ''; const room = (dk.getBoundingClientRect().top - rl.getBoundingClientRect().top) / HZ - 12; rl.style.maxHeight = ''; /* measured in its under-the-panel layout */ const need = rl.scrollHeight, kh = (document.querySelector('.mapov')?.offsetHeight || 0) + 16; /* the page gutter between the card, the key and the timeline */
+      rl.style.maxHeight = `${Math.max(200, room)}px`; const rb = rl.getBoundingClientRect(), ab = app.getBoundingClientRect(); void need; app.style.setProperty('--rail-b', `${Math.round((rb.bottom - ab.top) / HZ)}px`); app.classList.toggle('keyfree', rb.bottom + kh * HZ > dk.getBoundingClientRect().top - 16 * HZ); if (mk && app.classList.contains('keyfree')) { mk.classList.remove('mapov', 'panel'); mk.classList.add('inrail'); (rl.querySelector('.pdetrow') || rl.lastElementChild).after(mk); } /* no room under the panel: the key becomes the panel's last row, never a float in the scene */ { const r2 = rl.getBoundingClientRect(); rl.style.minHeight = `${Math.round(r2.height / HZ)}px`; app.style.setProperty('--rail-b', `${Math.round((r2.bottom - app.getBoundingClientRect().top) / HZ)}px`);
+        const kr = mk && mk.classList.contains('mapov') ? mk.getBoundingClientRect() : null; if (kr && kr.height) { const want = Math.floor((kr.top - r2.top) / HZ - 16); if (want > r2.height / HZ) { rl.style.minHeight = `${want}px`; app.style.setProperty('--rail-b', `${Math.round((rl.getBoundingClientRect().bottom - app.getBoundingClientRect().top) / HZ)}px`); } } } /* hover swaps the panel's content in place: never shorter than idle */ } /* panel first: when the key does not fit under it, the key moves into the free viewport */ }
   const cx = P.left + (w - P.left - P.right) / 2, cy = P.top + (h - P.top - P.bottom) / 2;
   if ((BARE || !view.card) && w && h) camera.setViewOffset(w, h, w / 2 - cx, h / 2 - cy, w, h);
   else camera.clearViewOffset();
@@ -141,7 +142,7 @@ function renderIssued() {
   const age = Math.max(0, Math.round((Date.now() - Date.parse(state.run.issue)) / 6e4)), ageS = age < 60 ? `${age}\u202fmin ago` : age < 48 * 60 ? `${Math.round(age / 60)}\u202fh ago` : `${Math.round(age / 1440)} days ago`;
   const iss = new Date(state.run.issue), today = fmtDay.format(iss) === fmtDay.format(new Date());
   const nx = new Date(Math.ceil((Date.now() - 18e5 + 1) / 36e5) * 36e5 + 18e5); // the archive job runs every hour at :30, as on the dashboard
-  $('issued-t').parentElement.querySelector('.frs').innerHTML = `<span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `${fmtDay.format(iss)}, `}${fmtHM(iss)}</b><span class="fw"> · next <b>${fmtHM(nx)}</b>${age < 90 ? ' · live' : ''}</span>`; // one template on both pages // the age in the tooltip, as on the dashboard
+  $('issued-t').parentElement.querySelector('.frs').innerHTML = `<span class="fw">Forecast issued </span><span class="fi">Issued </span><b>${today ? '' : `<span class="fw">${fmtDay.format(iss)}, </span><span class="fi">${fmtDay.format(iss).split(' ')[0]} </span>`}${fmtHM(iss)}</b><span class="fw"> · next <b>${fmtHM(nx)}</b></span>${age < 90 ? ' · live' : ''}`; // "live" on phones too // one template on both pages // the age in the tooltip, as on the dashboard
   $('issued-t').parentElement.title = `${T.issued} ${fmtRun.format(iss)}, ${ageS}`;
   $('livedot').className = age < 90 ? 'ok' : 'old';
 }
@@ -183,7 +184,8 @@ function fitHome() { // full view: all runways fit the area the panels leave fre
       const f = flow(rw, homeOd), along = TW.map(t => { const dx = f.start[0] - t[0], dy = f.start[1] - t[1], a = dx * f.dir[0] + dy * f.dir[1], c = Math.abs(dx * f.dir[1] - dy * f.dir[0]); return a > 0 && c < 2500 ? a : 0; });
       const L = Math.max(4000, Math.max(...along) + 1000); APPE.push([f.start[0] - f.dir[0] * L, f.start[1] - f.dir[1] * L]); // framed to the outermost town + 1 km; drawn on to the panel edge (below)
     }
-    const C = FIT_PTS = [...Object.values(RW).flatMap(r => [r.A, r.B]), ...AF.filter((_, i) => i % 10 === 0), ...TW, ...(nar ? [] : [...TW.map(p => [p[0] - 500, p[1]]), ...DEPS])] /* desktop: runways, take-off arrows and the towns' markers (the approaches run on to the panel) */, /* desktop: the approach dashes out to the towns too */ /* the airport, the towns and (desktop) the take-off arrows */ P3 = C.map(p => V(p[0], p[1], 0)), cam = camera.clone(), vv = new THREE.Vector3();
+    const NAPT = Object.values(RW).length * 2 + AF.filter((_, i) => i % 10 === 0).length; // the first NAPT fit points are the airport's own
+    const C = FIT_PTS = [...Object.values(RW).flatMap(r => [r.A, r.B]), ...AF.filter((_, i) => i % 10 === 0), ...TW, ...(nar ? [] : DEPS)] /* desktop: runways, take-off arrows and the towns' markers (the approaches run on to the panel) */, /* desktop: the approach dashes out to the towns too */ /* the airport, the towns and (desktop) the take-off arrows */ P3 = C.map(p => V(p[0], p[1], 0)), cam = camera.clone(), vv = new THREE.Vector3();
     const qx0 = (Math.min(...C.map(p => p[0])) + Math.max(...C.map(p => p[0]))) / 2, qy0 = (Math.min(...C.map(p => p[1])) + Math.max(...C.map(p => p[1]))) / 2;
     const camAt = (tx, ty, D, az, tt) => { const u = [Math.sin(az), Math.cos(az)]; return [V(tx - u[0] * D * Math.sin(tt), ty - u[1] * D * Math.sin(tt), D * Math.cos(tt)), V(tx, ty, 0)]; };
     const fcx = freeArea.left + fw / 2, fcy = freeArea.top + fh / 2, FILL = nar ? Math.min(0.97, 1 - 48 / Math.max(200, fw)) : 0.97; /* desktop: airport and the outermost town with a thin margin (the take-off arrows are cut 24 px above the timeline) */ /* phones: the town markers keep 24 px from the sides */ // a ~4 % margin on each side // 90 % of the binding side, centred in the free rect
@@ -197,10 +199,12 @@ function fitHome() { // full view: all runways fit the area the panels leave fre
         const sx0 = Math.min(...sp.map(q => q[0])), sx1 = Math.max(...sp.map(q => q[0])), sy0 = Math.min(...sp.map(q => q[1])), sy1 = Math.max(...sp.map(q => q[1]));
         const push = BTN ? Math.max(0, ...sp.filter(q => q[0] > BTN[0]).map(q => BTN[1] - q[1])) : 0; // points under the button corner push the frame down (and shrink it to fit)
         const rpj = Object.values(RW).flatMap(r => [r.A, r.B]).map(q => { vv.copy(V(q[0], q[1], 0)).project(cam); return [(vv.x + 1) / 2 * w, (1 - vv.y) / 2 * h]; });
-        const ax = (sx0 + sx1) / 2, ay = (sy0 + sy1) / 2; void rpj; /* runways, approaches and towns centred, even padding */ // desktop: the airport at 55 % across, 45 % down the free area
-        const AXF = nar ? 0.5 : 0.42, AYF = nar ? 0.5 : 0.48, /* the take-off arrows ~60 px above the timeline */ /* desktop: left of centre (toward the panel, as far as the frame allows) */ gx = freeArea.left + AXF * fw, gy = freeArea.top + AYF * fh;
+        const apt = nar ? sp : sp.slice(0, NAPT), ax = (Math.min(...apt.map(q => q[0])) + Math.max(...apt.map(q => q[0]))) / 2, ay = (Math.min(...apt.map(q => q[1])) + Math.max(...apt.map(q => q[1]))) / 2; void rpj; /* desktop: the airport (runways and aerodrome outline) centred in the free area, the towns and arrows fitted round it */ /* runways, approaches and towns centred, even padding */ // desktop: the airport at 55 % across, 45 % down the free area
+        const AXF = 0.5, AYF = 0.5, /* the take-off arrows ~60 px above the timeline */ /* desktop: left of centre (toward the panel, as far as the frame allows) */ gx = freeArea.left + AXF * fw, gy = freeArea.top + AYF * fh;
         fx = Math.max((ax - sx0) / (AXF * fw), (sx1 - ax) / ((1 - AXF) * fw)); fy = Math.max((ay - sy0) / (AYF * fh), (sy1 - ay) / ((1 - AYF) * fh)); cx = (ax - gx) / fw; cy = (ay - gy - push / 2) / fh; // everything stays in frame around that point
-        const FX = nar ? FILL : Math.min(FILL, 1 - 96 / fw), FY = nar ? FILL : Math.min(FILL, 1 - 104 / fh), sc = Math.max(fx / FX, (fy + push / fh) / FY) /* desktop: the take-off arrows keep ~48 px from the sides */, mpp = 2 * D * tv / h, ex = cx * fw * mpp, ey = cy * fh * mpp / Math.max(0.3, Math.cos(tt));
+        const FX = nar ? FILL : Math.min(FILL, 1 - 96 / fw), FY = nar ? FILL : Math.min(FILL, 1 - 104 / fh), ext = (q, mx, my) => (q.length ? Math.max((ax - Math.min(...q.map(p => p[0]))) / (AXF * fw - mx), (Math.max(...q.map(p => p[0])) - ax) / ((1 - AXF) * fw - mx), (ay - Math.min(...q.map(p => p[1])) + push) / (AYF * fh - my), (Math.max(...q.map(p => p[1])) - ay) / ((1 - AYF) * fh - my)) : 0),
+          /* desktop, by what each point needs: the airport 48 px inside the free area, a town disc's centre on the free area's edge (the disc 20 px clear of the panel), a take-off arrow's tip 24 px from the sides and 40 px over the timeline (its arrowhead stays drawn) */
+          sc = nar ? Math.max(fx / FX, (fy + push / fh) / FY) : Math.max(ext(sp.slice(0, NAPT), 48, 40), ext(sp.slice(NAPT, NAPT + TW.length), 0, 14), ext(sp.slice(NAPT + TW.length), 24, 32)), mpp = 2 * D * tv / h, ex = cx * fw * mpp, ey = cy * fh * mpp / Math.max(0.3, Math.cos(tt));
         tx += ex * r[0] - ey * u[0]; ty += ex * r[1] - ey * u[1];
         D *= Math.pow(sc, 0.8);
       }
@@ -297,6 +301,7 @@ function lines(polys, h, color, opacity, closed = false) {
   }
   return new THREE.LineSegments(geom(pos), new THREE.LineBasicMaterial({ color, opacity, ...ADD }));
 }
+const GHOST_OP = 1; // the "if switched" landings: the direction colour at full strength, dashed (the key's swatch the same)
 function ribbon(polys, h, color, opacity) {
   const pos = [];
   for (const { p, w } of polys) {
@@ -328,23 +333,25 @@ new ResizeObserver(gridVis).observe(app);
 FAR.push(add(th(fill(S.forest, 0, '#121211', 0.9), { color: '#d6dacd', opacity: 1 })));
 FAR.push(add(th(fill(S.water, 0, '#101318', 0.9), { color: '#bccddd', opacity: 1 })));
 // the airport's own surfaces (OSM) stay visible at every zoom: they sit inside the mapped area, so no cut-out edge
-add(th(fill(S.aerodrome, 0, '#1d1d1b', 0.9), { color: '#e3dfd6', opacity: 1 })); // light: one ground tint for the airport
-add(th(lines(S.aerodrome, 0, '#5a5954', 0.5, true), { color: '#b9b8b2', opacity: 1, blending: NB }));
-add(th(fill(S.aprons, 0, '#262624', 0.95), { color: '#c6bfb2', opacity: 1 })); // light: aprons a step darker than before
-add(th(lines(S.aprons, 0, '#45443f', 0.3, true), { color: '#c9c8c2', opacity: 0.35, blending: NB }));
-add(th(ribbon(S.taxiways, 0, '#2c2c2a', 0.95), { color: '#b6b2a8', opacity: 1 }));
+add(th(fill(S.aerodrome, 0, '#3a3a35', 0.95), { color: '#d5cdbd', opacity: 1 })); // light: one ground tint for the airport, a clear step off the map
+add(th(lines(S.aerodrome, 0, '#a5a49d', 0.9, true), { color: '#8f8b82', opacity: 1, blending: NB })); // light: a drawn boundary
+add(th(fill(S.aprons, 0, '#56564f', 0.95), { color: '#aea492', opacity: 1 })); // light: aprons and terminals clearly darker than the airport ground
+add(th(lines(S.aprons, 0, '#83827b', 0.6, true), { color: '#8a857b', opacity: 0.7, blending: NB }));
+add(th(ribbon(S.taxiways, 0, '#45453f', 0.95), { color: '#a49e92', opacity: 1 }));
 FAR.push(add(th(lines(S.taxiways.map(t => t.p), 0, '#5c5b55', 0.35), { color: '#d8d6d0', opacity: 0.35, blending: NB })));
 for (const c of [0, 1, 2]) {
   const col = ['#6d6c66', '#4a4945', '#33322f'][c];
   FAR.push(add(th(lines(S.roads.filter(r => r.c === c).map(r => r.p), 0, col, [0.65, 0.5, 0.45][c]),
-    { color: ['#aeaca6', '#bcbab4', '#cac8c2'][c], opacity: 1, blending: NB })));
+    { color: ['#aeaca6', '#bcbab4', '#cac8c2'][c], opacity: 0.55, blending: NB }))); // light: the streets recede so the airport stands out
 }
+const RIVER_PTS = []; // the Main's drawn points (scene metres) with their fade, for its name label
 { const MAIN = [[50.108, 8.78], [50.104, 8.74], [50.106, 8.69], [50.103, 8.65], [50.1, 8.58], [50.092, 8.545], [50.063, 8.53], [50.04, 8.5], [50.012, 8.47], [50.003, 8.44], [50.008, 8.4], [50.007, 8.33], [50.003, 8.275]].map(([la, lo]) => [(lo - 8.5706) * 71503, (la - 50.0333) * 111320]); // the Main, the 2D map's polyline
   // fading out beyond ~7 km of the airport, so it reads as context, not as a third flight path
   const SM = new THREE.CatmullRomCurve3(MAIN.map(p => new THREE.Vector3(p[0], p[1], 0)), false, 'centripetal').getSpacedPoints(180).map(v => [v.x, v.y]); // a smooth river, not a polyline
   for (let k = 0; k < SM.length - 1; k++) { const p0 = SM[k], p1 = SM[k + 1], t = (k + 0.5) / (SM.length - 1), d = Math.hypot((p0[0] + p1[0]) / 2 + 1500, (p0[1] + p1[1]) / 2);
     const f = Math.max(0, Math.min(1, (11000 - d) / 4000, 1 - (t - 0.6) / 0.4)); // faded by distance from the airport and over the last 40 % of its length
-    if (f > 0.02) add(th(ribbon([{ p: [p0, p1], w: 60 }], 0.3, '#3a4f5e', 0.5 * f), { color: '#9fb8cf', opacity: 0.95 * f })); } }
+    if (f > 0.02) add(th(ribbon([{ p: [p0, p1], w: 60 }], 0.3, '#3a4f5e', 0.5 * f), { color: '#9fb8cf', opacity: 0.95 * f }));
+    if (k % 3 === 0) RIVER_PTS.push([(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, f]); } }
 FAR.push(add(th(lines(S.rail, 0.5, '#8a8984', 0.5), { color: '#c8c6c0', opacity: 0.7, blending: NB })));
 
 { // light theme: a stage, a disc about 3 % darker than the page under the airport and the towns, fading out
@@ -393,10 +400,10 @@ function buildings() {
   g.computeVertexNormals();
   // footprints only, as one soft flat tone in both themes (no x-ray volumes, no outlines: at this scale those read as speckle)
   const flat = add(new THREE.Mesh(geom(rpos), new THREE.MeshBasicMaterial({ color: '#1b1c1e', transparent: true, opacity: 0.1, depthWrite: false, depthTest: false, side: THREE.DoubleSide })), 13);
-  th(flat, { color: '#b9b5ad', opacity: 1 }); // light: solid warm-grey footprints, so the town and terminals read at a glance
+  th(flat, { color: '#a59f93', opacity: 1 }); // light: solid warm-grey footprints, so the town and terminals read at a glance
   { const opos = []; for (const b of S.buildings) { if (areaOf(b.r) < (onAirport(b.r[0]) ? 400 : 2500)) continue; if (!inFence(b.r[0])) continue; const r = b.r; for (let i = 0; i < r.length; i++) { const a = r[i], c = r[(i + 1) % r.length]; opos.push(a[0], 0.6, -a[1], c[0], 0.6, -c[1]); } }
     const ol = add(new THREE.LineSegments(geom(opos), new THREE.LineBasicMaterial({ color: '#635e55', transparent: true, opacity: 0.95, depthTest: false })), 14); lightOnly.push(ol); } flat.material.color.set('#ffffff'); flat.material.opacity = 0.06; // dark: a faint white; light: 10 % ink
-  themed[themed.length - 1].dark = { color: new THREE.Color('#ffffff'), opacity: 0.14 }; // dark: buildings clearly above the ground
+  themed[themed.length - 1].dark = { color: new THREE.Color('#ffffff'), opacity: 0.2 }; // dark: buildings clearly above the ground (and the raised apron)
   { const out = add(new THREE.Mesh(geom(rposOut), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.018, depthWrite: false, depthTest: false, side: THREE.DoubleSide })), 13);
     th(out, { color: '#b9b5ad', opacity: 0.3 }); } // outside the fence: 30 % of the airport's tone
   void g; void epos; void ecol;
@@ -433,8 +440,8 @@ void main(){
     vec3 closed = mix(vec3(0.82, 0.62, 0.62), vec3(0.75, 0.04, 0.05), clamp(0.6 * hatch + edge + cross, 0., 1.));
     col = mix(col, closed, uClosed);
   } else {             // x-ray: dark strip, glowing edges and chevrons
-    col = vec3(0.045, 0.045, 0.043) + vec3(0.55, 0.55, 0.53) * marks;
-    col += uCol * uActive * (0.05 + edge * 0.8 + chev * 0.9 + step(ay, 0.12) * 0.7); // tarmac stays dark; the direction glows along edges, centreline and chevrons
+    col = vec3(0.17, 0.17, 0.16) + vec3(0.7, 0.7, 0.68) * marks; // dark: the strip a clear step above the map, its edges near white
+    col += uCol * uActive * (0.12 + edge * 0.9 + chev * 1.0 + step(ay, 0.12) * 0.8); // tarmac stays dark; the direction glows along edges, centreline and chevrons
     col = mix(col, vec3(0.05, 0.03, 0.03) + vec3(0.9, 0.16, 0.16) * (0.18 * hatch + 0.9 * edge + 0.7 * cross), uClosed);
   }
   gl_FragColor = vec4(col, 1.);
@@ -789,7 +796,7 @@ for (const rw of Object.values(RW)) {
 const pathGroup = add(new THREE.Group(), 46), pathArrows = [], pathTags = [];
 for (let i = 0; i < 10; i++) pathArrows.push(label(ARROW_SVG, 0, 0, 0, 'parrow'));
 for (let i = 0; i < 2; i++) pathTags.push(label('', 0, 0, 0, 'ptag'));
-let pathKey = '', PATHS = [], PATH_PTS = [];
+let pathKey = '', PATHS = [], PATH_PTS = [], GPATHS = [];
 const nearSeg = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
 function pathBox(od) { // bbox of the landing / take-off paths of od, the runways and the towns under the approaches
   const segs = pathSegs(od, true).filter(g => g.kind !== 'ghost'), pts = segs.flatMap(g => [g.a, g.b]);
@@ -819,7 +826,7 @@ function drawPaths(od, r18) {
   for (const c of pathGroup.children) { c.geometry.dispose(); c.material.dispose(); }
   pathGroup.clear();
   const col = od === 25 ? HEX.westLine : HEX.eastLine, segs = pathSegs(od, r18); lastSegs = segs; // paths in the line tint (lighter in dark mode)
-  PATHS = segs.filter(g => g.kind !== 'ghost').map(g => [g.a, g.b]);
+  PATHS = segs.filter(g => g.kind !== 'ghost').map(g => [g.a, g.b]); GPATHS = segs.filter(g => g.kind === 'ghost').map(g => [g.a, g.b]); // the other direction's approaches: runway tags keep clear of them too
   { // towns within 2 km of an active approach line are the ones being flown over now
     const near = (p, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], q = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy))); return Math.hypot(p[0] - a[0] - q * vx, p[1] - a[1] - q * vy); };
     for (const l of labels) if (l.cls === 'town') { const p = [l.p.x, -l.p.z]; l.el.classList.toggle('under', segs.some(g => { if (g.kind !== 'arr') return false; const R = od === 25 ? 14000 : 9000, L = Math.hypot(g.a[0] - g.b[0], g.a[1] - g.b[1]) || 1, bx = (g.a[0] - g.b[0]) / L, by = (g.a[1] - g.b[1]) / L, dx = p[0] - g.b[0], dy = p[1] - g.b[1], f = dx * bx + dy * by, c = Math.abs(dx * by - dy * bx); return f > 0 && f < R && c < 1500; })); } // the dashboard's town rule exactly: ahead of the threshold, under 9 km (07) / 14 km (25) out, within 1.5 km of the path // the dashboard's rule: within 1.5 km of the approach, 9 km out for 07, 14 km for 25
@@ -843,10 +850,10 @@ function drawPaths(od, r18) {
     const ink = theme === 'light' ? '#3a3a38' : '#d8d7d2';
     if (g.kind === 'arr') { // fading in from the far end: dashes in bands of rising opacity
       const B = 8; for (let k = 0; k < B; k++) { const part = polys.filter((_, i) => Math.min(B - 1, Math.floor(i / polys.length * B / 0.2)) === k); /* faded out over the outer 20 % */ if (!part.length) continue;
-        const m = ribbon(part.map(q => ({ ...q, w: 48 })), 2, col, 0.9 * DIM * Math.min(1, (k + 0.3) / (B - 1))); m.renderOrder = 46; pathGroup.add(m); }
+        const m = ribbon(part.map(q => ({ ...q, w: theme === 'light' ? 48 : 90 })), 2, col, Math.min(1, (theme === 'light' ? 0.9 : 1) * DIM * Math.min(1, (k + 0.3) / (B - 1)) * (theme === 'light' ? 1 : 1.2))); /* dark: wider, fully opaque dashes on the black map */ m.renderOrder = 46; pathGroup.add(m); }
       continue;
     }
-    const mesh = g.kind === 'arr' ? ribbon(polys.map(q => ({ ...q, w: 48 })), 2, col, 0.9) : g.kind === 'ghost' ? ribbon(polys.map(q => ({ ...q, w: 80 })), 2, od === 25 ? HEX.eastLine : HEX.westLine, 0.6 * DIM) /* exactly the key's colour */
+    const mesh = g.kind === 'arr' ? ribbon(polys.map(q => ({ ...q, w: 48 })), 2, col, 0.9) : g.kind === 'ghost' ? Object.assign(ribbon(polys.map(q => ({ ...q, w: app.clientWidth < 640 ? 150 : 80 })), 2, od === 25 ? HEX.ghostE : HEX.ghostW, GHOST_OP * DIM), { ghost: true }) /* exactly the key's colour, opaque: the dash pattern says it is hypothetical (>= 3:1 on the map ground, check.mjs) */
       : ribbon(polys.map(q => ({ ...q, w: 40 })), 2, ink, 0.9 * DIM); mesh.renderOrder = 46; pathGroup.add(mesh); // a thin take-off line, as on the 2D map
   }
   let n = 0;
@@ -878,7 +885,11 @@ let TOWN_RECTS = [];
 function updateLabels() {
   TOWN_RECTS = []; const RWY_RECTS = []; updateLabels.sp = null;
   { const w = app.clientWidth, h = app.clientHeight; // every town dot first, so no name lands on another town's dot
-    for (const l of labels) if (l.cls === 'town') { _v.copy(l.p).project(camera); const x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h; TOWN_RECTS.push([x - 10, y - 10, x + 10, y + 10]); } }
+    const ND = []; for (const l of labels) if (l.cls === 'town') { _v.copy(l.p).project(camera); let x = (_v.x + 1) / 2 * w, y = (1 - _v.y) / 2 * h; l.nd = null; l.tp = [x, y]; if (l.el.classList.contains('num') && !l.off) { l.nd = [x, y]; ND.push(l.nd); } }
+    for (let it = 0; it < 4; it++) for (let i = 0; i < ND.length; i++) for (let j = i + 1; j < ND.length; j++) { // numbered discs (22 px) never touch: two closer than 26 px step apart along the line between them
+      const a = ND[i], b = ND[j], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1, k = (26 - d) / 2; if (k <= 0) continue; a[0] -= dx / d * k; a[1] -= dy / d * k; b[0] += dx / d * k; b[1] += dy / d * k; }
+    for (const l of labels) if (l.cls === 'town') { const [x, y] = l.nd || l.tp; TOWN_RECTS.push([x - 10, y - 10, x + 10, y + 10]); }
+    updateLabels.nd = ND.map(([x, y]) => [x - 11, y - 11, x + 11, y + 11]); }
   const w = app.clientWidth, h = app.clientHeight;
   for (const l of labels) {
     if (l.off) { l.el.style.display = 'none'; continue; }
@@ -889,7 +900,7 @@ function updateLabels() {
       const lw = l.lw || (l.lw = l.el.offsetWidth || 80), half = l.cls === 'town' ? 0 : lw / 2, nd = l.cls === 'town' && l.el.classList.contains('num'), x0 = nd ? x - 12 : l.cls === 'town' ? x - 8 : x - half, x1 = nd ? x + 12 : l.cls === 'town' ? x + 8 + lw : x + half; /* a numbered disc is 22 px: its name is in the key */
       if (x0 < 4 || x1 > w - 4 || y < 8 || y > h - 8 || PANEL_RECTS.some(r => x1 > r[0] - 8 && x0 < r[2] + 8 && y > r[1] - 12 && y < r[3] + 12)) { l.el.style.display = 'none'; continue; }
     }
-    if (l.cls === 'town' && l.el.classList.contains('num')) { l.el.style.display = ''; l.el.style.transform = `translate(${x}px, ${y}px)`; continue; } // numbered: the name is in the key
+    if (l.cls === 'town' && l.el.classList.contains('num')) { if (l.nd) [x, y] = l.nd; l.el.style.display = ''; l.el.style.transform = `translate(${x}px, ${y}px)`; continue; } // numbered: the name is in the key
     if (l.cls === 'town') { // the dot sits on the town; its name goes where no flight path runs
       const tw = l.tw || (l.tw = l.el.querySelector('span').offsetWidth || 60), hitR = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
       const own = [x - 10, y - 10, x + 10, y + 10], others = TOWN_RECTS.filter(q => !(q[0] === own[0] && q[1] === own[1]));
@@ -909,14 +920,14 @@ function updateLabels() {
     }
     if (l.cls === 'rwy') { // a runway number never leaves the screen and never hides under a panel
       const hw = (l.w || (l.w = l.el.offsetWidth || 72)) / 2 + 8;
-      x = Math.max(hw, Math.min(w - hw, x));
+      x = Math.max(hw + 8, Math.min(w - hw - 8, x)); // 16 px clear of the screen edge
       if (PANEL_RECTS.some(r => x > r[0] - 30 && x < r[2] + 30 && y > r[1] - 12 && y < r[3] + 12)) { l.el.style.display = 'none'; continue; }
       if (!l.el.innerHTML) { l.el.style.display = 'none'; continue; } // the unused end's label holds no place
       let oX = 0, oY = 0;
       if (l.end) { // clear of every runway and path on screen (never on another runway's end): past the end, beside the runway, else hidden
         const pr = v => { _v2.copy(v).project(camera); return [(_v2.x + 1) / 2 * w, (1 - _v2.y) / 2 * h]; };
         const S2 = Object.values(RW).map(r => { const a = pr(V(r.A[0], r.A[1], 0)), b = pr(V(r.B[0], r.B[1], 0)); return [a, b, 170 * Math.hypot(b[0] - a[0], b[1] - a[1]) / r.len]; }); // centre line + half width in px
-        const bw = (l.w || 40) / 2 - 4, clear = (cx, cy) => cx > bw + 4 && cx < w - bw - 4 && cy > 12 && cy < h - 12
+        const bw = (l.w || 40) / 2 - 4, clear = (cx, cy) => cx > bw + 20 && cx < w - bw - 20 && cy > 12 && cy < h - 12 && !PANEL_RECTS.some(r => cx + bw + 8 > r[0] && cx - bw - 8 < r[2] && cy + 15 > r[1] && cy - (w < 640 ? 20 : 15) < r[3]) /* 16 px inside the screen, never under a card; phones: 12 px under the top card */
           && !RWY_RECTS.some(q => cx - bw - 10 < q[2] && q[0] < cx + bw + 10 && cy - 15 < q[3] && q[1] < cy + 15) // not on a number already placed
           && !PATH_PTS.some(([px, py]) => Math.abs(px - cx) < bw + 5 && Math.abs(py - cy) < 15)
           && S2.every(([a, b, hw2]) => { const vx = b[0] - a[0], vy = b[1] - a[1], f = Math.max(0, Math.min(1, ((cx - a[0]) * vx + (cy - a[1]) * vy) / (vx * vx + vy * vy || 1))), px = a[0] + vx * f, py = a[1] + vy * f;
@@ -932,7 +943,23 @@ function updateLabels() {
           for (const f of [0.12, 0.25, 0.4]) for (const sd of [1, -1]) for (const o of [24, 30, 38]) cands.push([E[0] - ux * L * f - uy * sd * o, E[1] - uy * L * f + ux * sd * o]);
         }
         let E0 = pr(l.end), O0 = pr(l.other), L0 = Math.hypot(E0[0] - O0[0], E0[1] - O0[1]) || 1, ux0 = (O0[0] - E0[0]) / L0, uy0 = (O0[1] - E0[1]) / L0, MC = Object.values(RW).map(r => pr(V((r.A[0] + r.B[0]) / 2, (r.A[1] + r.B[1]) / 2, 0))).reduce((a, q, _, A) => [a[0] + q[0] / A.length, a[1] + q[1] / A.length], [0, 0]), MID0 = [(E0[0] + O0[0]) / 2, (E0[1] + O0[1]) / 2], cen = l.rw && l.rw.key === 'centre', sn0 = (-uy0 * (MID0[0] - MC[0]) + ux0 * (MID0[1] - MC[1])) >= 0 ? 1 : -1, sn = cen ? (ux0 > 0 ? -1 : 1) : sn0, nx0 = -uy0 * sn, ny0 = ux0 * sn, /* the side away from the other runways (the centre runway: north) */ c = l.rw && l.rw.key === 'r18' ? [E0[0] + ux0 * 6 - Math.abs(uy0) * 30, E0[1] + uy0 * 6] /* 18: at its north end, on the west side, away from the 07R arrow */ : [E0[0] + ux0 * 24 + nx0 * 18, E0[1] + uy0 * 24 + ny0 * 18]; oX = -ux0; oY = -uy0; { const ownI = Object.values(RW).indexOf(l.rw), nearOwn = q => { let bi = -1, bd = 1e9; S2.forEach(([a, b], k) => { const vx = b[0] - a[0], vy = b[1] - a[1], f = Math.max(0, Math.min(1, ((q[0] - a[0]) * vx + (q[1] - a[1]) * vy) / (vx * vx + vy * vy || 1))), d = Math.hypot(q[0] - a[0] - vx * f, q[1] - a[1] - vy * f); if (d < bd) { bd = d; bi = k; } }); return bi === ownI; };
-          if ((w < 640 && !clear(c[0], c[1])) || !nearOwn(c)) { const c2 = cands.find(q => clear(q[0], q[1]) && nearOwn(q)) || cands.find(q => nearOwn(q)); if (c2) { c = c2; oX = 0; oY = 0; } } } /* a tag stays nearest to its own runway; phones: clear of every other runway too */ // every tag beside its runway's start end (clear of the landing arrow), the same offset
+          // beside its runway: the tag's box 6 px clear of every strip, 6 px clear of the path arrows, 4 px clear of the town
+          // discs, the dashes and the tags already placed; first beside the start end on the side away from the other runways,
+          // then past the start end, then the other side, then the other end; the old rule only when nothing fits
+          const tgh = (l.h || (l.h = l.el.offsetHeight || 20)) / 2, tw2 = (l.w || 40) / 2, bx = q => [q[0] - tw2, q[1] - tgh, q[0] + tw2, q[1] + tgh];
+          const sep = (a, b) => Math.max(a[0] - b[2], b[0] - a[2], a[1] - b[3], b[1] - a[3]);
+          const AR = pathArrows.filter(a => !a.off).map(a => { _v2.copy(a.p).project(camera); const ax = (_v2.x + 1) / 2 * w, ay = (1 - _v2.y) / 2 * h; return [ax - 11, ay - 14, ax + 11, ay + 14]; }); /* the arrow's 22 x 27 px box */
+          const segBox = (a, b, r) => { let m = 1e9; for (let t = 0; t <= 1.0001; t += 0.025) { const px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t; m = Math.min(m, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3]))); } return m; };
+          const GS = GPATHS.map(([a, b]) => [pr(V(a[0], a[1], 0)), pr(V(b[0], b[1], 0))]), pm = w < 640 ? 4 : 8, fine = q => { const r = bx(q); return GS.every(([a, b]) => segBox(a, b, r) >= 4) && r[0] > 16 && r[2] < w - 16 && r[1] > 8 && r[3] < h - 8 && !PANEL_RECTS.some(p => r[2] + pm > p[0] && r[0] - pm < p[2] && r[3] + pm > p[1] && r[1] - (w < 640 ? 12 : pm) < p[3]) /* phones: 12 px under the top card */
+            && S2.every(([a, b, hw2]) => segBox(a, b, r) >= hw2 + 6) && AR.every(a => sep(r, a) >= 6) && (updateLabels.nd || []).every(t => sep(r, t) >= 4) && RWY_RECTS.every(t => sep(r, t) >= 4)
+            && !PATH_PTS.some(([px, py]) => px > r[0] - 4 && px < r[2] + 4 && py > r[1] - 4 && py < r[3] + 4) && nearOwn(q); };
+          const beside = (E, O, sd, fs) => { const L = Math.hypot(O[0] - E[0], O[1] - E[1]) || 1, ux = (O[0] - E[0]) / L, uy = (O[1] - E[1]) / L, nx = -uy * sd, ny = ux * sd, pe = Math.abs(nx) * tw2 + Math.abs(ny) * tgh, out = [];
+            for (const f of fs) for (const k of [0, 4, 8]) { const o = (S2[ownI] ? S2[ownI][2] : 4) + pe + 6 + k; out.push([E[0] + ux * L * f + nx * o, E[1] + uy * L * f + ny * o]); } return out; };
+          const past = (E, O) => { const L = Math.hypot(O[0] - E[0], O[1] - E[1]) || 1, ux = (E[0] - O[0]) / L, uy = (E[1] - O[1]) / L, pa = Math.abs(ux) * tw2 + Math.abs(uy) * tgh, out = []; for (const k of [8, 14, 20]) out.push([E[0] + ux * (pa + k), E[1] + uy * (pa + k)]); return out; };
+          const sd0 = Math.sign(nx0 * -uy0 + ny0 * ux0) || 1, FS = [0.06, 0.15, 0.25, 0.35];
+          const nice = [...beside(E0, O0, sd0, FS), ...past(E0, O0), ...beside(E0, O0, -sd0, FS), ...beside(O0, E0, -sd0, FS), ...beside(O0, E0, sd0, FS), ...past(O0, E0)].find(fine);
+          if (nice) { c = nice; oX = 0; oY = 0; }
+          else if (!clear(c[0], c[1]) || !nearOwn(c)) { const c2 = cands.find(q => clear(q[0], q[1]) && nearOwn(q) && AR.every(a => sep(bx(q), a) >= 6)) || cands.find(q => clear(q[0], q[1]) && nearOwn(q)) || cands.find(q => nearOwn(q)); /* the old rule: clear of the path arrows first */ if (c2) { c = c2; oX = 0; oY = 0; } } } /* a tag stays nearest to its own runway; phones: clear of every other runway too */ // every tag beside its runway's start end (clear of the landing arrow), the same offset
         if (!c) { l.el.style.display = 'none'; continue; }
         [x, y] = c;
       }
@@ -947,6 +974,25 @@ function updateLabels() {
       l.el.style.setProperty('--a', `${Math.atan2(-(_v2.y - _v.y) * h, (_v2.x - _v.x) * w) * 180 / Math.PI}deg`);
     }
   }
+  placeRiverLabel(w, h);
+}
+// the Main, named along its line (as on the dashboard's map): an italic label just over or under the river where it is
+// drawn at full strength, clear of the flight paths, the town markers, the runway tags and the cards; none if no spot is free
+const riverEl = document.createElement('div'); riverEl.className = 'lbl rvl'; riverEl.textContent = 'Main'; labelLayer.appendChild(riverEl);
+function placeRiverLabel(w, h) {
+  if (BARE || view.card || w < 640 || !RIVER_PTS.length) { riverEl.style.display = 'none'; return; }
+  const lw = riverEl.lw || (riverEl.lw = riverEl.offsetWidth || 34), lh = 16, P = q => { _v2.copy(V(q[0], q[1], 0)).project(camera); return [(_v2.x + 1) / 2 * w, (1 - _v2.y) / 2 * h, _v2.z]; };
+  const SP = updateLabels.sp || PATHS.map(([a, b]) => [P(a), P(b)]), GP = GPATHS.map(([a, b]) => [P(a), P(b)]);
+  const boxD = (a, b, r) => { let m = 1e9; for (let t = 0; t <= 1.0001; t += 0.02) { const px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t; m = Math.min(m, Math.hypot(Math.max(r[0] - px, 0, px - r[2]), Math.max(r[1] - py, 0, py - r[3]))); } return m; };
+  const hitR = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3], rw = [...document.querySelectorAll('.lbl.rwy b, .lbl.parrow svg')].filter(e => e.offsetParent).map(e => { const q = e.getBoundingClientRect(), ar = app.getBoundingClientRect(); return [q.left - ar.left - 4, q.top - ar.top - 4, q.right - ar.left + 4, q.bottom - ar.top + 4]; });
+  let best = null; const scr = [...document.querySelectorAll('.scrim')].filter(e => e.offsetHeight).map(e => { const q = e.getBoundingClientRect(), ar = app.getBoundingClientRect(); return [q.left - ar.left, q.top - ar.top, q.right - ar.left, q.bottom - ar.top]; }); // never under the header's or the timeline's fading scrim (it washes the text out)
+  for (const q of RIVER_PTS) { if (q[2] < 0.7) continue; const [x, y, z] = P(q); if (z > 1) continue;
+    for (const dy of [-(lh / 2 + 5), lh / 2 + 5]) { const r = [x - lw / 2, y + dy - lh / 2, x + lw / 2, y + dy + lh / 2];
+      if (r[0] < 8 || r[2] > w - 8 || r[1] < 8 || scr.some(p => hitR(r, p)) || r[3] > h - 8 || PANEL_RECTS.some(p => hitR(r, [p[0] - 8, p[1] - 8, p[2] + 8, p[3] + 8])) || TOWN_RECTS.some(t => hitR(r, [t[0] - 6, t[1] - 6, t[2] + 6, t[3] + 6])) || rw.some(t => hitR(r, t))) continue;
+      const c = Math.min(...SP.map(([a, b]) => boxD(a, b, r)), ...GP.map(([a, b]) => boxD(a, b, r)));
+      if (!best || c > best.c) best = { c, x, y: y + dy }; } }
+  if (!best || best.c < 6) { riverEl.style.display = 'none'; return; }
+  riverEl.style.display = ''; riverEl.style.transform = `translate(${best.x.toFixed(1)}px, ${best.y.toFixed(1)}px) translate(-50%, -50%)`;
 }
 
 // ------------------------------------------------------------------ live traffic (fra.live -> live.json, OpenSky ADS-B)
@@ -1137,9 +1183,9 @@ const ICON = {
   chevrons: '<svg viewBox="0 0 12 12"><path d="M3 4.6 6 1.9l3 2.7M3 7.4l3 2.7 3-2.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const T = window.FRA_COPY || {}; // one vocabulary with the dashboard (fra.siteui.COPY)
-const HZ = (window.FRA_STYLE || {}).hatch || { css: 'repeating-linear-gradient(135deg,{c} 0 1.5px,transparent 1.5px 4.5px)', light: 'rgba(255,255,255,.4)', dark: 'rgba(0,0,0,.38)' };
+const HZ = (window.FRA_STYLE || {}).hatch || { css: 'repeating-linear-gradient(135deg,{c} 0 1.5px,transparent 1.5px 4.5px)', light: 'rgba(255,255,255,.4)', dark: 'rgba(255,255,255,.5)' };
 const ARROW_SVG2 = d => `<svg class="tarr" viewBox="0 0 34 24" aria-hidden="true"><path d="${((window.FRA_STYLE || {}).arrow || { e: 'M3 12h27M22 4l8 8-8 8', w: 'M31 12H4M12 4l-8 8 8 8' })[d]}"/></svg>`; // the headline's arrow
-const HATCH = t => HZ.css.replace('{c}', t === 'light' ? HZ[t] : 'rgba(255,255,255,.35)'); /* dark: light stripes */ // the night-ban hatch, the dashboard's definition
+const HATCH = t => HZ.css.replace('{c}', t === 'light' ? HZ.light : HZ.dark); /* dark: light stripes, ~3:1 on the navy bar (siteui.HATCH) */ // the night-ban hatch, the dashboard's definition
 const hud = document.createElement('div');
 hud.className = 'hud';
 hud.innerHTML = `
@@ -1147,7 +1193,7 @@ hud.innerHTML = `
   <header class="panel pbar"><a class="pbrand" href="index.html">${(window.FRA_STYLE || {}).logo || ''}Runway Direction Forecast<span>Frankfurt Airport</span></a>
     <nav class="ptabs" aria-label="Pages"><a href="index.html">Dashboard</a><a aria-current="page">3D view</a></nav>
     <div class="prun"><i id="livedot"></i><span class="frs"></span><b id="issued-t" hidden></b></div>
-    <button class="pthm" id="b-thm" title="Light or dark" aria-label="Switch between light and dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+    <button class="pthm" id="b-thm" title="Light / dark theme" aria-label="Light / dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
     <div class="ptz" role="group" aria-label="Time zone"><button data-v="Europe/Berlin" aria-pressed="true" id="tzl3">Local</button><button data-v="UTC" aria-pressed="false">UTC</button></div></header>
   <div class="rail">
   <header class="hero">
@@ -1166,11 +1212,10 @@ hud.innerHTML = `
       <div class="row-sub" id="wind-s"></div>
     </div>
     <div class="row">
-      <div class="row-main"><div class="row-title">Runway 18 (take-offs south)</div><div class="row-value" id="r18-v"></div></div>
+      <div class="row-main"><div class="row-title">Runway 18</div><div class="row-value" id="r18-v"></div></div>
       <div class="row-sub" id="r18-s"></div>
     </div>
-    <div class="row accrow"><div class="acc" id="acc"></div></div>
-    <div class="row pdetrow"><details class="pdet"><summary>Details</summary><div class="probl">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</div><div class="probl" id="pdetx"></div><div class="probl" id="pdetw"></div></details></div>
+    <div class="row pdetrow"><details class="pdet"><summary>Details</summary><div class="acc" id="acc"></div><div class="probl">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</div><div class="probl" id="pdetx"></div><div class="probl" id="pdetw"></div></details></div>
     <div class="row mapkey" id="mapkey" aria-label="Map key"></div>
     <div class="row how"><details><summary>How this works</summary>Our forecast blends two models trained on the directions actually flown at Frankfurt over the last 120 days; one of them runs 200 wind scenarios around the ECMWF and ICON forecasts. Calibrated out of sample and tested hour by hour on Jun to Oct 2026. The official forecast (INAA) is the operating-direction forecast published by the Umwelthaus. 07 and 25 are the runway headings (070° east, 250° west); Runway 18 West is used for take-offs to the south only. The live record since 1 Nov is only a few days long, too short to judge yet.<span class="howpg" id="how-pg"></span></details></div>
     </div>
@@ -1178,13 +1223,14 @@ hud.innerHTML = `
       <button role="radio" data-v="live" title="Real aircraft right now (ADS-B)">Live</button><button role="radio" data-v="fc" title="Simulated traffic for the hour picked on the timeline">Forecast</button></div>
   </header>
   </div>
-  <div class="attrib">${(window.FRA_STYLE || {}).footer || 'Official forecast = INAA (Umwelthaus). Map data © OpenStreetMap contributors. Wind: ECMWF IFS, DWD ICON.'}</div>
+  <div class="attrib">${((window.FRA_STYLE || {}).footer_lines || [(window.FRA_STYLE || {}).footer || 'Official forecast = INAA (Umwelthaus). Map data © OpenStreetMap contributors. Wind: ECMWF IFS, DWD ICON.']).map(t => `<span class="al">${t}</span>`).join(' ')}</div>
   <nav class="panel stack" aria-label="View">
     <div class="ib windchip" id="windchip" title="Forecast wind at the shown hour; the arrow points the way it blows"></div>
     <button class="ib" id="b-home">${ICON.orbit}<span>Reset view</span></button>
     <button class="ib" id="b-follow" aria-pressed="false" hidden>${ICON.plane}<span>Follow a landing aircraft</span></button>
     <button class="ib" id="b-fs">${ICON.expand}<span>Full screen</span></button>
   </nav>
+  <div class="hint3" id="hint3" aria-hidden="true">Drag to rotate · scroll to zoom</div>
   <div class="panel caption" id="caption" aria-live="polite"></div>
   <div class="panel actip" id="actip" hidden></div>
   <div class="acring" id="acring" hidden></div>
@@ -1192,7 +1238,7 @@ hud.innerHTML = `
   <div class="panel rose" id="rose" aria-hidden="true"><b data-d="N">N</b><b data-d="E">E</b><b data-d="S">S</b><b data-d="W">W</b><i id="rose-n"></i></div>
   <footer class="panel dock">
     <div class="dhd"><div class="dhl"><b class="dtitle">Next 48 hours</b><div class="readout" aria-live="polite"><span class="ro" id="dro"></span><button class="rback" id="dback" style="visibility:hidden">Back to now</button></div><span class="dpk" id="dpk" title="Highest hourly chance outside the night ban (23:00 to 05:00, no flights)"></span></div>
-      <label class="menu dmenu" title="Pick an older forecast to compare"><span>Replay an earlier run</span><select id="run" aria-label="Forecast run"></select>${ICON.chevrons}</label></div>
+      <label class="menu dmenu" title="Pick an older forecast to compare"><span>Replay an earlier run</span><select id="run" aria-label="Forecast run"></select><i class="chev" aria-hidden="true"></i></label></div>
     <button class="play" id="play" aria-label="Pause">${ICON.pause}</button>
     <div class="rowlbl" aria-hidden="true"><span id="dir-l">Direction</span><span id="risk-l" hidden></span><span id="r18-l">Runway 18</span><span id="wind-l" hidden>${T.headwind}</span></div>
     <div class="scrub">
@@ -1216,7 +1262,7 @@ const $ = id => document.getElementById(id);
   const ti = (window.FRA_QUALITY || {}).test_info, MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const a0 = ti && new Date(ti.start), b0 = ti && new Date(a0.getTime() + ti.days * 864e5), per = ti ? `backtest ${MON[a0.getUTCMonth()]}–\u2060${MON[b0.getUTCMonth()]}\u00a0${b0.getUTCFullYear()}` : '';
   const pc = v => Math.round(v * 100), rng = a => { const lo = Math.min(...a), hi = Math.max(...a); return lo === hi ? `${lo}` : `${lo}–${hi}`; }, hasP = R.length && R.every(r => r.prog !== null && r.prog !== undefined);
-  $('acc').innerHTML = R.length ? `<div class="pstat"><div class="kv"><span>Accuracy</span><b>${rng(R.map(r => pc(r.acc)))}\u202f%${hasP ? ` <small>· official <em>${rng(R.map(r => pc(r.prog)))}\u202f%</em></small>` : ''}</b></div></div>` : ''; // one row; the gain is under Details
+  $('acc').innerHTML = R.length ? `<div class="pstat"><div class="kv"><span>Hours correct</span><b>${rng(R.map(r => pc(r.acc)))}\u202f%${hasP ? ` <small>· official <em>${rng(R.map(r => pc(r.prog)))}\u202f%</em></small>` : ''}</b></div></div>` : ''; // one row; the gain is under Details
   if ($('pdetx') && R.length && hasP) $('pdetx').innerHTML = `${rng(R.map(r => Math.round((1 - (1 - r.acc) / (1 - r.prog)) * 100)))}\u202f% fewer wrong hours than the official forecast, ${Math.min(...R.map(r => r.lead))}–${Math.max(...R.map(r => r.lead))}\u202fh ahead.`;
   $('acc').title = R.map(r => `${r.lead} h ahead: ${Math.round(r.acc * 100)}% right (official ${Math.round(r.prog * 100)}%)`).join('\n');
 }
@@ -1270,7 +1316,7 @@ function setHero(word, color, sign) {
   if (word === heroWord) return; // the title stays neutral; the plate carries the direction colour
   const box = $('dir'), el = document.createElement('span'), old = heroEl, d = 26 * sign;
   const m = /^(\d\d) (.*)$/.exec(word); // "07 Eastbound": the runway number as a painted plate, as on the dashboard
-  if (m) { el.innerHTML = `<b class="dbadge"></b>`; el.firstChild.textContent = m[1]; el.firstChild.style.setProperty('--dc', m[1] === '25' ? HEX.west : HEX.east); el.firstChild.dataset.d = m[1]; el.append(` ${m[2]}`); } else el.textContent = word;
+  if (m) { el.innerHTML = `<b class="dbadge"></b>`; el.firstChild.textContent = m[1]; el.firstChild.style.setProperty('--dc', m[1] === '25' ? HEX.west : HEX.east); el.firstChild.dataset.d = m[1]; el.append(` ${m[2]}`); if (/^Frankfurt flies (East|West)$/.test(m[2])) el.insertAdjacentHTML('beforeend', ARROW_SVG2(m[2].endsWith('West') ? 'w' : 'e').replace('class="tarr"', 'class="tarr harr"')); /* the dashboard headline's drawn arrow */ } else el.textContent = word;
   box.appendChild(el);
   heroEl = el;
   if (!heroWord) { heroWord = word; return; }
@@ -1307,8 +1353,8 @@ function drawKnob() {
     $('ticks').querySelectorAll('span.day,span.hr,span.nowtick').forEach(l => { l.style.translate = ''; const r = l.getBoundingClientRect(), kx2 = $('knob') ? $('knob').getBoundingClientRect().left + $('knob').getBoundingClientRect().width / 2 : -1e9, hit = vis && ((r.right > br.left - 6 && r.left < br.right + 6 && r.bottom > br.top - 2 && r.top < br.bottom + 2) || (l.classList.contains('hr') && r.left - 2 < kx2 && r.right + 2 > kx2)); /* the shared rule: 6 px around the pill, and the label under the cursor line */
       if (hit && l.classList.contains('day')) { const dx = br.right + 8 - r.left, tr = $('ticks').getBoundingClientRect(); if (dx > 0 && dx <= 60 * (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1) && r.right + dx <= tr.right) { /* over 60 px: hidden, as on the dashboard */ l.style.translate = `${dx}px 0`; l.classList.remove('near'); return; } }
       l.classList.toggle('near', hit); }); // ticks under the pill hide; a day label moves right past it (never back over the day before), hidden when that leaves the plot
-    const pk = $('rpk'), pr = pk.getBoundingClientRect(), kx = $('track').getBoundingClientRect().left + x; pk.classList.toggle('off', vis); if ($('rpkl')) $('rpkl').style.opacity = vis ? '0' : ''; void pr; void kx; // label and leader together // the peak label never sits under the cursor
-    const tg = $('pgl'), tr = tg.getBoundingClientRect(), ch = $('track').querySelector('.swchip')?.getBoundingClientRect(), kxs = (r => r.left + r.width / 2)($('knob').getBoundingClientRect()), over = (!tg.hidden && kxs > tr.left - 3 && kxs < tr.right + 3) || (ch && kxs > ch.left - 3 && kxs < ch.right + 3); /* the shared tag-gap rule, on screen coordinates (the dock is zoomed) */ /* the Official tag and the "to 25" chip */
+    const pk = $('rpk'), pr = pk.getBoundingClientRect(), kx = $('track').getBoundingClientRect().left + x; pk.classList.toggle('off', vis); if ($('rpkl')) $('rpkl').style.opacity = vis ? '0' : ''; if ($('rpkh')) $('rpkh').style.opacity = vis ? '0' : ''; void pr; void kx; // label and leader together // the peak label never sits under the cursor
+    const tg = $('pgl'), tr = tg.getBoundingClientRect(), ch = $('track').querySelector('.swchip')?.getBoundingClientRect(), kxs = (r => r.left + r.width / 2)($('knob').getBoundingClientRect()), r18t = $('track').querySelector('.r18tag')?.getBoundingClientRect(), over = (!tg.hidden && kxs > tr.left - 3 && kxs < tr.right + 3) || (ch && kxs > ch.left - 3 && kxs < ch.right + 3) || (r18t && r18t.width && kxs > r18t.left - 3 && kxs < r18t.right + 3); /* the shared tag-gap rule, on screen coordinates (the dock is zoomed) */ /* the Official tag and the "to 25" chip */
     $('knob').style.setProperty('top', over ? 'var(--dt)' : '0px', 'important'); } { const kn = $('knob'), kr = kn.getBoundingClientRect(), kxl = kr.left + kr.width / 2, hz = app.clientWidth < 640 ? 1 : (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1); // the cursor breaks behind the in-bar label and, on phones, behind every row title (as on the dashboard)
       const boxes = [...document.querySelectorAll('.segs .dlab'), ...(app.clientWidth < 640 ? document.querySelectorAll('.dock .rowlbl > span') : [])].filter(l => !l.hidden).map(l => l.getBoundingClientRect()).filter(r => r.width && kxl > r.left - 3 && kxl < r.right + 3);
       const gaps = boxes.map(r => [(r.top - kr.top) / hz - 2, (r.bottom - kr.top) / hz + 2]).sort((a, b) => a[0] - b[0]);
@@ -1320,10 +1366,17 @@ let PGDIS = [], GHOST = false, OTHER = 'West', HOVERING = false, TOWN_KEY = [], 
 function renderMapKey() { // the map key: an overlay at the bottom-left of the 3D viewport, above the timeline
   const el = document.getElementById('mapkey'); if (!el) return; if (!el.classList.contains('mapov') && !el.classList.contains('inrail')) { el.classList.add('mapov', 'panel'); hud.appendChild(el); }
   const odK = (typeof state !== 'undefined' && state.cur) ? state.cur.od : 7, oK = odK === 25 ? 'east' : 'west'; // the dashboard's key: Landings in the shown direction's colour, the other direction's approaches only when a switch is in play
-  el.innerHTML = `<span><i class="plk" style="border-top-color:var(--${odK === 25 ? 'westLine' : 'eastLine'})!important"></i>${T.landings}</span><span><i class="tok"></i>${T.takeoffs}</span>${GHOST ? `<span><i class="plk gh" data-tok="${oK}Line" style="border-top-color:var(--${oK}Line)!important;opacity:.6"></i>${oK === 'west' ? 'West' : 'East'} approaches (if switched)</span>` : ''}<span class="kbr"></span>` + TOWN_KEY.map((l, k) => `<span class="tkey"><b>${k + 1}</b>${l.name}</span>`).join('');
+  el.innerHTML = `<span><i class="plk" style="border-top-color:var(--${odK === 25 ? 'westLine' : 'eastLine'})!important"></i>${T.landings}</span><span><i class="tok"></i>${T.takeoffs}</span>${GHOST ? `<span><i class="plk gh" data-tok="ghost${oK === 'west' ? 'W' : 'E'}" data-op="${GHOST_OP}" style="border-top-color:var(--ghost${oK === 'west' ? 'W' : 'E'})!important;opacity:${GHOST_OP}"></i>${oK === 'west' ? 'West' : 'East'} (if switched)</span>` : ''}<span class="kbr"></span>` + TOWN_KEY.map((l, k) => `<span class="tkey"><b>${k + 1}</b>${l.name}</span>`).join('');
+  { // the third column as wide as its longest label in either direction ("West (if switched)"): the key keeps its
+    // width when a hovered hour swaps the label, with no dead space on its right (desktop: the key takes the card's width)
+    const cx = renderMapKey.cx || (renderMapKey.cx = document.createElement('canvas').getContext('2d')), cs = getComputedStyle(el); cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const w = Math.max(...['West', 'East'].map(d => cx.measureText(`${d} (if switched)`).width)), rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    el.style.setProperty('--kc3', `${Math.ceil(w + 1.375 * rem + 1)}px`); }
 }
 const curIdx = () => (state.run ? Math.max(0, Math.min(N() - 1, Math.floor((Date.now() - Date.parse(state.run.hours[0].t)) / 36e5))) : 0);
 const isNowHour = () => liveMode || state.hour === curIdx();
+// how long the direction has held, the kicker's last part (the dashboard's rule: hours under 48, then days)
+const heldFor = () => { const hrs = window.FRA_SINCE ? Math.max(0, Math.round((Date.now() - Date.parse(window.FRA_SINCE)) / 36e5)) : null; return hrs === null ? '' : ` · ${hrs >= 48 ? `${Math.round(hrs / 24)} days` : `${hrs}\u202fh`}`; };
 const odName = od => (od === 25 ? '25 West' : '07 East'); // one wording on both pages: the plate and East / West
 function drawPgMark() { // where the official INAA prognosis disagrees with our model, marked on the strip
   const el = $('pgmark'); if (!state.run) return;
@@ -1338,9 +1391,9 @@ function bubText(i) { // the scrubber label: the selected hour and what is forec
   const wd = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t));
   $('bub-t').innerHTML = `<svg class="pinG" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 6 3 3v2h-4v7l-1 1-1-1v-7H7v-2l3-3z" fill="currentColor"/></svg>${wd} ${fmtHM(new Date(h.t))}`; // short: the full date is in the readout
   const tw = h.ws === undefined ? null : Math.round(h.ws * Math.cos((h.wd - (h.od === 25 ? 249 : 69)) * Math.PI / 180)); // + = headwind on the runways in use
-  const hsN = state.run.hours, nk = !now && isNight(h) ? hsN.findIndex((x, k) => k > i && !isNight(x)) : -1;
-  if (!now && isNight(h)) { const sm = innerWidth < 480, nx = nk >= 0 ? T.night_next.replace('{od}', hsN[nk].od === 25 ? '25' : '07').replace('{t}', fmtHM(new Date(hsN[nk].t))).replace(/^N/, 'n') : 'night ban'; $('dro').innerHTML = `<b>${sm ? `${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}` : fmtBub.format(new Date(h.t))}</b> · ${nx}`; } // the shared night phrase (siteui.COPY.night_next) else
-  else $('dro').innerHTML = `<b>${now ? `Now, ${fmtHM(new Date(h.t))}` : fmtBub.format(new Date(h.t))}</b> · ${now ? `${pct(west ? h.p25 : 1 - h.p25)} ${west ? 'West' : 'East'}` : `${pct(pOther(h))} chance of ${OTHER}`}${tw === null ? '' : ` · ${tw >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(tw)}\u202fkt`}`; // phones: the wind is in the panel
+  const hsN = state.run.hours, nb = !liveMode && isNight(h), nk = nb ? hsN.findIndex((x, k) => k > i && !isNight(x)) : -1; // a night hour reads as the night ban whether it is now, pinned or hovered (as on the dashboard)
+  if (nb) { const sm = innerWidth < 480, nx = nk >= 0 ? T.night_next.replace('{od}', hsN[nk].od === 25 ? '25' : '07').replace('{t}', fmtHM(new Date(hsN[nk].t))).replace(/^N/, 'n') : 'night ban'; $('dro').innerHTML = `<b>${sm ? `${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}` : fmtBub.format(new Date(h.t))}</b> · ${nx}`; } // the shared night phrase (siteui.COPY.night_next) else
+  else $('dro').innerHTML = `<b>${now ? slotLab(h.t) : fmtBub.format(new Date(h.t))}</b> · ${now ? `${pct(west ? h.p25 : 1 - h.p25)} ${west ? 'West' : 'East'}` : `${pct(pOther(h))} chance of ${OTHER}`}${tw === null ? '' : ` · ${tw >= 0 ? 'headwind' : 'tailwind'} ${Math.abs(tw)}\u202fkt`}`; // phones: the wind is in the panel
   $('dback').style.visibility = now || HOVERING ? 'hidden' : 'visible'; // only once a click has pinned an hour // in the DOM always: no layout shift; only off the current hour
 }
 function knobTo(i, opts) {
@@ -1373,6 +1426,9 @@ function drawNow() { // a vertical line at the current time, labelled, when it f
   if (st) st.style.visibility = firstDay && parseFloat(firstDay.style.left) / 100 * tw < 90 ? 'hidden' : ''; // the start day, unless its midnight label is right there
 }
 const fmtHM = d => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(d);
+// the current slot's name, as on the dashboard: a forecast hour runs from its valid time (label index = hour start) for one
+// hour, so a fresh forecast's first slot starts after the issue; named by its window, never as a later clock time
+const slotLab = t => { const a = Date.parse(t); return `${fmtHM(new Date(a))}\u2013${fmtHM(new Date(a + 36e5))}`; }; // the current slot as its one-hour window (the card title already says what comes next)
 function renderLiveBadge() { // one freshness state, with its time: the hero line and the legend never disagree
   const lg = document.getElementById('aclegend');
   if (!lg) return;
@@ -1496,7 +1552,8 @@ function dockLayout(hs) {
   DOCK.sc = swScale(Math.max(...hs.map(oth))); DOCK.rh = DOCK.sc.h; // the dashboard's scale and row height: as tall as the peak needs
   DOCK.r18 = hs.some(h => !isNight(h) && h.p18 < 0.9);
   DOCK.wind = false; // the headwind row lives on the dashboard; the 3D dock keeps direction and switch chance at full size
-  const ph = app.clientWidth < 600, dt = ph ? 30 : 19, /* the official tag's band: 4 px more air above it */ dh = nar ? 32 : 34, lgH = (() => { const k = $('dkey'), tr = $('track'); if (!k || !tr) return 0; if (ph) { if (k.parentElement !== tr) tr.appendChild(k); k.classList.add('inbar'); return (k.offsetHeight || 36) + 8; } if (k.classList.contains('inbar')) { k.classList.remove('inbar'); document.querySelector('.dock').appendChild(k); } return 0; })(), /* phones: the legend right under the direction bar, as on the dashboard */ rt = dt + dh + lgH + (ph ? 30 : 12), /* 12 px under the bar, as on the dashboard */ /* phones: an 8 px gap above and below each row name */ mt = rt + DOCK.rh + 16, wt = mt + (DOCK.r18 ? 18 : 4), wh = 44; // phones: each row's name in the 20 px above it
+  const lane = DOCK.r18 && !nar ? 12 : 0; DOCK.rh -= lane + (nar ? 0 : 10); /* desktop: the 10 px added to the band over the plot come from the plot (the peak note ~10 px under the bar); the lane over the cells holds the "18 closed" tag 3.5 px clear of its bracket */ if (!nar && innerHeight / (parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1) < 790) DOCK.rh -= 16; // a short window (768 px): the chance plot gives 16 px, so the left card, the key and the timeline keep their 16 px gutters // desktop: the "18 closed" tag sits in the Runway 18 lane, which takes 8 px from the chance plot (the dock keeps its height)
+  const ph = app.clientWidth < 600, dt = ph ? 30 : 24, /* the tag band: a 16 px tag (official, switch chip, "18 closed") 5 px under the hour axis and 3 px over the bar */ dh = nar ? 32 : 34, lgH = (() => { const k = $('dkey'), tr = $('track'); if (!k || !tr) return 0; if (k.classList.contains('inbar') || k.parentElement === tr) { k.classList.remove('inbar'); document.querySelector('.dock').appendChild(k); } return 0; })(), /* every width: the legend under the last row, clear of the Now and cursor lines (as on the dashboard) */ rt = dt + dh + lgH + (ph ? 30 : nar ? 12 : 22), /* 22 px under the bar: the band the peak note sits in, above the top gridline */ /* phones: an 8 px gap above and below each row name */ mt = rt + DOCK.rh + (ph ? 34 : 16 + lane), /* phones: the Runway 18 name in its own 16 px line between the chance baseline and the cells */ wt = mt + (DOCK.r18 ? 18 : 4), wh = 44; // phones: each row's name in the 20 px above it
   const th = DOCK.wind ? wt + wh : DOCK.r18 ? mt + 10 : rt + DOCK.rh;
   DOCK.rt = rt;
   for (const [k, v] of Object.entries({ dt, dh, rt, rh: DOCK.rh, mt, wt, wh, th })) app.style.setProperty(`--${k}`, `${v}px`);
@@ -1518,7 +1575,18 @@ function drawWindRow() { // headwind on the runways in use, against the switch l
     + ticks.map(v => `<rect x="1" y="${y(v) - 14}" width="${v ? 34 : 12}" height="13" rx="2" class="chip"/><text x="4" y="${y(v) - 3}">${v ? `${Math.abs(v)} kt` : '0'}</text>`).join('')
     + `<text x="${W - 4}" y="${Math.min(bot - 1, y(-1) + 11)}" text-anchor="end" class="limt">limit</text>`;
 }
-new ResizeObserver(() => { if (state.run) { dockLayout(state.run.hours); drawWindRow(); drawNow(); } }).observe(app);
+new ResizeObserver(() => { if (state.run) { dockLayout(state.run.hours); drawWindRow(); drawNow(); requestAnimationFrame(drawR18Note); } }).observe(app);
+function drawR18Note() { // desktop, as on the dashboard: an "18 closed" tag in the Runway 18 lane, between the chance plot's
+  // baseline and the cells, sitting on a bracket over the first closed run (no leader); the top lane carries only the switch chip
+  const tr = $('track'); if (!tr) return; tr.querySelectorAll('.r18tag, .r18lead, .r18brk').forEach(e => e.remove());
+  const cs = [...$('marks').querySelectorAll(':scope > i.x')].filter(e => e.getBoundingClientRect().width); if (app.clientWidth < 640 || $('marks').hidden || !cs.length) return;
+  const hz = parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1, T0 = tr.getBoundingClientRect(), loc = r => ({ l: (r.left - T0.left) / hz, r: (r.right - T0.left) / hz, t: (r.top - T0.top) / hz, b: (r.bottom - T0.top) / hz });
+  let E = 0; while (E + 1 < cs.length && cs[E + 1].getBoundingClientRect().left - cs[E].getBoundingClientRect().right < 4 * hz) E++; // the first closed run
+  const C = loc(cs[0].getBoundingClientRect()), C2 = loc(cs[E].getBoundingClientRect()), TW = tr.clientWidth, cx = (C.l + C2.r) / 2;
+  tr.insertAdjacentHTML('beforeend', `<span class="r18tag" title="Runway 18 closed from ${fmtBub.format(new Date(state.run.hours[[...$('marks').children].indexOf(cs[0])].t))}">18 closed</span><i class="r18brk" style="left:${C.l}px;width:${C2.r - C.l}px;top:${C.t - 4}px"></i>`);
+  const tg = tr.querySelector('.r18tag'), w = tg.offsetWidth, h = tg.offsetHeight, top = C.t - 7.5 - h, /* 3.5 px clear of its bracket */ left = Math.max(0, Math.min(TW - w, cx - w / 2)); // centred on the run, on its bracket
+  Object.assign(tg.style, { left: `${left}px`, top: `${top}px` });
+}
 function fitTicks() { // hide only the ticks that touch the "Forecast ends" label; skipped while the dock has no layout yet
   const tk = $('ticks'), e = tk.querySelector('.end'); if (!e) return;
   const r = e.getBoundingClientRect(); if (!r.width || !tk.getBoundingClientRect().width) return;
@@ -1534,12 +1602,14 @@ function setRun(name, keepHour) {
   $('track').setAttribute('aria-valuemax', hs.length);
   const hatch = (a, b, w = 3) => `repeating-linear-gradient(135deg,${a} 0 ${w}px,${b} ${w}px ${2 * w}px)`;
   requestAnimationFrame(() => { const sg = $('segs'), TW = sg.clientWidth, H2 = hs, c0 = curIdx(), TMIN = ((window.FRA_STYLE || {}).switch_tab_min) || 24; // the dashboard's rule: the predicted switch at least 24 px wide (into the 24 px kept free), faded like its hours, always with its chip
-    sg.querySelector('.swtab')?.remove(); $('track').querySelector('.swchip')?.remove();
+    sg.querySelector('.swtab')?.remove(); $('track').querySelectorAll('.swchip, .swtick, .swstem').forEach(e => e.remove());
     const ci = H2.findIndex((x2, q) => q > c0 && x2.od !== H2[c0].od); if (ci < 0) return; let e2 = ci; while (e2 + 1 < H2.length && H2[e2 + 1].od === H2[ci].od) e2++;
     const cwp = TW / H2.length, x0 = ci * cwp, segW = (e2 + 1 - ci) * cwp, od2 = H2[ci].od, lo = H2.slice(ci, e2 + 1).some(x2 => Math.min(x2.p25, 1 - x2.p25) >= 0.1);
     if (segW < TMIN) sg.insertAdjacentHTML('beforeend', `<i class="swtab ${od2 === 25 ? 'w' : 'e'}${lo ? ' lo' : ''}" style="left:${Math.min(x0, TW - TMIN)}px;width:${TMIN}px;background:${od2 === 25 ? HEX.west : HEX.east}" title="The switch starts here; the forecast ends after this hour"></i>`);
-    $('track').insertAdjacentHTML('beforeend', `<span class="swchip" style="--dc:${od2 === 25 ? HEX.west : HEX.east}">to ${od2 === 25 ? '25' : '07'}</span>`);
+    $('track').insertAdjacentHTML('beforeend', `<span class="swchip ${od2 === 25 ? 'w' : 'e'}" style="--dc:${od2 === 25 ? HEX.west : HEX.east}" title="Switch to ${od2 === 25 ? '25' : '07'} expected ${fmtBub.format(new Date(H2[ci].t))}">to ${od2 === 25 ? '25' : '07'}<span class="swt"> · ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(H2[ci].t))}</span></span>`); // the switch hour on the chip, as on the dashboard
     const chip = $('track').querySelector('.swchip'), cw2 = chip.offsetWidth, cl = Math.max(0, Math.min(x0, TW - cw2)); /* inside the axis */ chip.style.left = `${cl}px`;
+    if (cl < x0 - 1) $('track').insertAdjacentHTML('beforeend', `<i class="swtick" style="left:${x0}px"></i>`); // a chip pushed left of its hour: a dark tick across the bar marks the switch hour
+    $('track').insertAdjacentHTML('beforeend', `<i class="swstem" style="left:${(sg.querySelectorAll(':scope > i.w, :scope > i.e')[ci]?.offsetLeft ?? x0) - 0.5}px;background:${od2 === 25 ? HEX.west : HEX.east}"></i>`); // a 1 px stem from the chip down to the switch moment, as the "18 closed" tag has
     fitTagChip(); });
   $('segs').innerHTML = hs.map(h => {
     const west = h.p25 >= 0.5, other = Math.min(h.p25, 1 - h.p25); // <2%: solid, 2-25%: faded (less certain), more: hatched
@@ -1549,13 +1619,17 @@ function setRun(name, keepHour) {
   }).join('') + (() => { // "07 East →" on each run of one direction (from its first hour outside the night ban, if 5 h fit)
     let out = '', i = 0;
     while (i < hs.length) { let j = i; const w = hs[i].p25 >= 0.5; while (j + 1 < hs.length && (hs[j + 1].p25 >= 0.5) === w) j++;
-      let a = i; while (a <= j && isNight(hs[a])) a++;
-      const nf = Math.max(0, (Date.now() - Date.parse(hs[0].t)) / (hs.length * 36e5)), lf = Math.max(a / hs.length, a <= nf * hs.length ? nf : 0); // after the now line, 8 px in
-      if (j - a >= 4) out += `<span class="dlab ${w ? 'w' : 'e'}" style="left:calc(${(lf * 100).toFixed(2)}% + 8px)">${w ? `${ARROW_SVG2('w')}25 West` : `07 East${ARROW_SVG2('e')}`}</span>`;
+      // one rule on both pages: at the band start when its first solid run (no night hatch, after the now line) is >= the
+      // label's width + 8 px, else at the start of the first run that is (8 px in); never on the start of a night band
+      const nf = Math.max(0, (Date.now() - Date.parse(hs[0].t)) / (hs.length * 36e5)), TW = $('segs').clientWidth || $('track').clientWidth || 1000, ctx = dockLayout.cx || (dockLayout.cx = document.createElement('canvas').getContext('2d'));
+      ctx.font = '600 13px "IBM Plex Sans", system-ui, sans-serif'; const lw = ctx.measureText(w ? '25 West' : '07 East').width + 35;
+      let a = -1, lf = 0; for (let q = i; q <= j;) { while (q <= j && isNight(hs[q])) q++; if (q > j) break; let r = q; while (r + 1 <= j && !isNight(hs[r + 1])) r++; const f0 = Math.max(q / hs.length, q <= nf * hs.length ? nf : 0); if (((r + 1) / hs.length - f0) * TW >= lw + 8) { a = q; lf = f0; break; } q = r + 1; }
+      if (a >= 0) out += `<span class="dlab ${w ? 'w' : 'e'}" style="left:calc(${(lf * 100).toFixed(2)}% + 8px)">${w ? `${ARROW_SVG2('w')}25 West` : `07 East${ARROW_SVG2('e')}`}</span>`;
       i = j + 1; }
     return out; })();
-  $('marks').innerHTML = hs.map(h => `<i class="${isNight(h) ? 'n' : h.p18 < 0.5 ? 'x' : h.p18 < 0.9 ? 'r' : 'o'}" title="Runway 18 ${isNight(h) ? 'night ban' : h.p18 < 0.5 ? 'closed' : h.p18 < 0.9 ? `${pct(1 - h.p18)} chance of a closure` : 'open'}"></i>`).join('');
+  $('marks').innerHTML = hs.map(h => `<i class="${h.p18 < 0.5 ? 'x' : h.p18 < 0.9 ? 'r' : 'o'}${isNight(h) ? ' n' : ''}" title="Runway 18 ${isNight(h) ? 'night ban' : h.p18 < 0.5 ? 'closed' : h.p18 < 0.9 ? `${pct(1 - h.p18)} chance of a closure` : 'open'}"></i>`).join('');
   dockLayout(hs);
+  requestAnimationFrame(() => requestAnimationFrame(drawR18Note));
   { // switch chance per hour on the dashboard's scale: 0 to 20 % in a half-height row while no real switch is in view, else 0 to 100 %
     { OTHER = hs[curIdx()].od === 25 ? 'East' : 'West'; } // what the bars measure: p(the other direction) that hour
     const PKI = hs.reduce((m, h, i) => (!isNight(h) && (m < 0 || (OTHER === 'East' ? 1 - h.p25 : h.p25) > (OTHER === 'East' ? 1 - hs[m].p25 : hs[m].p25)) ? i : m), -1); // the labelled peak (outside the night ban), one step darker
@@ -1564,25 +1638,49 @@ function setRun(name, keepHour) {
     app.style.setProperty('--gf', (DOCK.sc.grid / TOP).toFixed(3)); // the 10 % label sits on its gridline
     $('rgl').style.top = `${DOCK.rt + GY + 1}px`;
     $('risk').innerHTML = `<line x1="0" y1="${GY}" x2="${W}" y2="${GY}" class="grid"/>` + (TOP > DOCK.sc.grid + 1e-9 ? `<line x1="0" y1="0.5" x2="${W}" y2="0.5" class="grid half"/>` : '') + `<line x1="0" y1="${RH - 0.5}" x2="${W}" y2="${RH - 0.5}" class="base calm"/>` + hs.map((h, i) => { const o = oth(h), ht = o < (((window.FRA_STYLE || {}).switch || {}).min_bar ?? 0.01) ? 0 : Math.max(2, Math.min(1, o / TOP) * PH);
-      const vpp = 10 * hs.length / ($('track').clientWidth || 1000), bw = Math.min(10 - 2 * vpp, 14 * vpp); return !ht ? `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - 1}" width="${bw.toFixed(2)}" height="1" fill="${theme === 'light' ? '#4b4d53' : '#9aa0a6'}" opacity=".3"/>` /* under 1 %: a 1 px stub, so the row reads as ~0, not as missing */ : `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - ht}" width="${bw.toFixed(2)}" height="${ht}" fill="${isNight(h) ? (theme === 'light' ? '#b9babc' : '#4b4b4c') : theme === 'light' ? '#4b4d53' : '#9aa0a6'}"${isNight(h) ? ' class="nt"' : ''} opacity="${isNight(h) ? 1 : o >= 0.2 || i === PKI ? 1 : 0.85}"${i === PKI ? ` style="filter:brightness(${theme === 'light' ? '.75' : '1.1'})"` : ''}><title>${fmtBub.format(new Date(h.t))}: ${pct(o)} chance of ${OTHER} that hour</title></rect>`; }).join('');
+      /* night hours keep their tone: the night band sits behind the bars (as on the dashboard) */ const vpp = 10 * hs.length / ($('track').clientWidth || 1000), bw = Math.min(10 - 2 * vpp, 14 * vpp); return !ht ? `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - 1}" width="${bw.toFixed(2)}" height="1" fill="${theme === 'light' ? '#4b4d53' : '#9aa0a6'}" opacity=".3"/>` /* under 1 %: a 1 px stub, so the row reads as ~0, not as missing */ : `<rect x="${(i * 10 + (10 - bw) / 2).toFixed(2)}" y="${RH - ht}" width="${bw.toFixed(2)}" height="${ht}" fill="${theme === 'light' ? '#4b4d53' : '#9aa0a6'}" opacity="${o >= 0.2 || i === PKI ? 1 : 0.85}"${i === PKI ? ` style="filter:brightness(${theme === 'light' ? '.75' : '1.1'})"` : ''}><title>${fmtBub.format(new Date(h.t))}: ${pct(o)} chance of ${OTHER} that hour</title></rect>`; }).join('');
     $('rgl').textContent = `${Math.round(DOCK.sc.grid * 100)} %`;
     { const t2 = $('rgl2'); if (t2) { t2.textContent = `${Math.round(TOP * 100)}\u202f%`; t2.hidden = !(TOP > DOCK.sc.grid + 1e-9) || !!DOCK.sc.calm; } } // the scale's top, as on the dashboard
     { // the single peak callout, as on the dashboard: "5 % · Fri 22:00", beside the tallest bar
       const pk = hs.reduce((m, h, i) => (!isNight(h) && (isNight(hs[m]) || oth(h) > oth(hs[m])) ? i : m), 0) /* the peak outside the night ban, as on the dashboard */, o = oth(hs[pk]), el = $('rpk');
-      if (o < 0.01 || DOCK.sc.calm) { el.textContent = ''; if ($('rpkl')) $('rpkl').style.display = 'none'; } // a calm day names its peak in the row label
+      if (o < 0.01 || DOCK.sc.calm) { el.textContent = ''; if ($('rpkl')) $('rpkl').style.display = 'none'; if ($('rpkh')) $('rpkh').style.display = 'none'; } // a calm day names its peak in the row label
       else {
         const f = (pk + 0.5) / hs.length;
         el.textContent = peakNote(o, hs[pk].t); if ($('dpk')) $('dpk').textContent = ''; // at the chance row's right end, just above its bar, as on the dashboard
         const bh = Math.max(2, Math.min(1, o / TOP) * PH); // just above its bar, inside the row, as on the dashboard
-        { const n = hs.length, tw = $('track').clientWidth || 1, cx = (pk + 0.5) / n * tw, w0 = el.offsetWidth || 120, flip = cx - 8 - w0 < 0, top = app.clientWidth < 600 ? DOCK.rt + 2 : DOCK.rt - 15; /* the dashboard's placement: just above the axis top, never on a bar (phones: inside the row's top, under the legend) */ // the note at the top of the row, right-aligned at its leader; the leader ends in a dot on the peak bar
-          Object.assign(el.style, { left: `${(flip ? cx : Math.min(cx, tw - 6 + 8)).toFixed(1)}px`, right: 'auto', top: `${top}px`, transform: flip ? 'translateX(8px)' : 'translateX(calc(-100% - 8px))' }); /* never past the plot's right edge (6 px inside) */
+        // the note inside the plot, in a 15 px band along its top, ending 6 px before the first bar that reaches into that
+        // band (as on the dashboard): clear of the direction bar, the switch chip and every bar; a dot marks the peak bar.
+        // Measured from the drawn bars (track coordinates), so it holds on every layout.
+        const placeBand = () => { const tr = $('track').getBoundingClientRect(), hz = parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1, sc = app.clientWidth < 640 ? 1 : hz;
+          const rk = $('risk').getBoundingClientRect(), bars = [...document.querySelectorAll('#risk rect')].map(b => { const r = b.getBoundingClientRect(); return { l: (r.left - tr.left) / sc, r: (r.right - tr.left) / sc, t: (r.top - tr.top) / sc, h: r.height / sc }; });
+          const BAND = 18, top = (rk.top - tr.top) / sc + 4, /* its capitals 4 px under the top gridline */ w0 = el.offsetWidth || 120, pb = bars[pk]; if (!pb) return; const cx = (pb.l + pb.r) / 2; let R = cx - 8;
+          { // desktop, when the band between the direction bar and the plot holds it (the dashboard's rule): the note above the
+            // top gridline, the leader along its mid-height (above the plot, so clear of every bar top) and a short vertical
+            // tick down to the peak dot
+            const sg = $('segs').getBoundingClientRect(), gap = (rk.top - sg.bottom) / sc, h0 = el.offsetHeight || 14;
+            if (app.clientWidth >= 640 && gap >= 17 && R - w0 >= 0) { const t0 = (rk.top - tr.top) / sc - 1 - h0;
+              Object.assign(el.style, { visibility: '', left: `${R.toFixed(1)}px`, right: 'auto', top: `${t0.toFixed(1)}px`, transform: 'translateX(-100%)' }); el.dataset.band = '1'; el.classList.add('up');
+              let ld = $('rpkl'); if (!ld) { ld = document.createElement('i'); ld.id = 'rpkl'; ld.className = 'rpkl'; $('track').appendChild(ld); }
+              Object.assign(ld.style, { left: `${cx.toFixed(1)}px`, top: `${(pb.t - 3).toFixed(1)}px`, height: '0px', display: '' });
+              let lh = $('rpkh'); if (!lh) { lh = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); lh.id = 'rpkh'; lh.setAttribute('class', 'rpkh'); lh.setAttribute('aria-hidden', 'true'); lh.innerHTML = '<path/>'; $('track').appendChild(lh); }
+              const ly = t0 + h0 / 2, x0 = R + 3; lh.firstChild.setAttribute('d', `M${x0.toFixed(1)} ${ly.toFixed(1)}L${cx.toFixed(1)} ${ly.toFixed(1)}L${cx.toFixed(1)} ${(pb.t - 6).toFixed(1)}`); lh.style.display = ''; return; }
+            el.classList.remove('up'); }
+          for (let it = 0; it < bars.length; it++) { let moved = false; for (let k = 0; k < pk; k++) { const b = bars[k]; if (b.h > 1.5 && b.t < top + BAND + 1 && b.r > R - w0 - 2 && b.l - 6 < R) { R = b.l - 6; moved = true; } } if (!moved) break; }
+          el.style.visibility = R - w0 < 0 ? 'hidden' : ''; // no room in the band: the dot alone (re-measured on the next frame)
+          Object.assign(el.style, { left: `${R.toFixed(1)}px`, right: 'auto', top: `${top.toFixed(1)}px`, transform: 'translateX(-100%)' }); el.dataset.band = '1';
           let ld = $('rpkl'); if (!ld) { ld = document.createElement('i'); ld.id = 'rpkl'; ld.className = 'rpkl'; $('track').appendChild(ld); }
-          Object.assign(ld.style, { left: `${cx.toFixed(1)}px`, top: `${top + 6}px`, height: `${Math.max(0, DOCK.rt + RH - bh - top - 6 - 2)}px`, display: '' }); }
-        requestAnimationFrame(() => { const q = el.getBoundingClientRect(), hit = !el.textContent || [...document.querySelectorAll('#risk rect')].some(b => { const r = b.getBoundingClientRect(); return r.height > 1.5 && r.right > q.left && r.left < q.right && r.bottom > q.top && r.top < q.bottom; }) || [document.getElementById('dkey')].some(k => { if (!k || !k.offsetHeight) return false; const r = k.getBoundingClientRect(); return r.bottom > q.top && r.top < q.bottom; });
-          if (hit && el.textContent) { el.textContent = ''; if ($('rpkl')) $('rpkl').style.display = 'none'; return; }
+          Object.assign(ld.style, { left: `${cx.toFixed(1)}px`, top: `${(pb.t - 3).toFixed(1)}px`, height: '0px', display: '' });
+          // a 1 px leader from the note's end to the peak dot (as on the dashboard): at the note's mid-height, lifted over any bar between them
+          let lh = $('rpkh'); if (!lh) { lh = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); lh.id = 'rpkh'; lh.setAttribute('class', 'rpkh'); lh.setAttribute('aria-hidden', 'true'); lh.innerHTML = '<path/>'; $('track').appendChild(lh); }
+          const ly = top + (el.offsetHeight || 14) / 2, dy = pb.t - 3, x0 = R + 3, yL = Math.max(top - 4, Math.min(ly, dy, ...bars.filter((b, k) => k < pk && b.h > 1.5 && b.r > x0 && b.l < cx - 3).map(b => b.t - 3)));
+          lh.firstChild.setAttribute('d', `M${x0.toFixed(1)} ${ly.toFixed(1)}` + (yL < ly ? `L${x0.toFixed(1)} ${yL.toFixed(1)}` : '') + (dy - yL > 4 ? `L${cx.toFixed(1)} ${yL.toFixed(1)}L${cx.toFixed(1)} ${(dy - 3).toFixed(1)}` : `L${(cx - 3).toFixed(1)} ${yL.toFixed(1)}`));
+          lh.style.display = R - w0 < 0 ? 'none' : ''; };
+        placeBand();
+        requestAnimationFrame(() => { placeBand(); const q = el.getBoundingClientRect(), hit = !el.textContent || [...document.querySelectorAll('#risk rect')].some(b => { const r = b.getBoundingClientRect(); return r.height > 1.5 && r.right > q.left && r.left < q.right && r.bottom > q.top && r.top < q.bottom; }) || [document.getElementById('dkey')].some(k => { if (!k || !k.offsetHeight) return false; const r = k.getBoundingClientRect(); return r.bottom > q.top && r.top < q.bottom; });
+          if (hit && el.textContent) { el.textContent = ''; if ($('rpkh')) $('rpkh').style.display = 'none'; return; } // the dot stays on the peak bar
           const ld = $('rpkl'), br = document.querySelectorAll('#risk rect')[pk]?.getBoundingClientRect(), tr = $('track').getBoundingClientRect(), hz = parseFloat(document.documentElement.style.getPropertyValue('--hz')) || 1;
-          if (ld && br && el.textContent && !el.textContent.startsWith('peak ')) { const t0 = (q.top + q.height / 2 - tr.top) / (app.clientWidth < 640 ? 1 : hz); Object.assign(ld.style, { top: `${t0}px`, height: `${Math.max(0, (br.top - q.top - q.height / 2) / (app.clientWidth < 640 ? 1 : hz) - 3)}px` }); } }); // no room for the note: the dot and its leader go too (never a lone dot); else the leader runs from the note to its bar
-        { const c0 = curIdx(), noSw = !hs.some((x, q) => q > c0 && x.od !== hs[c0].od); if (noSw) { const ty = DOCK.rt + RH - bh - 2; if (bh + 20 <= RH) { el.textContent = `peak ${pct(o)}`; Object.assign(el.style, { left: `${((pk + 0.5) / hs.length * ($('track').clientWidth || 1) + 4).toFixed(1)}px`, top: `${ty - 18}px`, transform: 'translateX(-100%)' }); Object.assign($('rpkl').style, { top: `${ty}px`, height: '0px' }); } else { el.textContent = ''; $('rpkl').style.display = 'none'; } } } // as on the dashboard: "peak 20 %" on its dot, or the darker bar alone // no switch expected: the panel names the peak; here only its dot and the darker bar (as on the dashboard)
+          if (ld && br && el.textContent && !el.textContent.startsWith('peak ') && !el.dataset.band) { const t0 = (q.top + q.height / 2 - tr.top) / (app.clientWidth < 640 ? 1 : hz); Object.assign(ld.style, { top: `${t0}px`, height: `${Math.max(0, (br.top - q.top - q.height / 2) / (app.clientWidth < 640 ? 1 : hz) - 3)}px` }); } }); // no room for the note: the dot and its leader go too (never a lone dot); else the leader runs from the note to its bar
+        { const c0 = curIdx(), noSw = !hs.some((x, q) => q > c0 && x.od !== hs[c0].od); if (noSw) { if ($('rpkh')) $('rpkh').style.display = 'none'; const ty = DOCK.rt + RH - bh - 2; if (bh + 20 <= RH) { el.textContent = `peak ${pct(o)}`; Object.assign(el.style, { left: `${((pk + 0.5) / hs.length * ($('track').clientWidth || 1) + 4).toFixed(1)}px`, top: `${ty - 18}px`, transform: 'translateX(-100%)' }); Object.assign($('rpkl').style, { top: `${ty}px`, height: '0px' }); } else { el.textContent = ''; $('rpkl').style.display = 'none'; } } } // as on the dashboard: "peak 20 %" on its dot, or the darker bar alone // no switch expected: the panel names the peak; here only its dot and the darker bar (as on the dashboard)
       }
     }
     { const pk = hs.reduce((m, h, i) => (!isNight(h) && (isNight(hs[m]) || oth(h) > oth(hs[m])) ? i : m), 0) /* the peak outside the night ban, as on the dashboard */; $('rgl').hidden = !!DOCK.sc.calm;
@@ -1598,8 +1696,8 @@ function setRun(name, keepHour) {
     if (any(isNight)) K.push(['night', `<span><i class="nightk" style="background:${HATCH(theme)},${HEX.east}"></i>${T.night}</span>`]);
     if (DOCK.wind) K.push(['limit', `<span><i class="limk"></i>${T.limit}</span>`]);
     if (any(h => !isNight(h) && Math.min(h.p25, 1 - h.p25) >= 0.1)) K.push(['faded', `<span><i class="lessk"></i>${T.faded}</span>`]);
-    if (any(h => !isNight(h) && h.p18 < 0.5)) K.push(['r18closed', '<span><i class="closedk"></i>Runway 18 closed</span>']);
-    if (any(h => !isNight(h) && h.p18 >= 0.5 && h.p18 < 0.9)) K.push(['r18risk', '<span><i class="riskk"></i>Runway 18, 10 to 50\u202f% closure chance</span>']);
+    { const cx = any(h => !isNight(h) && h.p18 < 0.5), rk = any(h => !isNight(h) && h.p18 >= 0.5 && h.p18 < 0.9); // one item for Runway 18, as on the dashboard (siteui.COPY.r18_*)
+      if (cx || rk) K.push(['r18', `<span class="kr18" title="${T.r18_tip || ''}">${cx ? '<i class="closedk"></i>' : ''}${rk ? '<i class="riskk"></i>' : ''}${cx && rk ? T.r18_both : cx ? T.r18_closed : T.r18_risk}</span>`]); }
     { const ORD = ((window.FRA_STYLE || {}).legend_order) || []; K.sort((a, b) => ORD.indexOf(a[0]) - ORD.indexOf(b[0])); } // the dashboard's order (siteui.STYLE.legend_order)
     renderMapKey();  // the map key lives in the scene
     $('dkey').innerHTML = K.map(k => k[1]).join('');
@@ -1654,7 +1752,7 @@ function setHour(i, force) {
   const west = od === 25, odCol = west ? HEX.west : HEX.east;
   const pOd = west ? h.p25 : 1 - h.p25;
   setHero(isNowHour() ? `${west ? '25' : '07'} Frankfurt flies ${west ? 'West' : 'East'}` : isNight(h) ? (k => { const H2 = state.run.hours, o = k < 0 ? (west ? '25' : '07') : H2[k].p25 >= 0.5 ? '25' : '07'; return `${o} ${k < 0 ? 'Night ban' : T.night_next.replace('{od}', o).replace('{t}', fmtHM(new Date(H2[k].t)))}`; })(state.run.hours.findIndex((x, q) => q > state.hour && !isNight(x))) : `${west ? '25' : '07'} Expected: ${west ? 'West' : 'East'}`, odCol, west ? -1 : 1); $('dir').classList.toggle('fut', !isNowHour()); $('dir').classList.toggle('nbh', !isNowHour() && isNight(h)); /* night ban: an outlined badge, no operations */ document.querySelector('.rail .hero')?.classList.toggle('fut', !isNowHour()); // a forecast hour: the story lines step out // a forecast hour reads as a forecast; now restores it
-  $('eyebrow').textContent = isNowHour() ? (window.FRA_SINCE ? `${T.now} · since ${fmtDay.format(new Date(window.FRA_SINCE))}, ${fmtHM(new Date(window.FRA_SINCE))}` : T.now) : `Frankfurt · forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(h.t))}`;
+  $('eyebrow').textContent = isNowHour() ? (window.FRA_SINCE ? `${T.now} · since ${fmtDay.format(new Date(window.FRA_SINCE))}, ${fmtHM(new Date(window.FRA_SINCE))}${heldFor()}` : T.now) : `Frankfurt · forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(h.t))}`;
   $('ground').textContent = '';
   if (!liveMode) $('dir-sub').innerHTML = '';
   bubText(state.hour);
@@ -1678,7 +1776,7 @@ function setHour(i, force) {
       const big = worst >= 0.2, wdT = t => `${wday(t)}\u00a0${fmtHM(new Date(t))}`, oname = o => (o === 25 ? 'West' : 'East');
       const atNow = isNowHour(), oh = pOther(h); // a picked or hovered hour: the panel describes that hour, not now
       $('outl').innerHTML = !atNow && isNight(h) ? 'No scheduled flights 23:00 to 05:00' : !atNow ? `${pct(h.p25 >= 0.5 ? h.p25 : 1 - h.p25)} ${h.p25 >= 0.5 ? 'West' : 'East'} this hour` // the switch chance is the row below
-        : j >= 0 ? T.out_expected.replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{t}', wdT(hs[j].t)) + (hs.length - 1 - j <= 1 ? (T.out_edge || '') : '') : big ? T.out_possible.replace('{p}', pct(worst)).replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{when}', (hs.length - 1 - wq <= 2 ? T.out_when_end : T.out_when_mid).replace('{t}', wdT(hs[wq].t))) /* siteui.COPY, shared with the dashboard */ : T.out_none; // the model's own 48 h number (p_change_48h)
+        : j >= 0 ? T.out_expected.replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{t}', `<span class="nw">${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(hs[j].t))}</span>`) + (hs.length - 1 - j <= 1 ? (T.out_edge || '') : '') : big ? T.out_possible.replace('{p}', pct(worst)).replace('{to}', oname(h.od === 25 ? 7 : 25)).replace('{when}', (hs.length - 1 - wq <= 2 ? T.out_when_end : T.out_when_mid).replace('{t}', wdT(hs[wq].t))) /* siteui.COPY, shared with the dashboard */ : T.out_none; // the model's own 48 h number (p_change_48h)
       const disagree = dis.length && j < 0 && !big && (atNow || dis.includes(state.hour)); // the official line only while the shown hour is inside its window
       $('disl').hidden = !disagree;
       $('outl').title = state.run.p_change === null || state.run.p_change === undefined ? '' : `Calibrated chance of any switch in 48 h: ${pct(state.run.p_change)}\nThe hourly bars are uncalibrated model probabilities.`;
@@ -1690,15 +1788,15 @@ function setHour(i, force) {
     { // one line: the peak ahead (now) or the shown hour's chance, with a small bar on the timeline's scale
       const oh = pOther(h), v = isNowHour() ? worst : oh, sc = DOCK.sc ? DOCK.sc.top : 0.2, bar = `<i class="swb"><i style="width:${(Math.min(1, v / sc) * 100).toFixed(0)}%"></i></i>`;
       $('dir-next').innerHTML = false && j >= 0 && isNowHour() ? /* the outlook already names the switch time: no repeat */ `<div class="kv"><span>${T.nextsw}</span><b>to ${h.od === 25 ? '07' : '25'}, ${wk.format(new Date(hs[j].t))}</b></div>`
-        : isNowHour() ? `<div class="kv" title="The operating hour (outside the 23:00 to 05:00 night ban) with the highest chance of ${OTHER}, to ${end}. The 48 h figure above is calibrated on past switches from the highest hourly chance, so it can be lower."><span>${T.switch} ${OTHER}</span><b>${worstOp < 0.01 ? 'Under 1\u202f% every hour' : `peak ${pct(worstOp)} · ${wk.format(new Date(hs[wqOp < 0 ? wq : wqOp].t))}`}</b></div>`
+        : isNowHour() ? `<div class="kv" title="The operating hour (outside the 23:00 to 05:00 night ban) with the highest chance of ${OTHER}, to ${end}. The 48 h figure above is calibrated on past switches from the highest hourly chance, so it can be lower."><span>${T.switch} ${OTHER}</span><b>${worstOp < 0.01 ? 'Under 1\u202f% every hour' : T.peak_by.replace('{p}', pct(worstOp)).replace('{t}', peakNote(worstOp, hs[wqOp < 0 ? wq : wqOp].t).replace(/^.* at /, ''))}</b></div>`
         : `<div class="kv"><span>${T.switch} ${OTHER}</span><b>${pct(oh)} at ${fmtHM(new Date(h.t))}</b></div>`; }
     { // phones: a compact answer card (the plate and headline, the outlook, the accuracy)
       const Rq = ((window.FRA_QUALITY || {}).od25 || []).filter(r => r.acc !== null && r.acc !== undefined), pc = v => Math.round(v * 100), rg = a => (Math.min(...a) === Math.max(...a) ? `${Math.min(...a)}` : `${Math.min(...a)}–${Math.max(...a)}`);
-      const since = window.FRA_SINCE ? `since ${fmtDay.format(new Date(window.FRA_SINCE))}` : ''; // the dashboard phone's order: eyebrow, answer, outlook, proof, problem, official warning
-      $('sumbar').innerHTML = `<div class="sb0">Frankfurt${!isNowHour() ? ` · <span class="nw">forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}</span>` : since ? ` · <span class="nw">${since}</span>` : ''}</div><div class="sb1${!isNowHour() && isNight(h) ? ' nbh' : ''}"><b class="dbadge" style="--dc:${h.od === 25 ? HEX.west : HEX.east}" data-d="${h.od === 25 ? '25' : '07'}">${h.od === 25 ? '25' : '07'}</b><span class="nw">${isNowHour() ? `flies ${h.od === 25 ? 'West' : 'East'}\u00a0${ARROW_SVG2(h.od === 25 ? 'w' : 'e')}` : (/^\d\d (.*)$/.exec(heroWord || '') || [0, ''])[1]}</span></div><div class="sb2">${$('outl').innerHTML}</div>`
+      const since = window.FRA_SINCE ? `since ${fmtDay.format(new Date(window.FRA_SINCE))}, ${fmtHM(new Date(window.FRA_SINCE))}${heldFor()}` : ''; // the kicker as on every other page and width // the dashboard phone's order: eyebrow, answer, outlook, proof, problem, official warning
+      $('sumbar').innerHTML = `<div class="sb0">${!isNowHour() ? `Frankfurt · <span class="nw">forecast for ${new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(h.t))} ${fmtHM(new Date(h.t))}</span>` : `${T.now}${since ? ` · <span class="nw">${since}</span>` : ''}`}</div><div class="sb1${!isNowHour() && isNight(h) ? ' nbh' : ''}"><b class="dbadge" style="--dc:${h.od === 25 ? HEX.west : HEX.east}" data-d="${h.od === 25 ? '25' : '07'}">${h.od === 25 ? '25' : '07'}</b><span class="nw">${isNowHour() ? `flies ${h.od === 25 ? 'West' : 'East'}\u00a0${ARROW_SVG2(h.od === 25 ? 'w' : 'e')}` : (/^\d\d (.*)$/.exec(heroWord || '') || [0, ''])[1]}</span></div><div class="sb2">${$('outl').innerHTML.replace(/ expected (<span class="nw">)/, ' · $1')}</div>`
         + `<details class="sbx"${app.classList.contains('sbopen') ? ' open' : ''}><summary>Details</summary>` + (Rq.length ? `<div class="sb3">Right <b>${rg(Rq.map(r => pc(r.acc)))}\u202f%</b> of hours · official <em>${rg(Rq.map(r => pc(r.prog)))}\u202f%</em></div>` : '')
         + `<div class="sb4">The direction switches at short notice when the wind turns, so airlines and ground crews can't plan for it.</div>${$('disl').hidden ? '' : `<div class="sb5">${$('disl').innerHTML}</div>`}</details>`;
-      { const sm = $('sumbar').querySelector('.sbx>summary'), o2 = $('sumbar').querySelector('.sb1'); if (sm && o2) sm.style.top = `${o2.offsetTop + (o2.offsetHeight - (sm.offsetHeight || 24)) / 2}px`; } // Details sits on the headline row, right-aligned; the outlook runs full width
+      { const sm = $('sumbar').querySelector('.sbx>summary'), o2 = $('sumbar').querySelector('.sb1'); if (sm && o2) { const o0 = $('sumbar').querySelector('.sb0'); sm.style.top = `${Math.max(o2.offsetTop + (o2.offsetHeight - (sm.offsetHeight || 24)) / 2, o0 ? o0.offsetTop + o0.offsetHeight + 2 : 0)}px`; } } // Details sits on the headline row, right-aligned, never on the kicker line; the outlook runs full width
       { const d = $('sumbar').querySelector('.sbx'); if (d) d.ontoggle = () => { app.classList.toggle('sbopen', d.open); requestAnimationFrame(resize); }; } // phones: proof, problem and the official line behind a toggle, so the map keeps its room
     }
     $('how-pg').textContent = dis.length ? ` The official forecast flags ${fmtBub.format(new Date(hs[dis[0]].t))} to ${fmtHM(new Date(new Date(hs[dis[dis.length - 1]].t).getTime() + 36e5))} as a possible switch (orange bracket on the timeline).`
@@ -1709,8 +1807,29 @@ function setHour(i, force) {
 
   { // a fact for now, a chance for a forecast hour, never both in one phrase
     const day = state.run.hours.slice(liveMode ? 0 : state.hour), worst = Math.max(...day.map(x => 1 - x.p18));
-    $('r18-v').innerHTML = !isNowHour() && isNight(h) ? '<span class="badge nb">Night ban</span>' : `<span class="badge${r18 ? '' : ' closed'}">${r18 ? `${(window.FRA_STYLE || {}).check || ''}In use` : 'Closed'}</span>`; // the night ban: no take-offs, so no status
-    $('r18-s').textContent = ''; $('r18-v').title = r18 ? `Closure chance to the end of the forecast: at most ${pct(worst)} in any hour` : 'Its take-offs use the Centre runway';
+    const wk = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) /* "Fri 6 Nov, 07:00": the dashboard's closure range */, c0 = day.findIndex(x => x.p18 < 0.5); let c1 = c0; while (c0 >= 0 && c1 + 1 < day.length && day[c1 + 1].p18 < 0.5) c1++; // the first forecast closure ahead (the dashboard's rule: closed below 50 % open)
+    const TR = window.FRA_TRAFFIC, fraH = t => +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', hour: '2-digit', hourCycle: 'h23' }).format(new Date(t));
+    const moved = TR && c0 >= 0 ? Math.max(...day.slice(c0, c1 + 1).map(x => Math.round(TR.perHour[fraH(x.t)] / 2 * (TR.share18 || 0)))) : 0; // the dashboard's figure: the most departures an hour that move
+    // the current hour (as on the dashboard, siteui.COPY.r18_*): the next closure is the value, a hollow ring while it is
+    // scheduled, a filled dot while it is in effect; the date, the routine state and what it moves are the lines under it
+    const wd0 = t => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, weekday: 'short' }).format(new Date(t)), dk = t => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t));
+    let big = '', lines = [], st = 'hour';
+    if (isNowHour()) {
+      const mv = (moved > 0 ? T.r18_moves : T.r18_moves0).replace('{n}', moved);
+      if (c0 < 0) { st = 'none'; big = T.r18_open.replace('{n}', day.length); // the dashboard's lines: the highest daytime closure chance, what it carries at the busiest
+        const dd = day.filter(x => !isNight(x)), wd = dd.length ? Math.max(...dd.map(x => 1 - x.p18)) : 0, most = TR && dd.length ? Math.max(...dd.map(x => Math.round(TR.perHour[fraH(x.t)] / 2 * (TR.share18 || 0)))) : 0;
+        lines = [T.r18_open_max.replace('{p}', pct(wd)), ...(most > 0 ? [T.r18_carries.replace('{n}', most)] : [])]; }
+      else { const s0 = day[c0].t, e0 = Date.parse(day[c1].t) + 36e5;
+        if (c0 === 0) { st = 'now'; big = T.r18_until.replace('{b}', dk(e0) === dk(Date.now()) ? fmtHM(new Date(e0)) : `${wd0(e0)} ${fmtHM(new Date(e0))}`); lines = [mv]; }
+        else { st = 'sched'; const iso = t => dk(t).split('/').reverse().join('-'), nd = Math.round((Date.parse(iso(s0)) - Date.parse(iso(Date.now()))) / 864e5);
+          // the quiet line (the dashboard's rule): the relative day, the at-risk hours next to the closure in the lane as the "at risk" range, the routine state
+          const risk = x => x.p18 >= 0.5 && x.p18 < 0.9 && !isNight(x); let a2 = c0, b2 = c1; while (a2 - 1 > 0 && risk(day[a2 - 1])) a2--; while (b2 + 1 < day.length && risk(day[b2 + 1])) b2++;
+          const sA = day[a2].t, eB = Date.parse(day[b2].t) + 36e5, may = a2 < c0 || b2 > c1 ? T.r18_may.replace('{a}', fmtHM(new Date(sA))).replace('{b}', dk(eB) === dk(sA) ? fmtHM(new Date(eB)) : `${wd0(eB)} ${fmtHM(new Date(eB))}`) : '';
+          big = T.r18_closes.replace('{date}', fmtDay.format(new Date(s0))).replace('{a}', fmtHM(new Date(s0))).replace('{b}', dk(e0) === dk(s0) ? fmtHM(new Date(e0)) : `${wd0(e0)} ${fmtHM(new Date(e0))}`); lines = [[T.r18_rel[Math.min(nd, 2)].replace('{n}', nd), may, T.r18_date].filter(Boolean).join(' · '), mv]; } } }
+    $('r18-v').dataset.state = st;
+    $('r18-v').innerHTML = st !== 'hour' ? `<span class="badge r18b">${st === 'none' ? '' : `<i class="r18d${st === 'sched' ? ' ring' : ''}" aria-hidden="true"></i>`}${big}</span>`
+      : isNight(h) ? '<span class="badge nb">Night ban</span>' : `<span class="badge${r18 ? '' : ' closed'}">${r18 ? `${(window.FRA_STYLE || {}).check || ''}In use` : 'Closed'}</span>`; // a forecast hour: its own state; the night ban: no take-offs, so no status
+    $('r18-s').innerHTML = lines.map((t, k) => `<span class="${k === lines.length - 1 && (st !== 'none' || k) ? 'r18i' : 'r18w'}">${t}</span>`).join(''); $('r18-s').classList.toggle('r18is', lines.length > 0); $('r18-v').title = r18 ? `Closure chance to the end of the forecast: at most ${pct(worst)} in any hour` : 'Its take-offs use the Centre runway';
   }
 
   if (h.ws !== undefined) {
@@ -1721,7 +1840,9 @@ function setHour(i, force) {
     const word = (v, hdg = null) => { const g = hdg === null ? null : gust(hdg); return word0(v) + (g !== null && wg > ws + 2 && Math.round(Math.abs(g)) !== Math.round(Math.abs(v)) ? `, gusts ${Math.round(Math.abs(g))}` : ''); };
     const from = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'][Math.round(h.wd / 45) % 8];
     const cmp = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(h.wd / 45) % 8];
-    { const tI = Math.round(comp(HDG[od])); $('wind-v').innerHTML = `${Math.abs(tI)}\u202fkt ${tI > 0 ? 'tailwind' : 'headwind'} on ${west ? 25 : '07'}`; } // one wind format on both pages
+    $('wind-t').textContent = isNowHour() ? `${T.wind} now` : `${T.wind} at ${fmtHM(new Date(h.t))}`; // its basis named: the current hour or the shown one
+    // the compass wind stays a quiet line under the value at every width: the label column carries the row's name only
+    { const tI = Math.round(comp(HDG[od])); $('wind-v').innerHTML = `${tI > 0 ? 'tailwind' : 'headwind'} ${Math.abs(tI)}\u202fkt on ${west ? 25 : '07'}`; } // one wind order on both pages: "headwind 5 kt", as in the timeline readouts
     windInd.el.innerHTML = `<svg viewBox="0 0 24 24" style="--a:${h.wd + 180}deg"><path d="M12 21V4M6 10l6-6 6 6"/></svg><span><b>${ws}\u202fkt ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(h.wd / 45) % 8]}</b></span>`; // the arrow: just the speed and where it comes from; the full line is in the panel
     $('windchip').innerHTML = windInd.el.innerHTML;
     LAST_WD = h.wd;
@@ -1729,7 +1850,7 @@ function setHour(i, force) {
     $('wcomp').innerHTML = `<svg viewBox="0 0 24 24" style="--a:${h.wd + 180}deg"><path d="M12 21V4M6 10l6-6 6 6"/></svg>` // the arrow is drawn pointing south: rotating by the FROM direction makes it point downwind;
     const t25 = Math.round(-ws * Math.cos((h.wd - HDG[25]) * Math.PI / 180)); // + = tailwind for westbound
     const tIn = Math.round(comp(HDG[od]));
-    $('wind-why').textContent = `${cmp} ${ws}\u202fkt · ${String(Math.round(h.wd)).padStart(3, '0')}°`; /* one wind format on both pages */ $('wind-why').title = 'The official rule switches direction when the tailwind stays above 1 kt for 30 minutes, or at once from 10 kt';
+    $('wind-why').textContent = `from ${cmp} · ${String(Math.round(h.wd)).padStart(3, '0')}°`; /* the direction only: the speed that matters is the value above */ $('wind-why').title = 'The official rule switches direction when the tailwind stays above 1 kt for 30 minutes, or at once from 10 kt';
     const xw = Math.round(Math.abs(h.ws * Math.sin((h.wd - HDG[od]) * Math.PI / 180)));
     $('wind-s').innerHTML = ''; { const pw = $('pdetw'); if (pw) pw.innerHTML = `<b>Wind per runway</b><br>${String(h.wd).padStart(3, '0')}°, gusts ${Math.round(h.wg)}\u202fkt<br>`
       + `${west ? 25 : '07'}: ${word(comp(HDG[od]), HDG[od])}, crosswind ${xw}\u202fkt<br>18: ${word(comp(HDG[18]), HDG[18])}`; } // inside Details: one disclosure at the bottom
@@ -2020,7 +2141,7 @@ function setTz(v) { // Local (Frankfurt) or UTC, from the top bar or the dashboa
   try { localStorage.setItem('fra-tz', TZ === 'UTC' ? 'utc' : 'local'); } catch { /* storage blocked */ }
 }
 $('b-thm').onclick = () => setTheme(theme === 'light' ? 'dark' : 'light', true);
-const thmLabel = () => { const t = `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`; $('b-thm').title = t; $('b-thm').setAttribute('aria-label', t); };
+const thmLabel = () => { const t = 'Light / dark theme'; $('b-thm').title = t; $('b-thm').setAttribute('aria-label', t); }; // one name on both pages
 thmLabel(); new MutationObserver(thmLabel).observe(app, { attributes: true, attributeFilter: ['class'] });
 try { if (innerWidth >= 480) $('tzl3').textContent = `Local (${new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value})`; } catch { /* keep "Local" */ }
 document.querySelectorAll('.ptz button').forEach(b => b.addEventListener('click', () => { if (b.dataset.v !== TZ) setTz(b.dataset.v); }));
@@ -2035,7 +2156,7 @@ window.__fra = {
   setTheme, setCardMode, planes: () => planes,
   rwScreen() { // each runway's ends on screen, with its designators (check.mjs: every tag sits nearest its own runway)
     const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), ar = app.getBoundingClientRect(), p = q => { v.copy(V(q[0], q[1], 0)).project(camera); return [ar.left + (v.x + 1) / 2 * w, ar.top + (1 - v.y) / 2 * h]; };
-    return Object.values(RW).map(r => [[r.d07, r.d25], p(r.A), p(r.B)]);
+    return Object.values(RW).map(r => { const a = p(r.A), b = p(r.B); return [[r.d07, r.d25], a, b, 170 * Math.hypot(b[0] - a[0], b[1] - a[1]) / r.len]; }); // [3]: the strip's half width in px
   },
   depTips() { // the take-off arrows' tips on screen and the free viewport (check.mjs)
     const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), F = freeArea;
@@ -2046,4 +2167,8 @@ window.__fra = {
     const x0 = Math.min(...sp.map(q => q[0])), x1 = Math.max(...sp.map(q => q[0])), y0 = Math.min(...sp.map(q => q[1])), y1 = Math.max(...sp.map(q => q[1])), F = freeArea, fw = w - F.left - F.right, fh = h - F.top - F.bottom;
     const rp = Object.values(RW).flatMap(r => [r.A, r.B]).map(p => { v.copy(V(p[0], p[1], 0)).project(camera); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]; }); return { rwW: +((Math.max(...rp.map(q => q[0])) - Math.min(...rp.map(q => q[0]))) / fw).toFixed(2), rwH: +((Math.max(...rp.map(q => q[1])) - Math.min(...rp.map(q => q[1]))) / fh).toFixed(2), fillW: +((x1 - x0) / fw).toFixed(2), fillH: +((y1 - y0) / fh).toFixed(2), offX: +(((x0 + x1) / 2 - (F.left + fw / 2)) / fw).toFixed(3), offY: +(((y0 + y1) / 2 - (F.top + fh / 2)) / fh).toFixed(3) };
   }, live: () => ({ liveMode, wantLive, n: planes.size, gen: liveData?.generated }),
+  ghost(show) { // the "if switched" dashes: shown or hidden, and points along them on screen (check.mjs measures their contrast on the map)
+    const w = app.clientWidth, h = app.clientHeight, v = new THREE.Vector3(), out = []; pathGroup.children.forEach(m => { if (m.ghost) m.visible = show; });
+    for (const g of (lastSegs || []).filter(q => q.kind === 'ghost')) for (const f of [0.15, 0.25, 0.35]) { const a = g.a || g.p?.[0], b = g.b || g.p?.[g.p.length - 1]; if (!a || !b) continue; v.copy(V(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 0)).project(camera); out.push([(v.x + 1) / 2 * w, (1 - v.y) / 2 * h]); }
+    return out; },
 };
