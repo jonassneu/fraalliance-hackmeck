@@ -10,7 +10,7 @@ Installing takes about a minute. No training and no historical data are needed: 
 | --- | --- |
 | System | Linux or macOS. The background service (`--service`) needs Linux with systemd; elsewhere use `ops.serve` with your own process manager. |
 | Software | [uv](https://docs.astral.sh/uv/), which installs Python 3.12 and the packages by itself. Node.js is not needed: the 3D view is prebuilt. |
-| Resources | 1 CPU core, 1 GB RAM, about 600 MB of disk for the installation (mostly Python packages). The archive grows by about 7 MB a day, mostly raw radar tracks kept for the live record. |
+| Resources | 1 CPU core, 1 GB RAM (a run peaks at about 600 MB), about 600 MB of disk for the installation (mostly Python packages). The archive grows by about 7 MB a day, mostly raw radar tracks kept for the live record. |
 | Network | Outbound HTTPS to the hosts below. Nothing listens on the network unless you choose `--host 0.0.0.0`. |
 
 | Host | What for | Requests |
