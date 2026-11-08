@@ -3,3 +3,7 @@
 One module per pipeline step; run them from the repository root with `uv run python -m fra.<module>`.
 See README.md ("Repository layout" and "Reproduce the pipeline") for the order and what each step writes.
 """
+
+from fra import portable
+
+portable.install()

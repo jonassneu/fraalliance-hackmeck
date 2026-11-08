@@ -4,10 +4,12 @@ import io
 import json
 import tarfile
 from datetime import datetime, timezone
+from xml.etree import ElementTree
 
 import pytest
 
-from ops import install, release_bundle, serve
+from fra import portable
+from ops import backup, install, release_bundle, serve
 
 
 def _fake_data(tmp_path):
@@ -80,3 +82,47 @@ def test_schedule():
     assert serve.next_event(t(16, 30), 30) == (t(16, 50), "retry")
     assert serve.next_event(t(16, 55), 30) == (t(17, 30), "run")
     assert serve.next_event(t(23, 51), 30) == (datetime(2026, 11, 7, 0, 30, tzinfo=timezone.utc), "run")
+
+
+def test_lock_excludes_a_second_holder(tmp_path):
+    p = tmp_path / "x.lock"
+    with open(p, "w") as a, open(p, "w") as b:
+        portable.lock_nowait(a)
+        with pytest.raises(BlockingIOError):
+            portable.lock_nowait(b)
+        portable.unlock(a)
+        portable.lock_nowait(b)
+        portable.unlock(b)
+
+
+def test_backup_copy_without_rsync(tmp_path):
+    src = tmp_path / "archive"
+    (src / "issued").mkdir(parents=True)
+    (src / "run_cache").mkdir()
+    (src / "issued" / "forecast_x.csv").write_text("1")
+    (src / "run_cache" / "big.bin").write_text("skip")
+    (src / ".archive.lock").write_text("")
+    (src / "a.tmp").write_text("skip")
+    dst = tmp_path / "copy"
+    backup.copy_new(src, dst)
+    assert sorted(p.relative_to(dst).as_posix() for p in dst.rglob("*") if p.is_file()) == ["issued/forecast_x.csv"]
+    (dst / "keep.txt").write_text("stays")          # nothing is removed from the copy
+    (src / "issued" / "forecast_x.csv").write_text("22")
+    backup.copy_new(src, dst)
+    assert (dst / "issued" / "forecast_x.csv").read_text() == "22" and (dst / "keep.txt").exists()
+
+
+def test_task_definition(monkeypatch):
+    monkeypatch.setenv("USERDOMAIN", "AIR&PORT")
+    monkeypatch.setenv("USERNAME", "ops")
+    root = ElementTree.fromstring(install.task_xml("0.0.0.0", 8081))
+    ns = "{http://schemas.microsoft.com/windows/2004/02/mit/task}"
+    assert root.find(f"{ns}Principals/{ns}Principal/{ns}UserId").text == "AIR&PORT\\ops"
+    assert root.find(f"{ns}Settings/{ns}ExecutionTimeLimit").text == "PT0S"   # the default would stop it after 3 days
+    args = root.find(f"{ns}Actions/{ns}Exec/{ns}Arguments").text
+    assert "--host 0.0.0.0 --port 8081" in args and "service.log" in args
+
+
+def test_web_types_do_not_depend_on_the_machine():
+    assert serve.Handler.extensions_map[".js"] == "text/javascript"
+    assert serve.Handler.extensions_map[".json"] == "application/json"

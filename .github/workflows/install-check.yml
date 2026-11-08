@@ -1,0 +1,76 @@
+name: Install check
+
+# The whole installation on a clean machine: model files from the release, a test forecast with live data, one hourly
+# run, the web pages and, on Windows, the background service. It calls the radar and weather services, so it only runs
+# on request. Avoid minutes 25-40, when the hourly jobs use the radar server.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["ci/**"]
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - name: Line endings as in a default Git for Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf true
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: Install (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: call install.cmd
+      - name: Install (Linux, macOS)
+        if: runner.os != 'Windows'
+        run: ./install.sh
+      - name: Test forecast, unrounded
+        shell: bash
+        run: uv run --no-sync python -m fra.archive --smoke blend-v2 | cut -c1-900
+      - name: One hourly run
+        continue-on-error: true    # a weather service timing out is judged by the next step
+        run: uv run --no-sync python -m ops.serve --once
+      - name: Outputs and web pages
+        run: uv run --no-sync python tests/check_install.py
+      - name: Hourly loop fires on schedule
+        run: uv run --no-sync python tests/check_install.py --loop
+      - name: Background service (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call install.cmd --service --no-test || exit /b 1
+          uv run --no-sync python tests/check_install.py --service
+          set result=%errorlevel%
+          schtasks /Query /TN "FRA Forecast" /V /FO LIST
+          type data\service.log
+          schtasks /End /TN "FRA Forecast"
+          schtasks /Delete /TN "FRA Forecast" /F
+          exit /b %result%
+      - name: Update steps from SETUP.md
+        shell: bash
+        run: |
+          git status --short site
+          git checkout -- site
+          git fetch --tags
+          git checkout "$GITHUB_SHA"
+          if [ "$RUNNER_OS" = Windows ]; then cmd //c "install.cmd --no-test"; else ./install.sh --no-test; fi
+          test -z "$(git status --short --untracked-files=no site)"
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: install-${{ matrix.os }}
+          if-no-files-found: ignore
+          include-hidden-files: true
+          path: |
+            data/archive/issued/
+            data/archive/runs.jsonl
+            data/service.log
+            site/*.json
+            site/*.html

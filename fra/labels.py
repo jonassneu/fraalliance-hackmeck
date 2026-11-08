@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd
 import requests
 
+from fra.portable import lock_nowait, unlock
+
 DATA = Path(__file__).resolve().parent.parent / "data"
 CACHE = DATA / "inaa"
 URL = "https://inaa.umwelthaus.org/Fanomos/GetFlightTracks"
@@ -37,7 +39,6 @@ INAA_SLOTS = DATA / "logs" / "inaa_slots"
 
 def _acquire_slot(max_wait, poll):
     """fd holding an exclusive flock on a free slot file, or None if the lock directory is unusable."""
-    import fcntl
     t0 = time.monotonic()
     while True:
         for i in range(INAA_MAX):
@@ -47,7 +48,7 @@ def _acquire_slot(max_wait, poll):
             except OSError:  # infrastructure problem: never block data collection on it
                 return None
             try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock_nowait(fd)
                 return fd
             except OSError:  # slot taken
                 os.close(fd)
@@ -65,14 +66,12 @@ def inaa_slot(max_wait=1800, poll=0.2):
         yield
     finally:
         if fd is not None:
-            import fcntl
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            unlock(fd)
             os.close(fd)
 
 
 def inaa_slots_busy():
     """Number of INAA slots currently held (by any process)."""
-    import fcntl
     busy = 0
     for i in range(INAA_MAX):
         try:
@@ -80,8 +79,8 @@ def inaa_slots_busy():
         except OSError:
             continue
         try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            lock_nowait(fd)
+            unlock(fd)
         except OSError:
             busy += 1
         finally:

@@ -1,6 +1,7 @@
 """The forecast service in one process: the hourly job plus the web pages.
 
-    uv run python -m ops.serve [--port 8080] [--host 127.0.0.1] [--minute 30] [--backup DIR] [--no-web] [--once]
+    uv run python -m ops.serve [--port 8080] [--host 127.0.0.1] [--minute 30] [--backup DIR] [--log FILE]
+                               [--no-web] [--once]
 
 Every hour at minute 30 it runs these steps, each in its own process with a time limit; a failed step never stops
 the next one:
@@ -40,7 +41,8 @@ STEPS = [  # (module, extra args, time limit in s)
     ("fra.alerts", [], 5 * 60),
 ]
 ENV = {**os.environ, "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
-       "PYTHONUNBUFFERED": "1"}
+       "PYTHONUNBUFFERED": "1", "PYTHONUTF8": "1"}
+INSTALLER = "install.cmd" if os.name == "nt" else "./install.sh"
 
 
 def log(msg):
@@ -52,14 +54,15 @@ def issued(hour):
     return (ISSUED / f"forecast_{hour:%Y%m%dT%H}.csv").exists()
 
 
-def run_chain(backup=None):
-    """The hourly steps, in order. Returns {module: exit code or 'timeout'}."""
+def run_chain(backup=None, out=None):
+    """The hourly steps, in order; `out` takes their output (None: this terminal). {module: exit code or 'timeout'}."""
     steps = STEPS + ([("ops.backup", ["--dest", str(backup)], 10 * 60)] if backup else [])
     res = {}
     for mod, args, limit in steps:
         t0 = time.monotonic()
         try:
-            r = subprocess.run([sys.executable, "-m", mod, *args], cwd=ROOT, env=ENV, timeout=limit)
+            r = subprocess.run([sys.executable, "-m", mod, *args], cwd=ROOT, env=ENV, timeout=limit, stdout=out,
+                               stderr=subprocess.STDOUT if out else None)
             res[mod] = r.returncode
         except subprocess.TimeoutExpired:
             res[mod] = "timeout"
@@ -82,6 +85,11 @@ def next_event(now, minute, retry_minute=RETRY_MINUTE):
 class Handler(http.server.SimpleHTTPRequestHandler):
     """Static files of site/; no caching, so the dashboard always polls the newest alerts and live record."""
 
+    # fixed here: otherwise they come from the Windows registry, where for example .js can be text/plain
+    extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map, ".html": "text/html", ".css": "text/css",
+                      ".js": "text/javascript", ".json": "application/json", ".svg": "image/svg+xml",
+                      ".png": "image/png"}
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache")
         super().end_headers()
@@ -90,8 +98,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+class Server(http.server.ThreadingHTTPServer):
+    allow_reuse_address = os.name != "nt"   # on Windows it would let two servers share the port without an error
+
+
 def serve_web(host, port):
-    httpd = http.server.ThreadingHTTPServer((host, port), functools.partial(Handler, directory=str(SITE)))
+    httpd = Server((host, port), functools.partial(Handler, directory=str(SITE)))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     shown = "localhost" if host in ("127.0.0.1", "0.0.0.0", "") else host
     log(f"web pages: http://{shown}:{port}/ (dashboard), http://{shown}:{port}/airport3d.html (3D view)")
@@ -104,20 +116,24 @@ def main(argv=None):
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--minute", type=int, default=30, help="minute of the hourly run (default 30)")
     ap.add_argument("--backup", metavar="DIR", help="copy data/archive to DIR after every run (ops.backup)")
+    ap.add_argument("--log", metavar="FILE", help="append all output to FILE (for services without a terminal)")
     ap.add_argument("--no-web", action="store_true", help="run the hourly job only")
     ap.add_argument("--once", action="store_true", help="run the hourly steps once and exit (for cron)")
     a = ap.parse_args(argv)
     if not (ROOT / "data" / "archive" / "variants.json").exists():
-        sys.exit("No model installed: run ./install.sh first (SETUP.md).")
+        sys.exit(f"No model installed: run {INSTALLER} first (SETUP.md).")
+    out = open(a.log, "a", buffering=1, encoding="utf-8") if a.log else None
+    if out:
+        sys.stdout = sys.stderr = out
     if a.once:
-        res = run_chain(a.backup)
+        res = run_chain(a.backup, out)
         return 0 if res.get("fra.archive") == 0 else 1
     if not a.no_web:
         serve_web(a.host, a.port)
     now = datetime.now(timezone.utc)
     if now.minute >= a.minute and not issued(now.replace(minute=0, second=0, microsecond=0)):
         log("no forecast for this hour yet: running now")   # before :30 the radar hour may still be incomplete
-        run_chain(a.backup)
+        run_chain(a.backup, out)
     while True:
         t, kind = next_event(datetime.now(timezone.utc), a.minute)
         log(f"next {kind} at {t:%H:%M}Z")
@@ -125,7 +141,7 @@ def main(argv=None):
             time.sleep(min(wait, 60))
         if kind == "retry" and issued(t.replace(minute=0)):
             continue
-        run_chain(a.backup)
+        run_chain(a.backup, out)
 
 
 if __name__ == "__main__":

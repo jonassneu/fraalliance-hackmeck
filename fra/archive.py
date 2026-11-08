@@ -57,7 +57,6 @@ and the variants of every run.
 
 import argparse
 import contextlib
-import fcntl
 import gzip
 import hashlib
 import importlib
@@ -75,6 +74,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import requests
+
+from fra.portable import lock_nowait
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -146,7 +147,7 @@ def iso(t):
 
 def rel(p):
     p = Path(p)
-    return str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p)
+    return p.relative_to(ROOT).as_posix() if p.is_relative_to(ROOT) else str(p)
 
 
 def month_dir(base, t):
@@ -1252,7 +1253,7 @@ def main(argv=None):
     ARCHIVE.mkdir(parents=True, exist_ok=True)
     lock = open(ARCHIVE / ".archive.lock", "w")
     try:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_nowait(lock)
     except BlockingIOError:
         print("another fra.archive run holds the lock; exiting", flush=True)
         return 0

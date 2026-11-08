@@ -38,16 +38,16 @@ Both pages are rebuilt every hour from the newest forecast, with alerts and the 
 
 ## Set it up
 
-Linux or macOS with internet access, about a minute. The release ships the frozen model files, so no training and no historical data are needed.
+Windows, Linux or macOS with internet access, about a minute. The release ships the frozen model files, so no training and no historical data are needed.
 
 ```bash
-git clone --branch v2.0 https://github.com/jonassneu/fraalliance-hackmeck.git
+git clone --branch v2.1 https://github.com/jonassneu/fraalliance-hackmeck.git
 cd fraalliance-hackmeck
-./install.sh                         # Python environment, model files, a test forecast
+./install.sh                         # on Windows: .\install.cmd    Python environment, model files, a test forecast
 uv run python -m ops.serve           # forecast every hour, pages on http://localhost:8080/
 ```
 
-`./install.sh --service` runs it in the background on Linux. Requirements, network access, outputs and updates: [SETUP.md](SETUP.md).
+`./install.sh --service` (Windows: `.\install.cmd --service`) runs it in the background on Linux and Windows. Requirements, network access, outputs and updates: [SETUP.md](SETUP.md).
 
 ## Results
 
@@ -159,7 +159,7 @@ systemctl --user list-timers 'fra-*'           # the hourly timer
 | Path | Contents |
 | --- | --- |
 | [`fra/`](fra) | The pipeline, one module per step (see below) |
-| [`install.sh`](install.sh), [`SETUP.md`](SETUP.md) | Installation from a release and the setup guide |
+| [`install.sh`](install.sh), [`install.cmd`](install.cmd), [`SETUP.md`](SETUP.md) | Installation from a release and the setup guide |
 | [`ops/`](ops) | Live operation: installer (`install.py`), service (`serve.py`), release bundle (`release_bundle.py`), frozen runtimes, hourly job, variants, backups ([ops/README.md](ops/README.md), [ops/RUNTIME.md](ops/RUNTIME.md)) |
 | [`tests/`](tests) | Unit tests for the official decision rules, checked against the worked examples in the case |
 | [`experiments/`](experiments) | Walk-forward research harness, the four hackathon studies, and the studies since: long test (`eval_long`), decision model (`parta`), wind futures (`partb`), retests (`phase2`), the blend and holdout plan (`integration`), 12-year history (`history12`), more weather models (`multimodel`), the check on data never used for design (`replication`) |

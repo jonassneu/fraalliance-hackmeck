@@ -18,9 +18,11 @@ target can be set with --dest / FRA_BACKUP_DIR). Exit 0 on success, 1 on failure
 """
 
 import argparse
+import fnmatch
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -43,6 +45,27 @@ def sha256(p):
     return h.hexdigest()
 
 
+def excluded(name, is_dir):
+    return any(fnmatch.fnmatch(name, x.rstrip("/")) for x in EXCLUDE if x.endswith("/") == is_dir)
+
+
+def copy_new(src, dst):
+    """What rsync -a does here, for machines without rsync (Windows): new and changed files, nothing removed."""
+    if src.is_file():
+        files = [(src, dst)]
+    else:
+        files = []
+        for d, dirs, names in os.walk(src):
+            dirs[:] = [x for x in dirs if not excluded(x, True)]
+            files += [(Path(d) / n, dst / Path(d).relative_to(src) / n) for n in names if not excluded(n, False)]
+    for a, b in files:
+        st = a.stat()
+        if b.exists() and b.stat().st_size == st.st_size and abs(b.stat().st_mtime - st.st_mtime) < 2:
+            continue
+        b.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(a, b)
+
+
 def rsync(dest):
     out = {}
     for rel in SOURCES:
@@ -52,7 +75,11 @@ def rsync(dest):
             continue
         dst = dest / "repo" / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        cmd = ["rsync", "-a", *[f"--exclude={x}" for x in EXCLUDE], str(src) + ("/" if src.is_dir() else ""),
+        if not shutil.which("rsync"):
+            copy_new(src, dst)
+            out[rel] = "ok"
+            continue
+        cmd =["rsync", "-a", *[f"--exclude={x}" for x in EXCLUDE], str(src) + ("/" if src.is_dir() else ""),
                str(dst) + ("/" if src.is_dir() else "")]
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
         out[rel] = "ok" if r.returncode == 0 else f"rsync exit {r.returncode}: {r.stderr.strip()[-200:]}"
@@ -65,7 +92,7 @@ def daily_manifest(dest, now):
         return dict(manifest=str(path), note="exists")
     arch = REPO / "data" / "archive"
     files = sorted(list((arch / "issued").glob("forecast_*")) + list((arch / "issued_shadow").glob("*/forecast_*")))
-    lines = [f"{sha256(p)}  {p.relative_to(REPO)}" for p in files if p.is_file()]
+    lines = [f"{sha256(p)}  {p.relative_to(REPO).as_posix()}" for p in files if p.is_file()]
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     tmp.write_text("\n".join(lines) + "\n")
